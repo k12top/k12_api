@@ -28,3 +28,10 @@ message HelloRequest {
 message HelloReply {
   string message = 1;
 }
+
+enum ErrorReason {
+  // Sets the default value.
+  GREETER_UNSPECIFIED = 0;
+  // User not found.
+  USER_NOT_FOUND = 1;
+}
