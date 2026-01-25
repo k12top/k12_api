@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package auth.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "k12_backend/api/auth/v1;v1";
+
+service Auth {
+  rpc Login (LoginRequest) returns (LoginReply) {
+    option (google.api.http) = {
+      post: "/api/v1/auth/login"
+      body: "*"
+    };
+  }
+  rpc RefreshToken (RefreshTokenRequest) returns (RefreshTokenReply) {
+    option (google.api.http) = {
+      post: "/api/v1/auth/refresh"
+      body: "*"
+    };
+  }
+}
+
+message LoginRequest {
+  string code = 1;
+  string state = 2;
+}
+
+message LoginReply {
+  string token = 1;
+  string refresh_token = 2;
+  int64 expires_in = 3;
+  User user = 4;
+}
+
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message RefreshTokenReply {
+  string token = 1;
+  string refresh_token = 2;
+  int64 expires_in = 3;
+}
+
+message User {
+  int64 id = 1;
+  string username = 2;
+  string email = 3;
+  string avatar = 4;
+}
