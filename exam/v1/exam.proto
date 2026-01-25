@@ -1,0 +1,342 @@
+syntax = "proto3";
+
+package exam.v1;
+
+option go_package = "k12_backend/api/exam/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+// ExamService 考试服务
+service ExamService {
+  // ========== 分类相关 ==========
+  // 获取考试分类列表
+  rpc ListCategories(ListCategoriesRequest) returns (ListCategoriesResponse) {
+    option (google.api.http) = {
+      get: "/v1/exam/categories"
+    };
+  }
+
+  // ========== 试卷相关 ==========
+  // 获取试卷列表
+  rpc ListPapers(ListPapersRequest) returns (ListPapersResponse) {
+    option (google.api.http) = {
+      get: "/v1/exam/papers"
+    };
+  }
+
+  // 获取试卷详情
+  rpc GetPaper(GetPaperRequest) returns (GetPaperResponse) {
+    option (google.api.http) = {
+      get: "/v1/exam/papers/{paper_id}"
+    };
+  }
+
+  // ========== 考试会话相关 ==========
+  // 开始考试
+  rpc StartExam(StartExamRequest) returns (StartExamResponse) {
+    option (google.api.http) = {
+      post: "/v1/exam/sessions/start"
+      body: "*"
+    };
+  }
+
+  // 获取考试会话详情（断点续考）
+  rpc GetSession(GetSessionRequest) returns (GetSessionResponse) {
+    option (google.api.http) = {
+      get: "/v1/exam/sessions/{session_id}"
+    };
+  }
+
+  // 保存答案（草稿）
+  rpc SaveAnswer(SaveAnswerRequest) returns (SaveAnswerResponse) {
+    option (google.api.http) = {
+      post: "/v1/exam/sessions/{session_id}/answers"
+      body: "*"
+    };
+  }
+
+  // 提交考试
+  rpc SubmitExam(SubmitExamRequest) returns (SubmitExamResponse) {
+    option (google.api.http) = {
+      post: "/v1/exam/sessions/{session_id}/submit"
+      body: "*"
+    };
+  }
+
+  // 获取考试结果
+  rpc GetResult(GetResultRequest) returns (GetResultResponse) {
+    option (google.api.http) = {
+      get: "/v1/exam/sessions/{session_id}/result"
+    };
+  }
+
+  // 获取用户考试历史
+  rpc ListUserSessions(ListUserSessionsRequest) returns (ListUserSessionsResponse) {
+    option (google.api.http) = {
+      get: "/v1/exam/sessions"
+    };
+  }
+
+  // 上报行为日志
+  rpc ReportBehavior(ReportBehaviorRequest) returns (ReportBehaviorResponse) {
+    option (google.api.http) = {
+      post: "/v1/exam/sessions/{session_id}/behavior"
+      body: "*"
+    };
+  }
+}
+
+// ========== 通用消息 ==========
+
+// 分页信息
+message Pagination {
+  int32 page = 1;       // 当前页码，从1开始
+  int32 page_size = 2;  // 每页数量
+  int64 total = 3;      // 总记录数
+}
+
+// 拼音片段
+message PinyinSegment {
+  string char = 1;      // 原始字符
+  string pinyin = 2;    // 拼音（无需标注时为空）
+  int32 tone = 3;       // 声调 1-4，轻声为 0
+  bool is_blank = 4;    // 是否为填空占位符
+}
+
+// 带拼音的文本
+message PinyinText {
+  string raw = 1;                       // 原始文本
+  repeated PinyinSegment segments = 2;  // 逐字拼音
+}
+
+// 媒体资源
+message Media {
+  string type = 1;   // image, audio, video
+  string url = 2;    // 资源地址
+  string label = 3;  // 标签说明
+}
+
+// 选项
+message Option {
+  string key = 1;                   // 选项Key: A, B, C...
+  string value = 2;                 // 选项内容
+  string type = 3;                  // 内容类型: text, image
+  PinyinText value_pinyin = 4;      // 选项拼音（可选）
+}
+
+// 题目内容
+message QuestionContent {
+  string text = 1;                  // 题干文本
+  PinyinText text_pinyin = 2;       // 题干拼音（可选）
+  repeated Media media = 3;         // 多媒体资源
+  repeated Option options = 4;      // 选项列表
+  int32 max_duration = 5;           // 口语题最大录音时长(秒)
+}
+
+// 答案配置（判分后展示）
+message AnswerConfig {
+  repeated string correct_keys = 1;  // 正确选项Key
+  int32 score = 2;                   // 分值
+  string explanation = 3;            // 解析文本
+  string scoring_rule = 4;           // 多选评分规则: all_or_nothing, partial
+  string match_rule = 5;             // 填空匹配规则: exact, exact_ignore_case, contains, regex
+}
+
+// ========== 分类相关 ==========
+
+message ListCategoriesRequest {
+  bool active_only = 1;  // 是否只返回启用的分类
+}
+
+message ListCategoriesResponse {
+  repeated Category categories = 1;
+}
+
+message Category {
+  int64 id = 1;
+  string code = 2;
+  string name = 3;
+  string description = 4;
+  int32 paper_count = 5;  // 该分类下的试卷数量
+}
+
+// ========== 试卷相关 ==========
+
+message ListPapersRequest {
+  int64 category_id = 1;   // 按分类筛选
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message ListPapersResponse {
+  repeated PaperSummary papers = 1;
+  Pagination pagination = 2;
+}
+
+message PaperSummary {
+  int64 id = 1;
+  string title = 2;
+  string description = 3;
+  int32 duration = 4;          // 考试时长(秒)
+  int32 total_score = 5;       // 总分
+  int32 question_count = 6;    // 题目数量
+  string category_name = 7;    // 分类名称
+}
+
+message GetPaperRequest {
+  int64 paper_id = 1;
+  bool with_pinyin = 2;        // 是否返回拼音数据
+  bool preview_only = 3;       // 仅预览（不包含答案）
+}
+
+message GetPaperResponse {
+  PaperDetail paper = 1;
+}
+
+message PaperDetail {
+  int64 id = 1;
+  string title = 2;
+  string description = 3;
+  int32 duration = 4;
+  int32 total_score = 5;
+  PaperSettings settings = 6;
+  repeated QuestionItem questions = 7;
+}
+
+message PaperSettings {
+  bool shuffle_questions = 1;   // 题目乱序
+  bool shuffle_options = 2;     // 选项乱序
+  bool show_result = 3;         // 考完立即出分
+  bool allow_view_answer = 4;   // 允许查看答案
+  int32 max_attempts = 5;       // 最大尝试次数
+  int32 retake_cooldown = 6;    // 重考冷却时间(秒)
+  string retake_policy = 7;     // 取分策略: best, latest, first
+}
+
+message QuestionItem {
+  int64 id = 1;
+  string type = 2;              // 题目类型
+  string stem = 3;              // 题干
+  QuestionContent content = 4;  // 完整内容
+  int32 score = 5;              // 该题分值
+  int32 order = 6;              // 题目顺序
+  bool required = 7;            // 是否必答
+  int32 difficulty = 8;         // 难度
+  repeated string tags = 9;     // 标签
+}
+
+// ========== 考试会话相关 ==========
+
+message StartExamRequest {
+  int64 paper_id = 1;
+  bool with_pinyin = 2;        // 是否返回拼音数据
+}
+
+message StartExamResponse {
+  int64 session_id = 1;
+  int64 start_time = 2;        // Unix 秒
+  int64 due_time = 3;          // Unix 秒
+  PaperDetail paper = 4;       // 试卷内容（题目已按配置乱序）
+}
+
+message GetSessionRequest {
+  int64 session_id = 1;
+  bool with_pinyin = 2;
+}
+
+message GetSessionResponse {
+  int64 session_id = 1;
+  string status = 2;
+  int64 start_time = 3;
+  int64 due_time = 4;
+  int64 remaining_seconds = 5;  // 剩余时间(秒)
+  map<string, string> answers = 6;  // 已保存的答案
+  PaperDetail paper = 7;
+}
+
+message SaveAnswerRequest {
+  int64 session_id = 1;
+  repeated AnswerItem answers = 2;
+}
+
+message AnswerItem {
+  int64 question_id = 1;
+  string choice_keys = 2;      // 选择题: "A" 或 "A,C"
+  string text = 3;             // 填空/写作
+  string audio_url = 4;        // 口语题录音URL
+}
+
+message SaveAnswerResponse {
+  bool success = 1;
+  int64 saved_at = 2;          // 保存时间 Unix 秒
+}
+
+message SubmitExamRequest {
+  int64 session_id = 1;
+}
+
+message SubmitExamResponse {
+  string status = 1;           // completed 或 grading
+  optional int32 score = 2;    // 客观题立即出分
+  google.protobuf.Timestamp submitted_at = 3;
+}
+
+message GetResultRequest {
+  int64 session_id = 1;
+}
+
+message GetResultResponse {
+  int64 session_id = 1;
+  string status = 2;
+  int32 total_score = 3;
+  int32 user_score = 4;
+  float accuracy_rate = 5;           // 正确率
+  repeated QuestionResult questions = 6;
+  map<string, float> tag_scores = 7; // 各知识点得分率
+  google.protobuf.Timestamp started_at = 8;
+  google.protobuf.Timestamp submitted_at = 9;
+}
+
+message QuestionResult {
+  int64 question_id = 1;
+  string type = 2;
+  string user_answer = 3;
+  string correct_answer = 4;
+  bool is_correct = 5;
+  int32 score = 6;             // 该题满分
+  int32 score_earned = 7;      // 实际得分
+  string explanation = 8;      // 答案解析
+}
+
+message ListUserSessionsRequest {
+  int64 paper_id = 1;          // 按试卷筛选（可选）
+  string status = 2;           // 按状态筛选（可选）
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message ListUserSessionsResponse {
+  repeated SessionSummary sessions = 1;
+  Pagination pagination = 2;
+}
+
+message SessionSummary {
+  int64 session_id = 1;
+  int64 paper_id = 2;
+  string paper_title = 3;
+  string status = 4;
+  optional int32 score = 5;
+  int64 started_at = 6;
+  optional int64 submitted_at = 7;
+}
+
+message ReportBehaviorRequest {
+  int64 session_id = 1;
+  string event = 2;            // 事件类型: page_leave, page_return, etc.
+  string data = 3;             // 附加数据 JSON
+}
+
+message ReportBehaviorResponse {
+  bool success = 1;
+}
