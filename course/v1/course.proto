@@ -1,0 +1,622 @@
+syntax = "proto3";
+
+package course.v1;
+
+option go_package = "k12_backend/api/course/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+// CourseService 课程服务
+service CourseService {
+  // ========== 学科相关 ==========
+  // 获取学科列表
+  rpc ListSubjects(ListSubjectsRequest) returns (ListSubjectsResponse) {
+    option (google.api.http) = {
+      get: "/v1/course/subjects"
+    };
+  }
+
+  // ========== 课程相关 ==========
+  // 获取课程列表
+  rpc ListCourses(ListCoursesRequest) returns (ListCoursesResponse) {
+    option (google.api.http) = {
+      get: "/v1/course/courses"
+    };
+  }
+
+  // 获取课程详情
+  rpc GetCourse(GetCourseRequest) returns (GetCourseResponse) {
+    option (google.api.http) = {
+      get: "/v1/course/courses/{course_id}"
+    };
+  }
+
+  // 获取课程大纲(章节结构)
+  rpc GetCourseOutline(GetCourseOutlineRequest) returns (GetCourseOutlineResponse) {
+    option (google.api.http) = {
+      get: "/v1/course/courses/{course_id}/outline"
+    };
+  }
+
+  // ========== 课件相关 ==========
+  // 获取课件详情
+  rpc GetCourseware(GetCoursewareRequest) returns (GetCoursewareResponse) {
+    option (google.api.http) = {
+      get: "/v1/course/coursewares/{courseware_id}"
+    };
+  }
+
+  // ========== 学习进度相关 ==========
+  // 报名课程
+  rpc EnrollCourse(EnrollCourseRequest) returns (EnrollCourseResponse) {
+    option (google.api.http) = {
+      post: "/v1/course/courses/{course_id}/enroll"
+      body: "*"
+    };
+  }
+
+  // 获取用户课程列表(已报名)
+  rpc ListUserCourses(ListUserCoursesRequest) returns (ListUserCoursesResponse) {
+    option (google.api.http) = {
+      get: "/v1/course/user/courses"
+    };
+  }
+
+  // 获取课程学习进度
+  rpc GetCourseProgress(GetCourseProgressRequest) returns (GetCourseProgressResponse) {
+    option (google.api.http) = {
+      get: "/v1/course/courses/{course_id}/progress"
+    };
+  }
+
+  // 更新课件学习进度
+  rpc UpdateLearningProgress(UpdateLearningProgressRequest) returns (UpdateLearningProgressResponse) {
+    option (google.api.http) = {
+      post: "/v1/course/coursewares/{courseware_id}/progress"
+      body: "*"
+    };
+  }
+
+  // 更新任务进度
+  rpc UpdateTaskProgress(UpdateTaskProgressRequest) returns (UpdateTaskProgressResponse) {
+    option (google.api.http) = {
+      post: "/v1/course/tasks/{task_id}/progress"
+      body: "*"
+    };
+  }
+
+  // 重置课程进度
+  rpc ResetCourseProgress(ResetCourseProgressRequest) returns (ResetCourseProgressResponse) {
+    option (google.api.http) = {
+      post: "/v1/course/courses/{course_id}/reset"
+      body: "*"
+    };
+  }
+
+  // 获取下一个学习内容(推荐)
+  rpc GetNextLearningContent(GetNextLearningContentRequest) returns (GetNextLearningContentResponse) {
+    option (google.api.http) = {
+      get: "/v1/course/courses/{course_id}/next"
+    };
+  }
+
+  // ========== 证书相关 ==========
+  // 获取用户证书列表
+  rpc ListUserCertificates(ListUserCertificatesRequest) returns (ListUserCertificatesResponse) {
+    option (google.api.http) = {
+      get: "/v1/course/user/certificates"
+    };
+  }
+
+  // 获取证书详情
+  rpc GetCertificate(GetCertificateRequest) returns (GetCertificateResponse) {
+    option (google.api.http) = {
+      get: "/v1/course/certificates/{certificate_id}"
+    };
+  }
+
+  // 验证证书
+  rpc VerifyCertificate(VerifyCertificateRequest) returns (VerifyCertificateResponse) {
+    option (google.api.http) = {
+      get: "/v1/course/certificates/verify/{certificate_no}"
+    };
+  }
+
+  // 申请证书
+  rpc ApplyCertificate(ApplyCertificateRequest) returns (ApplyCertificateResponse) {
+    option (google.api.http) = {
+      post: "/v1/course/courses/{course_id}/certificate/apply"
+      body: "*"
+    };
+  }
+
+  // 下载证书
+  rpc DownloadCertificate(DownloadCertificateRequest) returns (DownloadCertificateResponse) {
+    option (google.api.http) = {
+      get: "/v1/course/certificates/{certificate_id}/download"
+    };
+  }
+}
+
+// ========== 通用消息 ==========
+
+message Pagination {
+  int32 page = 1;
+  int32 page_size = 2;
+  int64 total = 3;
+}
+
+// ========== 学科相关 ==========
+
+message ListSubjectsRequest {
+  bool active_only = 1;
+}
+
+message ListSubjectsResponse {
+  repeated Subject subjects = 1;
+}
+
+message Subject {
+  int64 id = 1;
+  string code = 2;
+  string name = 3;
+  string description = 4;
+  string icon_url = 5;
+  int32 course_count = 6;
+}
+
+// ========== 课程相关 ==========
+
+message ListCoursesRequest {
+  int64 subject_id = 1;
+  string stage = 2;
+  string grade = 3;
+  int32 difficulty = 4;
+  int32 page = 5;
+  int32 page_size = 6;
+}
+
+message ListCoursesResponse {
+  repeated CourseSummary courses = 1;
+  Pagination pagination = 2;
+}
+
+message CourseSummary {
+  int64 id = 1;
+  string code = 2;
+  string name = 3;
+  string description = 4;
+  string cover_image = 5;
+  string stage = 6;
+  string grade = 7;
+  int32 difficulty = 8;
+  int32 total_hours = 9;
+  int32 total_chapters = 10;
+  string subject_name = 11;
+  int32 enrolled_count = 12;
+  optional UserCourseProgress user_progress = 13;
+}
+
+message UserCourseProgress {
+  string status = 1;
+  int32 progress_percent = 2;
+  int32 completed_chapters = 3;
+  int64 last_study_at = 4;
+}
+
+message GetCourseRequest {
+  int64 course_id = 1;
+}
+
+message GetCourseResponse {
+  CourseDetail course = 1;
+}
+
+message CourseDetail {
+  int64 id = 1;
+  string code = 2;
+  string name = 3;
+  string description = 4;
+  string cover_image = 5;
+  string stage = 6;
+  string grade = 7;
+  int32 difficulty = 8;
+  int32 total_hours = 9;
+  int32 total_chapters = 10;
+  CourseSettings settings = 11;
+  Subject subject = 12;
+  optional UserCourseProgress user_progress = 13;
+}
+
+message CourseSettings {
+  bool allow_skip_sections = 1;
+  bool require_sequential = 2;
+  bool certificate_enabled = 3;
+  int32 passing_score = 4;
+}
+
+message GetCourseOutlineRequest {
+  int64 course_id = 1;
+  bool with_progress = 2;
+}
+
+message GetCourseOutlineResponse {
+  repeated ChapterOutline chapters = 1;
+  optional CourseProgressSummary progress_summary = 2;
+}
+
+message ChapterOutline {
+  int64 id = 1;
+  string title = 2;
+  string description = 3;
+  int32 sort_order = 4;
+  int32 estimated_hours = 5;
+  bool is_free_trial = 6;
+  repeated SectionOutline sections = 7;
+  optional ChapterProgress progress = 8;
+}
+
+message SectionOutline {
+  int64 id = 1;
+  string title = 2;
+  string description = 3;
+  int32 sort_order = 4;
+  int32 estimated_minutes = 5;
+  string unlock_rule = 6;
+  repeated CoursewareOutline coursewares = 7;
+  optional SectionProgress progress = 8;
+}
+
+message CoursewareOutline {
+  int64 id = 1;
+  string title = 2;
+  string type = 3;
+  int32 sort_order = 4;
+  int32 estimated_minutes = 5;
+  optional CoursewareProgress progress = 6;
+}
+
+message ChapterProgress {
+  string status = 1;
+  int32 progress_percent = 2;
+  int32 completed_sections = 3;
+  int32 total_sections = 4;
+}
+
+message SectionProgress {
+  string status = 1;
+  int32 progress_percent = 2;
+  bool is_locked = 3;
+  int32 completed_coursewares = 4;
+  int32 total_coursewares = 5;
+}
+
+message CoursewareProgress {
+  string status = 1;
+  int32 progress_percent = 2;
+  bool is_locked = 3;
+}
+
+message CourseProgressSummary {
+  int32 total_chapters = 1;
+  int32 completed_chapters = 2;
+  int32 total_sections = 3;
+  int32 completed_sections = 4;
+  int32 total_coursewares = 5;
+  int32 completed_coursewares = 6;
+  int32 overall_percent = 7;
+  int32 total_study_time = 8;
+}
+
+// ========== 课件相关 ==========
+
+message GetCoursewareRequest {
+  int64 courseware_id = 1;
+  bool with_progress = 2;
+}
+
+message GetCoursewareResponse {
+  CoursewareDetail courseware = 1;
+}
+
+message CoursewareDetail {
+  int64 id = 1;
+  string code = 2;
+  string title = 3;
+  string description = 4;
+  string type = 5;
+  int32 estimated_minutes = 6;
+  repeated ContentBlock content_blocks = 7;
+  optional CoursewareProgressDetail progress = 8;
+  NavigationInfo navigation = 9;
+}
+
+message ContentBlock {
+  int64 id = 1;
+  string type = 2;
+  int32 sort_order = 3;
+  bool is_required = 4;
+  int32 estimated_minutes = 5;
+  string content = 6;  // JSON string
+  repeated LearningTask tasks = 7;
+  optional BlockProgress progress = 8;
+}
+
+message LearningTask {
+  int64 id = 1;
+  string type = 2;
+  string title = 3;
+  string description = 4;
+  bool is_skippable = 5;
+  string completion_criteria = 6;  // JSON string
+  repeated int64 dependency_ids = 7;
+  optional TaskProgressInfo progress = 8;
+}
+
+message TaskProgressInfo {
+  string status = 1;
+  string progress_data = 2;  // JSON string
+  int32 attempts = 3;
+  optional int32 best_score = 4;
+}
+
+message BlockProgress {
+  string status = 1;
+  int32 progress_percent = 2;
+  string progress_data = 3;  // JSON string
+}
+
+message CoursewareProgressDetail {
+  string status = 1;
+  int32 progress_percent = 2;
+  int32 study_time = 3;
+  optional ResumePoint resume_point = 4;
+  int32 completed_tasks = 5;
+  int32 total_tasks = 6;
+}
+
+message ResumePoint {
+  int32 block_index = 1;
+  int64 block_id = 2;
+  string position = 3;  // JSON string
+}
+
+message NavigationInfo {
+  optional CoursewareNavItem prev = 1;
+  optional CoursewareNavItem next = 2;
+  SectionNavItem section = 3;
+  ChapterNavItem chapter = 4;
+}
+
+message CoursewareNavItem {
+  int64 id = 1;
+  string title = 2;
+  string type = 3;
+}
+
+message SectionNavItem {
+  int64 id = 1;
+  string title = 2;
+}
+
+message ChapterNavItem {
+  int64 id = 1;
+  string title = 2;
+}
+
+// ========== 学习进度相关 ==========
+
+message EnrollCourseRequest {
+  int64 course_id = 1;
+}
+
+message EnrollCourseResponse {
+  int64 enrollment_id = 1;
+  string status = 2;
+  google.protobuf.Timestamp enrolled_at = 3;
+}
+
+message ListUserCoursesRequest {
+  string status = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message ListUserCoursesResponse {
+  repeated UserCourseItem courses = 1;
+  Pagination pagination = 2;
+}
+
+message UserCourseItem {
+  int64 enrollment_id = 1;
+  CourseSummary course = 2;
+  string status = 3;
+  int32 progress_percent = 4;
+  int32 completed_chapters = 5;
+  int32 total_study_time = 6;
+  int64 enrolled_at = 7;
+  optional int64 expires_at = 8;
+  optional int64 last_study_at = 9;
+}
+
+message GetCourseProgressRequest {
+  int64 course_id = 1;
+}
+
+message GetCourseProgressResponse {
+  CourseProgressSummary summary = 1;
+  repeated ChapterProgressDetail chapters = 2;
+}
+
+message ChapterProgressDetail {
+  int64 chapter_id = 1;
+  string title = 2;
+  ChapterProgress progress = 3;
+  repeated SectionProgressDetail sections = 4;
+}
+
+message SectionProgressDetail {
+  int64 section_id = 1;
+  string title = 2;
+  SectionProgress progress = 3;
+}
+
+message UpdateLearningProgressRequest {
+  int64 courseware_id = 1;
+  int32 progress_percent = 2;
+  string block_progress = 3;  // JSON string
+  optional ResumePoint resume_point = 4;
+  int32 study_time_delta = 5;
+}
+
+message UpdateLearningProgressResponse {
+  bool success = 1;
+  string status = 2;
+  int32 new_progress_percent = 3;
+}
+
+message UpdateTaskProgressRequest {
+  int64 task_id = 1;
+  string status = 2;
+  string progress_data = 3;  // JSON string
+  optional int32 score = 4;
+}
+
+message UpdateTaskProgressResponse {
+  bool success = 1;
+  string status = 2;
+  repeated int64 unlocked_task_ids = 3;
+}
+
+message ResetCourseProgressRequest {
+  int64 course_id = 1;
+  bool reset_all = 2;
+  optional int64 chapter_id = 3;
+}
+
+message ResetCourseProgressResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message GetNextLearningContentRequest {
+  int64 course_id = 1;
+}
+
+message GetNextLearningContentResponse {
+  bool has_next = 1;
+  optional NextContentInfo next = 2;
+}
+
+message NextContentInfo {
+  int64 courseware_id = 1;
+  string courseware_title = 2;
+  string courseware_type = 3;
+  int64 section_id = 4;
+  string section_title = 5;
+  int64 chapter_id = 6;
+  string chapter_title = 7;
+  optional ResumePoint resume_point = 8;
+}
+
+// ========== 证书相关 ==========
+
+message ListUserCertificatesRequest {
+  string status = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message ListUserCertificatesResponse {
+  repeated CertificateSummary certificates = 1;
+  Pagination pagination = 2;
+}
+
+message CertificateSummary {
+  int64 id = 1;
+  string certificate_no = 2;
+  string status = 3;
+  string course_name = 4;
+  string subject_name = 5;
+  string type = 6;
+  string image_url = 7;
+  int64 issued_at = 8;
+  optional int64 expires_at = 9;
+}
+
+message GetCertificateRequest {
+  int64 certificate_id = 1;
+}
+
+message GetCertificateResponse {
+  CertificateDetail certificate = 1;
+}
+
+message CertificateDetail {
+  int64 id = 1;
+  string certificate_no = 2;
+  string status = 3;
+  string type = 4;
+  CertificateContentData data = 5;
+  string pdf_url = 6;
+  string image_url = 7;
+  string verify_url = 8;
+  int64 issued_at = 9;
+  optional int64 expires_at = 10;
+}
+
+message CertificateContentData {
+  string student_name = 1;
+  string course_name = 2;
+  string course_code = 3;
+  string subject_name = 4;
+  string issue_date = 5;
+  string expiry_date = 6;
+  optional int32 score = 7;
+  string grade = 8;
+  int32 study_hours = 9;
+}
+
+message VerifyCertificateRequest {
+  string certificate_no = 1;
+}
+
+message VerifyCertificateResponse {
+  bool valid = 1;
+  string status = 2;
+  string message = 3;
+  optional CertificateVerifyInfo info = 4;
+}
+
+message CertificateVerifyInfo {
+  string certificate_no = 1;
+  string student_name = 2;
+  string course_name = 3;
+  int64 issued_at = 4;
+  optional int64 expires_at = 5;
+}
+
+message ApplyCertificateRequest {
+  int64 course_id = 1;
+  string type = 2;
+}
+
+message ApplyCertificateResponse {
+  bool success = 1;
+  string message = 2;
+  optional int64 certificate_id = 3;
+  optional string status = 4;
+}
+
+message DownloadCertificateRequest {
+  int64 certificate_id = 1;
+  string format = 2;
+}
+
+message DownloadCertificateResponse {
+  string download_url = 1;
+  string filename = 2;
+  int64 file_size = 3;
+  int64 expires_at = 4;
+}
