@@ -1,0 +1,148 @@
+syntax = "proto3";
+
+package ai.v1;
+
+option go_package = "github.com/langchain-ai-service/api/ai/v1;v1";
+
+// AI 服务接口
+service AIService {
+  // 单轮对话 - 非流式
+  rpc Chat(ChatRequest) returns (ChatResponse);
+
+  // 单轮对话 - 流式响应
+  rpc ChatStream(ChatRequest) returns (stream ChatStreamResponse);
+
+  // 多轮对话 - 非流式
+  rpc Conversation(ConversationRequest) returns (ChatResponse);
+
+  // 多轮对话 - 流式响应
+  rpc ConversationStream(ConversationRequest) returns (stream ChatStreamResponse);
+
+  // Agent 任务执行
+  rpc ExecuteAgent(AgentRequest) returns (AgentResponse);
+
+  // Agent 任务执行 - 流式
+  rpc ExecuteAgentStream(AgentRequest) returns (stream AgentStreamResponse);
+
+  // 获取支持的 Provider 列表
+  rpc ListProviders(ListProvidersRequest) returns (ListProvidersResponse);
+}
+
+// Provider 枚举
+enum Provider {
+  PROVIDER_UNSPECIFIED = 0;
+  PROVIDER_OPENAI = 1;
+  PROVIDER_CLAUDE = 2;
+  PROVIDER_GEMINI = 3;
+}
+
+// 消息角色
+enum Role {
+  ROLE_UNSPECIFIED = 0;
+  ROLE_USER = 1;
+  ROLE_ASSISTANT = 2;
+  ROLE_SYSTEM = 3;
+}
+
+// 聊天消息
+message Message {
+  Role role = 1;
+  string content = 2;
+}
+
+// 模型参数
+message ModelParams {
+  Provider provider = 1;
+  string model = 2;           // 模型名称，如 gpt-4, claude-3-opus
+  float temperature = 3;      // 温度参数 0.0-2.0
+  int32 max_tokens = 4;       // 最大输出 token 数
+  optional string system_prompt = 5;  // 系统提示词
+}
+
+// 单轮对话请求
+message ChatRequest {
+  string prompt = 1;
+  ModelParams params = 2;
+}
+
+// 对话响应
+message ChatResponse {
+  string content = 1;
+  int32 prompt_tokens = 2;
+  int32 completion_tokens = 3;
+  string model = 4;
+  Provider provider = 5;
+}
+
+// 流式响应
+message ChatStreamResponse {
+  string delta = 1;          // 增量内容
+  bool is_final = 2;         // 是否为最后一条
+  optional int32 prompt_tokens = 3;
+  optional int32 completion_tokens = 4;
+}
+
+// 多轮对话请求
+message ConversationRequest {
+  repeated Message messages = 1;
+  ModelParams params = 2;
+}
+
+// Agent 类型
+enum AgentType {
+  AGENT_TYPE_UNSPECIFIED = 0;
+  AGENT_TYPE_LANGCHAIN = 1;    // 基础 LangChain Agent
+  AGENT_TYPE_LANGGRAPH = 2;    // LangGraph 有状态 Agent
+  AGENT_TYPE_DEEPAGENTS = 3;   // DeepAgents 复杂任务 Agent
+}
+
+// Agent 请求
+message AgentRequest {
+  string task = 1;             // 任务描述
+  AgentType agent_type = 2;
+  ModelParams params = 3;
+  map<string, string> context = 4;  // 额外上下文
+  optional string session_id = 5;   // 会话 ID（用于有状态 Agent）
+}
+
+// Agent 响应
+message AgentResponse {
+  string result = 1;
+  repeated AgentStep steps = 2;
+  int32 total_tokens = 3;
+}
+
+// Agent 执行步骤
+message AgentStep {
+  string thought = 1;          // 思考过程
+  string action = 2;           // 执行的动作
+  string action_input = 3;     // 动作输入
+  string observation = 4;      // 观察结果
+}
+
+// Agent 流式响应
+message AgentStreamResponse {
+  oneof content {
+    string thought = 1;
+    string action = 2;
+    string observation = 3;
+    string result = 4;
+  }
+  bool is_final = 5;
+}
+
+// 列出 Provider 请求
+message ListProvidersRequest {}
+
+// Provider 信息
+message ProviderInfo {
+  Provider provider = 1;
+  string name = 2;
+  repeated string models = 3;
+  bool available = 4;
+}
+
+// 列出 Provider 响应
+message ListProvidersResponse {
+  repeated ProviderInfo providers = 1;
+}
