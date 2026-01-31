@@ -262,6 +262,7 @@ message PaperDetail {
   int32 duration = 4;
   int32 total_score = 5;
   PaperSettings settings = 6;
+  // 试题列表顺序由服务端决定（含乱序）；客户端可按 QuestionItem.type / QuestionGroupItem.type 分组展示
   repeated PaperItem items = 7;           // 统一的试题列表（独立题 + 题组）
   int32 question_count = 8;               // 题目总数（包含题组子题）
 }
