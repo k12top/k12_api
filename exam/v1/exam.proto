@@ -7,8 +7,8 @@ option go_package = "k12_backend/api/exam/v1;v1";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 
-// ExamService 考试服务
-service ExamService {
+// PublicExamService 公共考试服务 (无需认证)
+service PublicExamService {
   // ========== 分类相关 ==========
   // 获取考试分类列表
   rpc ListCategories(ListCategoriesRequest) returns (ListCategoriesResponse) {
@@ -31,7 +31,10 @@ service ExamService {
       get: "/v1/exam/papers/{paper_id}"
     };
   }
+}
 
+// ExamService 考试服务 (需要认证)
+service ExamService {
   // ========== 考试会话相关 ==========
   // 开始考试
   rpc StartExam(StartExamRequest) returns (StartExamResponse) {
@@ -154,31 +157,31 @@ message QuestionContent {
   repeated Media media = 3;         // 多媒体资源
   repeated Option options = 4;      // 选项列表（单选/多选/判断）
   int32 max_duration = 5;           // 口语题最大录音时长(秒)
-  
+
   // 填空题专用
   repeated Blank blanks = 6;           // 填空位置和提示
-  
+
   // 匹配题专用
   repeated MatchItem left_items = 7;   // 左侧配对项
   repeated MatchItem right_items = 8;  // 右侧配对项
-  
+
   // 排序题专用
   string ordering_type = 9;            // "word"(连词成句) / "sentence"(句子排序)
   repeated OrderItem items = 10;       // 待排序项
-  
+
   // 病句题专用
   string error_type = 11;              // "identify"(选出错误) / "correct"(改正错误)
   repeated Option sentences = 12;      // 待判断的句子列表（identify类型）
   string sentence = 13;                // 单个待纠错句子（correct类型）
   string error_hint = 14;              // 错误提示
-  
+
   // 听力题专用
   string audio_transcript = 15;        // 听力音频文字稿（判断题/听力题）
-  
+
   // 写作题专用
   int32 min_words = 16;                // 最少字数
   int32 max_words = 17;                // 最多字数
-  
+
   // 口语题专用
   string prompt = 18;                  // 朗读/回答提示文本
   PinyinText prompt_pinyin = 19;       // 提示文本的拼音
