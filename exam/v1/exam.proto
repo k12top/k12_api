@@ -262,34 +262,6 @@ message PaperSummary {
   int32 question_count = 6;    // 题目数量
   string category_name = 7;    // 分类名称
   string level = 8;            // 等级
-  repeated PaperItemSummary items = 9;  // 试卷包含的试题列表（独立题 + 题组摘要）
-}
-
-// 试卷条目摘要（列表用，不含完整题干内容）
-message PaperItemSummary {
-  oneof item {
-    QuestionSummary question = 1;       // 独立题目摘要
-    QuestionGroupSummary group = 2;      // 题组摘要
-  }
-  int32 order = 3;
-  bool required = 4;
-}
-
-// 独立题目摘要
-message QuestionSummary {
-  int64 id = 1;
-  string type = 2;       // 题型
-  int32 score = 3;      // 该题分值
-  string group_type = 4; // 题型大类: read, writing, listening，用于按题型聚合
-}
-
-// 题组摘要
-message QuestionGroupSummary {
-  int64 id = 1;
-  string type = 2;              // 题组类型
-  int32 total_score = 3;        // 题组总分
-  int32 question_count = 4;     // 子题数量
-  string group_type = 5;        // 题型大类: read, writing, listening，用于按题型聚合
 }
 
 message GetPaperRequest {
@@ -479,6 +451,8 @@ message QuestionResult {
   int32 score_earned = 7;      // 实际得分
   string explanation = 8;      // 答案解析
   optional int64 group_id = 9; // 所属题组ID（题组子题才有）
+  string stem = 10;            // 题干，方便前端展示
+  QuestionContent content = 11; // 题目内容与选项，方便前端展示
 }
 
 message ListUserSessionsRequest {
