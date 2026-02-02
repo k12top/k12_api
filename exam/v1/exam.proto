@@ -44,10 +44,25 @@ service ExamService {
     };
   }
 
-  // 获取考试会话详情（断点续考）
+  // 获取未完成的考试会话（开始考试前检测；仅当试卷 allow_retake 时才有“放弃并重考”）
+  rpc GetUnfinishedSession(GetUnfinishedSessionRequest) returns (GetUnfinishedSessionResponse) {
+    option (google.api.http) = {
+      get: "/v1/exam/papers/{paper_id}/unfinished-session"
+    };
+  }
+
+  // 获取考试会话详情（断点续考 / 进入未完成考试）
   rpc GetSession(GetSessionRequest) returns (GetSessionResponse) {
     option (google.api.http) = {
       get: "/v1/exam/sessions/{session_id}"
+    };
+  }
+
+  // 放弃当前未完成考试（仅当试卷 allow_retake 时允许；放弃后可重新开始考试）
+  rpc AbandonSession(AbandonSessionRequest) returns (AbandonSessionResponse) {
+    option (google.api.http) = {
+      post: "/v1/exam/sessions/{session_id}/abandon"
+      body: "*"
     };
   }
 
@@ -246,6 +261,7 @@ message PaperSummary {
   int32 total_score = 5;       // 总分
   int32 question_count = 6;    // 题目数量
   string category_name = 7;    // 分类名称
+  string level = 8;            // 等级
 }
 
 message GetPaperRequest {
@@ -275,9 +291,10 @@ message PaperSettings {
   bool shuffle_options = 2;     // 选项乱序
   bool show_result = 3;         // 考完立即出分
   bool allow_view_answer = 4;   // 允许查看答案
-  int32 max_attempts = 5;       // 最大尝试次数
-  int32 retake_cooldown = 6;    // 重考冷却时间(秒)
-  string retake_policy = 7;     // 取分策略: best, latest, first
+  int32 max_attempts = 5;       // 最大尝试次数（仅当 allow_retake 为 true 时生效）
+  int32 retake_cooldown = 6;    // 重考冷却时间(秒)（仅当 allow_retake 为 true 时生效）
+  string retake_policy = 7;     // 取分策略: best, latest, first（仅当 allow_retake 为 true 时生效）
+  bool allow_retake = 8;        // 是否允许重考；为 false 时仅允许一次考试，不提供未完成检测/放弃重考等能力
 }
 
 // 试卷条目（独立题目或题组）
@@ -349,6 +366,31 @@ message GetSessionResponse {
   int64 remaining_seconds = 5;  // 剩余时间(秒)
   map<string, string> answers = 6;  // 已保存的答案
   PaperDetail paper = 7;
+}
+
+message GetUnfinishedSessionRequest {
+  int64 paper_id = 1;
+}
+
+message GetUnfinishedSessionResponse {
+  UnfinishedSessionSummary session = 1;  // 有未完成考试时返回，否则为空
+}
+
+message UnfinishedSessionSummary {
+  int64 session_id = 1;
+  int64 paper_id = 2;
+  string paper_title = 3;
+  int64 started_at = 4;
+  int64 due_time = 5;
+  int64 remaining_seconds = 6;  // 剩余时间(秒)
+}
+
+message AbandonSessionRequest {
+  int64 session_id = 1;
+}
+
+message AbandonSessionResponse {
+  bool success = 1;
 }
 
 message SaveAnswerRequest {
