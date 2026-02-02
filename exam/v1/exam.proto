@@ -262,6 +262,34 @@ message PaperSummary {
   int32 question_count = 6;    // 题目数量
   string category_name = 7;    // 分类名称
   string level = 8;            // 等级
+  repeated PaperItemSummary items = 9;  // 试卷包含的试题列表（独立题 + 题组摘要）
+}
+
+// 试卷条目摘要（列表用，不含完整题干内容）
+message PaperItemSummary {
+  oneof item {
+    QuestionSummary question = 1;       // 独立题目摘要
+    QuestionGroupSummary group = 2;      // 题组摘要
+  }
+  int32 order = 3;
+  bool required = 4;
+}
+
+// 独立题目摘要
+message QuestionSummary {
+  int64 id = 1;
+  string type = 2;       // 题型
+  int32 score = 3;      // 该题分值
+  string group_type = 4; // 题型大类: read, writing, listening，用于按题型聚合
+}
+
+// 题组摘要
+message QuestionGroupSummary {
+  int64 id = 1;
+  string type = 2;              // 题组类型
+  int32 total_score = 3;        // 题组总分
+  int32 question_count = 4;     // 子题数量
+  string group_type = 5;        // 题型大类: read, writing, listening，用于按题型聚合
 }
 
 message GetPaperRequest {
@@ -316,6 +344,7 @@ message QuestionItem {
   int32 score = 5;              // 该题分值
   int32 difficulty = 6;         // 难度
   repeated string tags = 7;     // 标签
+  string group_type = 8;        // 题型大类: read, writing, listening，用于按题型聚合
 }
 
 // 题组
@@ -328,6 +357,7 @@ message QuestionGroupItem {
   int32 total_score = 6;                      // 题组总分
   int32 difficulty = 7;                       // 题组难度
   repeated string tags = 8;                   // 标签
+  string group_type = 9;                     // 题型大类: read, writing, listening，用于按题型聚合
 }
 
 // 题组子题
@@ -337,6 +367,7 @@ message GroupSubQuestion {
   QuestionContent content = 3;        // 子题内容（阅读理解类型的子题有独立选项）
   int32 score = 4;                    // 该子题分值
   int32 order_in_group = 5;           // 在题组中的顺序
+  string group_type = 6;              // 题型大类: read, writing, listening（与所属题组一致，便于聚合）
 }
 
 // ========== 考试会话相关 ==========
