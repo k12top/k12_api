@@ -209,6 +209,7 @@ message SharedMaterial {
   PinyinText text_pinyin = 2;       // 拼音标注
   repeated Media media = 3;         // 多媒体（音频/图片/视频）
   string instruction = 4;           // 答题指引
+  repeated Blank blanks = 5;        // 空白位置（选句/选词填空用）
 }
 
 // 答案配置（判分后展示）
