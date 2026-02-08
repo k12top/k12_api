@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package ai.v1;
+
+import "ai_service.proto";
+
+option go_package = "github.com/langchain-ai-service/api/ai/v1;v1";
+
+// AI 考试与评估服务
+service AIExamService {
+  // AI 自动判定分数
+  // 输入题目、学生答案、评分标准及分值，返回 AI 判定的分数及理由
+  rpc GradeAnswer(GradeAnswerRequest) returns (GradeAnswerResponse);
+}
+
+// 自动评分请求
+message GradeAnswerRequest {
+  string question = 1;          // 考试题目内容
+  string student_answer = 2;    // 学生的答题内容
+  float full_score = 3;         // 题目总分值
+  optional string criteria = 4;  // 额外的判分要求或评分标准
+
+  ModelParams params = 5;       // AI 模型参数
+
+  // AI 输出的 JSON Schema (用于保证输出结构化)
+  // 默认情况下，后端会根据 GradeAnswerResponse 的结构要求 AI 返回
+  optional string json_schema = 6;
+}
+
+// 自动评分响应
+message GradeAnswerResponse {
+  float score = 1;              // AI 判定的分数
+  string feedback = 2;          // 给学生的评语/反馈
+  string justification = 3;     // 判分理由/详细得分分析 (后端从 AI 输出的结构化数据中提取)
+
+  // 统计与元数据
+  int32 prompt_tokens = 4;
+  int32 completion_tokens = 5;
+  int32 total_tokens = 6;
+  string model = 7;
+}
