@@ -7,8 +7,8 @@ option go_package = "k12_backend/api/course/v1;v1";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 
-// CourseService 课程服务
-service CourseService {
+// PublicCourseService 公共课程服务 (无需认证)
+service PublicCourseService {
   // ========== 学科相关 ==========
   // 获取学科列表
   rpc ListSubjects(ListSubjectsRequest) returns (ListSubjectsResponse) {
@@ -39,6 +39,20 @@ service CourseService {
     };
   }
 
+  // 获取课件详情 (公共预览版可以在这里增加，如果需要)
+  // rpc GetCoursewarePublic(...)
+
+  // ========== 证书验证 ==========
+  // 验证证书 (对外公开验证)
+  rpc VerifyCertificate(VerifyCertificateRequest) returns (VerifyCertificateResponse) {
+    option (google.api.http) = {
+      get: "/v1/course/certificates/verify/{certificate_no}"
+    };
+  }
+}
+
+// CourseService 课程服务 (需要认证)
+service CourseService {
   // ========== 课件相关 ==========
   // 获取课件详情
   rpc GetCourseware(GetCoursewareRequest) returns (GetCoursewareResponse) {
@@ -46,6 +60,7 @@ service CourseService {
       get: "/v1/course/coursewares/{courseware_id}"
     };
   }
+
 
   // ========== 学习进度相关 ==========
   // 报名课程
@@ -116,12 +131,6 @@ service CourseService {
     };
   }
 
-  // 验证证书
-  rpc VerifyCertificate(VerifyCertificateRequest) returns (VerifyCertificateResponse) {
-    option (google.api.http) = {
-      get: "/v1/course/certificates/verify/{certificate_no}"
-    };
-  }
 
   // 申请证书
   rpc ApplyCertificate(ApplyCertificateRequest) returns (ApplyCertificateResponse) {

@@ -7,8 +7,8 @@ option go_package = "k12_backend/api/exam/v1;v1";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 
-// ExamService 考试服务
-service ExamService {
+// PublicExamService 公共考试服务 (无需认证)
+service PublicExamService {
   // ========== 分类相关 ==========
   // 获取考试分类列表
   rpc ListCategories(ListCategoriesRequest) returns (ListCategoriesResponse) {
@@ -31,7 +31,10 @@ service ExamService {
       get: "/v1/exam/papers/{paper_id}"
     };
   }
+}
 
+// ExamService 考试服务 (需要认证)
+service ExamService {
   // ========== 考试会话相关 ==========
   // 开始考试
   rpc StartExam(StartExamRequest) returns (StartExamResponse) {
@@ -41,10 +44,25 @@ service ExamService {
     };
   }
 
-  // 获取考试会话详情（断点续考）
+  // 获取未完成的考试会话（开始考试前检测；仅当试卷 allow_retake 时才有“放弃并重考”）
+  rpc GetUnfinishedSession(GetUnfinishedSessionRequest) returns (GetUnfinishedSessionResponse) {
+    option (google.api.http) = {
+      get: "/v1/exam/papers/{paper_id}/unfinished-session"
+    };
+  }
+
+  // 获取考试会话详情（断点续考 / 进入未完成考试）
   rpc GetSession(GetSessionRequest) returns (GetSessionResponse) {
     option (google.api.http) = {
       get: "/v1/exam/sessions/{session_id}"
+    };
+  }
+
+  // 放弃当前未完成考试（仅当试卷 allow_retake 时允许；放弃后可重新开始考试）
+  rpc AbandonSession(AbandonSessionRequest) returns (AbandonSessionResponse) {
+    option (google.api.http) = {
+      post: "/v1/exam/sessions/{session_id}/abandon"
+      body: "*"
     };
   }
 
@@ -154,31 +172,31 @@ message QuestionContent {
   repeated Media media = 3;         // 多媒体资源
   repeated Option options = 4;      // 选项列表（单选/多选/判断）
   int32 max_duration = 5;           // 口语题最大录音时长(秒)
-  
+
   // 填空题专用
   repeated Blank blanks = 6;           // 填空位置和提示
-  
+
   // 匹配题专用
   repeated MatchItem left_items = 7;   // 左侧配对项
   repeated MatchItem right_items = 8;  // 右侧配对项
-  
+
   // 排序题专用
   string ordering_type = 9;            // "word"(连词成句) / "sentence"(句子排序)
   repeated OrderItem items = 10;       // 待排序项
-  
+
   // 病句题专用
   string error_type = 11;              // "identify"(选出错误) / "correct"(改正错误)
   repeated Option sentences = 12;      // 待判断的句子列表（identify类型）
   string sentence = 13;                // 单个待纠错句子（correct类型）
   string error_hint = 14;              // 错误提示
-  
+
   // 听力题专用
   string audio_transcript = 15;        // 听力音频文字稿（判断题/听力题）
-  
+
   // 写作题专用
   int32 min_words = 16;                // 最少字数
   int32 max_words = 17;                // 最多字数
-  
+
   // 口语题专用
   string prompt = 18;                  // 朗读/回答提示文本
   PinyinText prompt_pinyin = 19;       // 提示文本的拼音
@@ -191,6 +209,7 @@ message SharedMaterial {
   PinyinText text_pinyin = 2;       // 拼音标注
   repeated Media media = 3;         // 多媒体（音频/图片/视频）
   string instruction = 4;           // 答题指引
+  repeated Blank blanks = 5;        // 空白位置（选句/选词填空用）
 }
 
 // 答案配置（判分后展示）
@@ -243,6 +262,7 @@ message PaperSummary {
   int32 total_score = 5;       // 总分
   int32 question_count = 6;    // 题目数量
   string category_name = 7;    // 分类名称
+  string level = 8;            // 等级
 }
 
 message GetPaperRequest {
@@ -262,6 +282,7 @@ message PaperDetail {
   int32 duration = 4;
   int32 total_score = 5;
   PaperSettings settings = 6;
+  // 试题列表顺序由服务端决定（含乱序）；客户端可按 QuestionItem.type / QuestionGroupItem.type 分组展示
   repeated PaperItem items = 7;           // 统一的试题列表（独立题 + 题组）
   int32 question_count = 8;               // 题目总数（包含题组子题）
 }
@@ -271,9 +292,10 @@ message PaperSettings {
   bool shuffle_options = 2;     // 选项乱序
   bool show_result = 3;         // 考完立即出分
   bool allow_view_answer = 4;   // 允许查看答案
-  int32 max_attempts = 5;       // 最大尝试次数
-  int32 retake_cooldown = 6;    // 重考冷却时间(秒)
-  string retake_policy = 7;     // 取分策略: best, latest, first
+  int32 max_attempts = 5;       // 最大尝试次数（仅当 allow_retake 为 true 时生效）
+  int32 retake_cooldown = 6;    // 重考冷却时间(秒)（仅当 allow_retake 为 true 时生效）
+  string retake_policy = 7;     // 取分策略: best, latest, first（仅当 allow_retake 为 true 时生效）
+  bool allow_retake = 8;        // 是否允许重考；为 false 时仅允许一次考试，不提供未完成检测/放弃重考等能力
 }
 
 // 试卷条目（独立题目或题组）
@@ -295,6 +317,7 @@ message QuestionItem {
   int32 score = 5;              // 该题分值
   int32 difficulty = 6;         // 难度
   repeated string tags = 7;     // 标签
+  string group_type = 8;        // 题型大类: read, writing, listening，用于按题型聚合
 }
 
 // 题组
@@ -307,6 +330,7 @@ message QuestionGroupItem {
   int32 total_score = 6;                      // 题组总分
   int32 difficulty = 7;                       // 题组难度
   repeated string tags = 8;                   // 标签
+  string group_type = 9;                     // 题型大类: read, writing, listening，用于按题型聚合
 }
 
 // 题组子题
@@ -316,6 +340,7 @@ message GroupSubQuestion {
   QuestionContent content = 3;        // 子题内容（阅读理解类型的子题有独立选项）
   int32 score = 4;                    // 该子题分值
   int32 order_in_group = 5;           // 在题组中的顺序
+  string group_type = 6;              // 题型大类: read, writing, listening（与所属题组一致，便于聚合）
 }
 
 // ========== 考试会话相关 ==========
@@ -345,6 +370,31 @@ message GetSessionResponse {
   int64 remaining_seconds = 5;  // 剩余时间(秒)
   map<string, string> answers = 6;  // 已保存的答案
   PaperDetail paper = 7;
+}
+
+message GetUnfinishedSessionRequest {
+  int64 paper_id = 1;
+}
+
+message GetUnfinishedSessionResponse {
+  UnfinishedSessionSummary session = 1;  // 有未完成考试时返回，否则为空
+}
+
+message UnfinishedSessionSummary {
+  int64 session_id = 1;
+  int64 paper_id = 2;
+  string paper_title = 3;
+  int64 started_at = 4;
+  int64 due_time = 5;
+  int64 remaining_seconds = 6;  // 剩余时间(秒)
+}
+
+message AbandonSessionRequest {
+  int64 session_id = 1;
+}
+
+message AbandonSessionResponse {
+  bool success = 1;
 }
 
 message SaveAnswerRequest {
@@ -402,6 +452,8 @@ message QuestionResult {
   int32 score_earned = 7;      // 实际得分
   string explanation = 8;      // 答案解析
   optional int64 group_id = 9; // 所属题组ID（题组子题才有）
+  string stem = 10;            // 题干，方便前端展示
+  QuestionContent content = 11; // 题目内容与选项，方便前端展示
 }
 
 message ListUserSessionsRequest {
