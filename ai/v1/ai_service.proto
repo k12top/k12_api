@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package ai.v1;
 
-option go_package = "github.com/langchain-ai-service/api/ai/v1;v1";
+option go_package = "k12_backend/api/ai/v1;v1";
 
 // AI 服务接口
 service AIService {

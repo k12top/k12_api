@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package ai.v1;
 
-import "ai_service.proto";
+import "ai/v1/ai_service.proto";
 
-option go_package = "github.com/langchain-ai-service/api/ai/v1;v1";
+option go_package = "k12_backend/api/ai/v1;v1";
 
 // AI 考试与评估服务
 service AIExamService {
