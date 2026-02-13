@@ -215,7 +215,7 @@ message SharedMaterial {
 // 答案配置（判分后展示）
 message AnswerConfig {
   repeated string correct_keys = 1;       // 正确选项Key（选择题/判断题）
-  float score = 2;                        // 分值
+  double score = 2;                        // 分值
   string explanation = 3;                 // 解析文本
   string scoring_rule = 4;                // 多选评分规则: all_or_nothing, partial
   string match_rule = 5;                  // 填空匹配规则: exact, exact_ignore_case, contains, regex
@@ -259,7 +259,7 @@ message PaperSummary {
   string title = 2;
   string description = 3;
   int32 duration = 4;          // 考试时长(秒)
-  float total_score = 5;       // 总分
+  double total_score = 5;       // 总分
   int32 question_count = 6;    // 题目数量
   string category_name = 7;    // 分类名称
   string level = 8;            // 等级
@@ -280,7 +280,7 @@ message PaperDetail {
   string title = 2;
   string description = 3;
   int32 duration = 4;
-  float total_score = 5;
+  double total_score = 5;
   PaperSettings settings = 6;
   // 试题列表顺序由服务端决定（含乱序）；客户端可按 QuestionItem.type / QuestionGroupItem.type 分组展示
   repeated PaperItem items = 7;           // 统一的试题列表（独立题 + 题组）
@@ -314,7 +314,7 @@ message QuestionItem {
   string type = 2;              // 题目类型: choice_single, choice_multi, true_false, gap_fill, writing, speaking, matching, ordering, error_correction
   string stem = 3;              // 题干
   QuestionContent content = 4;  // 完整内容
-  float score = 5;              // 该题分值
+  double score = 5;              // 该题分值
   int32 difficulty = 6;         // 难度
   repeated string tags = 7;     // 标签
   string group_type = 8;        // 题型大类: read, writing, listening，用于按题型聚合
@@ -327,7 +327,7 @@ message QuestionGroupItem {
   SharedMaterial shared_material = 3;         // 共享材料（文章/音频等）
   repeated Option shared_options = 4;         // 共享选项池（看图选图/选词填空用）
   repeated GroupSubQuestion questions = 5;    // 子题列表
-  float total_score = 6;                      // 题组总分
+  double total_score = 6;                      // 题组总分
   int32 difficulty = 7;                       // 题组难度
   repeated string tags = 8;                   // 标签
   string group_type = 9;                     // 题型大类: read, writing, listening，用于按题型聚合
@@ -338,7 +338,7 @@ message GroupSubQuestion {
   int64 id = 1;
   string stem = 2;                    // 子题题干
   QuestionContent content = 3;        // 子题内容（阅读理解类型的子题有独立选项）
-  float score = 4;                    // 该子题分值
+  double score = 4;                    // 该子题分值
   int32 order_in_group = 5;           // 在题组中的顺序
   string group_type = 6;              // 题型大类: read, writing, listening（与所属题组一致，便于聚合）
 }
@@ -422,7 +422,7 @@ message SubmitExamRequest {
 
 message SubmitExamResponse {
   string status = 1;           // completed 或 grading
-  optional float score = 2;    // 客观题立即出分
+  optional double score = 2;    // 客观题立即出分
   google.protobuf.Timestamp submitted_at = 3;
 }
 
@@ -433,11 +433,11 @@ message GetResultRequest {
 message GetResultResponse {
   int64 session_id = 1;
   string status = 2;
-  float total_score = 3;
-  float user_score = 4;
-  float accuracy_rate = 5;           // 正确率
+  double total_score = 3;
+  double user_score = 4;
+  double accuracy_rate = 5;           // 正确率
   repeated QuestionResult questions = 6;
-  map<string, float> tag_scores = 7; // 各知识点得分率
+  map<string, double> tag_scores = 7; // 各知识点得分率
   google.protobuf.Timestamp started_at = 8;
   google.protobuf.Timestamp submitted_at = 9;
 }
@@ -448,8 +448,8 @@ message QuestionResult {
   string user_answer = 3;
   string correct_answer = 4;
   bool is_correct = 5;
-  float score = 6;             // 该题满分
-  float score_earned = 7;      // 实际得分
+  double score = 6;             // 该题满分
+  double score_earned = 7;      // 实际得分
   string explanation = 8;      // 答案解析
   optional int64 group_id = 9; // 所属题组ID（题组子题才有）
   string stem = 10;            // 题干，方便前端展示
@@ -473,7 +473,7 @@ message SessionSummary {
   int64 paper_id = 2;
   string paper_title = 3;
   string status = 4;
-  optional float score = 5;
+  optional double score = 5;
   int64 started_at = 6;
   optional int64 submitted_at = 7;
 }

@@ -17,7 +17,7 @@ service AIExamService {
 message GradeAnswerRequest {
   string question = 1;          // 考试题目内容
   string student_answer = 2;    // 学生的答题内容
-  float full_score = 3;         // 题目总分值
+  double full_score = 3;         // 题目总分值
   optional string criteria = 4;  // 额外的判分要求或评分标准
 
   ModelParams params = 5;       // AI 模型参数
@@ -29,7 +29,7 @@ message GradeAnswerRequest {
 
 // 自动评分响应
 message GradeAnswerResponse {
-  float score = 1;              // AI 判定的分数
+  double score = 1;              // AI 判定的分数
   string feedback = 2;          // 给学生的评语/反馈
   string justification = 3;     // 判分理由/详细得分分析 (后端从 AI 输出的结构化数据中提取)
 
