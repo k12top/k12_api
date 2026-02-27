@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package exam.v1;
+
+service ExamParserService {
+  // Create a new task to parse an exam document. Returns the task ID.
+  rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse);
+
+  // Query the status of a specific task
+  rpc GetTaskStatus(GetTaskStatusRequest) returns (GetTaskStatusResponse);
+
+  // Stream the progress of a task. The server will close the stream when the task completes or fails.
+  rpc StreamTaskProgress(StreamTaskProgressRequest) returns (stream TaskProgressMessage);
+}
+
+message CreateTaskRequest {
+  string file_name = 1;      // Name of the file, e.g. "exam.pdf" or "exam.docx"
+  int32 max_pages = 2;       // Max pages to process (0 = all)
+
+  oneof source {
+    string file_url = 3;     // OSS URL or HTTP link to download from
+    bytes file_content = 4;  // Direct file upload bytes
+    string file_path = 5;    // Local file path (for local testing/access)
+  }
+}
+
+message CreateTaskResponse {
+  string task_id = 1;
+  string message = 2;
+}
+
+message GetTaskStatusRequest {
+  string task_id = 1;
+}
+
+message GetTaskStatusResponse {
+  string task_id = 1;
+  string status = 2;         // PENDING, PROCESSING, COMPLETED, FAILED
+  string error_message = 3;
+  string result_path = 4;    // Path to the parsed JSON
+  int32 total_pages = 5;
+  int32 processed_pages = 6;
+  string created_at = 7;
+  string updated_at = 8;
+  float progress_percent = 9;
+  string parsed_result_json = 10; // Contains the full JSON payload if COMPLETED
+}
+
+message StreamTaskProgressRequest {
+  string task_id = 1;
+}
+
+message TaskProgressMessage {
+  string task_id = 1;
+  string status = 2;
+  float progress_percent = 3;
+  string detail = 4; // e.g., "Extracted page 3/10" or "Stage 2 complete"
+  int32 processed_pages = 5;
+  int32 total_pages = 6;
+}
