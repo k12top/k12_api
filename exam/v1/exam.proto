@@ -323,7 +323,7 @@ message QuestionItem {
 // 题组
 message QuestionGroupItem {
   int64 id = 1;
-  string type = 2;                            // 题组类型: image_matching, word_bank, reading, listening, cloze
+  string type = 2;                            // 题组类型: image_matching, word_bank, reading, listening, cloze, group_ordering
   SharedMaterial shared_material = 3;         // 共享材料（文章/音频等）
   repeated Option shared_options = 4;         // 共享选项池（看图选图/选词填空用）
   repeated GroupSubQuestion questions = 5;    // 子题列表
