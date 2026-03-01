@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package exam.v1;
 
+option go_package = "k12_backend/api/exam/v1;v1";
+
 service ExamParserService {
   // Create a new task to parse an exam document. Returns the task ID.
   rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse);
