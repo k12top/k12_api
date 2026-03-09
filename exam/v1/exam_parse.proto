@@ -20,10 +20,16 @@ message CreateTaskRequest {
   int32 max_pages = 2;       // Max pages to process (0 = all)
 
   oneof source {
-    string file_url = 3;     // OSS URL or HTTP link to download from
-    bytes file_content = 4;  // Direct file upload bytes
-    string file_path = 5;    // Local file path (for local testing/access)
+    // MinIO 地址或任意可下载 URL；提供后服务端不会上传，直接按该地址拉取
+    string file_url = 3;     // e.g. minio://bucket/key, https://minio.example.com/bucket/key, 或 OSS/HTTP URL
+    bytes file_content = 4;  // 直接上传文件内容；服务端会写入 MinIO（或落盘 temp）
+    string file_path = 5;    // 本地文件路径（仅测试/本机访问）
   }
+
+  // Optional exam metadata (subject, grade, exam type). If not set, LLM will infer.
+  string subject = 6;        // e.g. 语文, 数学, 英文, 物理, 化学
+  string grade_level = 7;    // e.g. 初中, 高中 or 初一, 初二, 高一
+  string exam_type = 8;      // e.g. 期中, 期末, 模拟, 月考
 }
 
 message CreateTaskResponse {
@@ -46,6 +52,7 @@ message GetTaskStatusResponse {
   string updated_at = 8;
   float progress_percent = 9;
   string parsed_result_json = 10; // Contains the full JSON payload if COMPLETED
+  string exam_meta_json = 11;     // Structured exam labels (subject, grade_level, grade_detail, exam_type)
 }
 
 message StreamTaskProgressRequest {
