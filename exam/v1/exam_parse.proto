@@ -24,6 +24,8 @@ message CreateTaskRequest {
     bytes file_content = 4;  // Direct file upload bytes
     string file_path = 5;    // Local file path (for local testing/access)
   }
+
+  string model = 6;          // Optional LLM/VLM model name; if empty, use server default
 }
 
 message CreateTaskResponse {
@@ -39,13 +41,14 @@ message GetTaskStatusResponse {
   string task_id = 1;
   string status = 2;         // PENDING, PROCESSING, COMPLETED, FAILED
   string error_message = 3;
-  string result_path = 4;    // Path to the parsed JSON
+  string result_path = 4;    // Path to the parsed JSON (e.g. MinIO URI)
   int32 total_pages = 5;
   int32 processed_pages = 6;
   string created_at = 7;
   string updated_at = 8;
   float progress_percent = 9;
   string parsed_result_json = 10; // Contains the full JSON payload if COMPLETED
+  string pipeline_version = 11;   // Processing pipeline version that produced this result (e.g. "1.0")
 }
 
 message StreamTaskProgressRequest {
