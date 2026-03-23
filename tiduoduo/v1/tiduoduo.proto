@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package tiduoduo.v1;
+
+option go_package = "k12_backend/api/tiduoduo/v1;v1";
+
+import "google/api/annotations.proto";
+import "exam/v1/exam.proto";
+
+// TiDuoDuoQueryService 面向业务侧读取题目结构化内容（与考试域模型一致）。
+service TiDuoDuoQueryService {
+  // 按平台题目/题组 ID 批量拉取展示用结构；是否返回答案由鉴权与 include_answer 共同约束。
+  rpc BatchGetQuestionContents(BatchGetQuestionContentsRequest) returns (BatchGetQuestionContentsResponse) {
+    option (google.api.http) = {
+      post: "/v1/tiduoduo/questions:batchGet"
+      body: "*"
+    };
+  }
+
+  // 单题快捷读取（题组请用 batch 接口传 group_id）。
+  rpc GetQuestionContent(GetQuestionContentRequest) returns (GetQuestionContentResponse) {
+    option (google.api.http) = {
+      get: "/v1/tiduoduo/questions/{question_id}"
+    };
+  }
+}
+
+message BatchGetQuestionContentsRequest {
+  // 独立题 ID，或题组顶层 ID（与 exam 中 PaperItem 一致）。
+  repeated int64 question_ids = 1;
+  repeated int64 group_ids = 2;
+  bool include_answer = 3;
+  bool with_pinyin = 4;
+}
+
+message BatchGetQuestionContentsResponse {
+  repeated QuestionContentView items = 1;
+}
+
+message GetQuestionContentRequest {
+  int64 question_id = 1;
+  bool include_answer = 2;
+  bool with_pinyin = 3;
+}
+
+message GetQuestionContentResponse {
+  QuestionContentView item = 1;
+}
+
+// 统一视图：一层 PaperItem + 可选答案映射（独立题用自身 id；题组用各子题 id）。
+message QuestionContentView {
+  exam.v1.PaperItem item = 1;
+  map<int64, exam.v1.AnswerConfig> answers_by_leaf_id = 2;
+}

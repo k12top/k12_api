@@ -1,0 +1,149 @@
+syntax = "proto3";
+
+package tiduoduo.v1;
+
+option go_package = "k12_backend/api/tiduoduo/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+import "exam/v1/exam.proto";
+
+// TiDuoDuoAdminService 对接与运维侧能力：对外推送规则、对内入库与学科试卷扩展。
+// 鉴权在实现层区分：对外 partner 凭签名/密钥；对内 mTLS 或服务账号，勿混用同一端点策略。
+service TiDuoDuoAdminService {
+  // 提交外部「规则」JSON（映射、抽题、展示、评分策略等），服务端校验后异步结构化并落库为平台可执行配置。
+  rpc SubmitRuleJson(SubmitRuleJsonRequest) returns (SubmitRuleJsonResponse) {
+    option (google.api.http) = {
+      post: "/v1/tiduoduo/admin/rules:submit"
+      body: "*"
+    };
+  }
+
+  // 查询规则入库 / 编译任务状态（异步流水线：校验 → 结构化 → 绑定学科/试卷模板）。
+  rpc GetRuleIngestTask(GetRuleIngestTaskRequest) returns (GetRuleIngestTaskResponse) {
+    option (google.api.http) = {
+      get: "/v1/tiduoduo/admin/rule-ingest-tasks/{task_id}"
+    };
+  }
+
+  // 内部系统：将已拉取并已按平台语义整理好的题目批次写入题库并可选挂载到试卷（幂等由 client_request_id 保证）。
+  rpc InternalIngestQuestionBatch(InternalIngestQuestionBatchRequest) returns (InternalIngestQuestionBatchResponse) {
+    option (google.api.http) = {
+      post: "/v1/tiduoduo/admin/internal/questions:ingest"
+      body: "*"
+    };
+  }
+
+  // 在已有学科关联的考试分类下，向指定试卷追加试题列表（顺序追加或按 insert_after_order 插入）。
+  rpc AppendSubjectPaperQuestions(AppendSubjectPaperQuestionsRequest) returns (AppendSubjectPaperQuestionsResponse) {
+    option (google.api.http) = {
+      post: "/v1/tiduoduo/admin/subjects/{subject_id}/papers/{paper_id}/questions:append"
+      body: "*"
+    };
+  }
+}
+
+// ---------- 规则推送（对外） ----------
+
+message SubmitRuleJsonRequest {
+  // 调用方规则文档版本，便于服务端选择解析器。
+  string schema_version = 1;
+  // 调用方侧稳定业务键，用于幂等与对账。
+  string external_rule_key = 2;
+  // 可选：HTTP Idempotency-Key 的 proto 映射。
+  string idempotency_key = 3;
+  // 原始 JSON；与 rule_struct 二选一，优先 rule_struct。
+  string rule_json = 4;
+  google.protobuf.Struct rule_struct = 5;
+  // 可选：目标学科（与 course.v1.Subject 对齐的 ID）。
+  int64 subject_id = 6;
+  // 可选：考试分类（与 exam.v1.Category 对齐）；与学科二选一或同时提供时由实现约定优先级。
+  int64 exam_category_id = 7;
+}
+
+message SubmitRuleJsonResponse {
+  string task_id = 1;
+  RuleIngestTaskStatus status = 2;
+  string message = 3;
+}
+
+message GetRuleIngestTaskRequest {
+  string task_id = 1;
+}
+
+message GetRuleIngestTaskResponse {
+  RuleIngestTask task = 1;
+}
+
+message RuleIngestTask {
+  string task_id = 1;
+  RuleIngestTaskStatus status = 2;
+  string schema_version = 3;
+  string external_rule_key = 4;
+  repeated string validation_errors = 5;
+  // 结构化完成后生成的平台侧实体 ID（实现填充）。
+  int64 platform_rule_id = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+enum RuleIngestTaskStatus {
+  RULE_INGEST_TASK_STATUS_UNSPECIFIED = 0;
+  RULE_INGEST_TASK_STATUS_PENDING = 1;
+  RULE_INGEST_TASK_STATUS_VALIDATING = 2;
+  RULE_INGEST_TASK_STATUS_STRUCTURING = 3;
+  RULE_INGEST_TASK_STATUS_SUCCEEDED = 4;
+  RULE_INGEST_TASK_STATUS_FAILED = 5;
+}
+
+// ---------- 内部拉取后入库 ----------
+
+// 单道可入库题目：题干结构 + 答案配置 + 外部溯源键。
+message IngestibleQuestion {
+  // 写入前为空则由服务端分配；幂等更新时带平台题目 ID。
+  int64 platform_question_id = 1;
+  string external_question_key = 2;
+  exam.v1.QuestionItem question = 3;
+  exam.v1.AnswerConfig answer = 4;
+}
+
+message IngestibleQuestionGroup {
+  int64 platform_group_id = 1;
+  string external_group_key = 2;
+  exam.v1.QuestionGroupItem group = 3;
+  // 子题答案：key 为子题在 group.questions 中的 id（实现需与子题一致）。
+  map<int64, exam.v1.AnswerConfig> sub_answers = 4;
+}
+
+message InternalIngestQuestionBatchRequest {
+  string client_request_id = 1;
+  string source_system = 2;
+  repeated IngestibleQuestion questions = 3;
+  repeated IngestibleQuestionGroup groups = 4;
+  // 若 true，同一 external_*_key 已存在则更新而非报错。
+  bool upsert_by_external_key = 5;
+}
+
+message InternalIngestQuestionBatchResponse {
+  repeated int64 platform_question_ids = 1;
+  repeated int64 platform_group_ids = 2;
+  string message = 3;
+}
+
+// ---------- 学科试卷追加题目 ----------
+
+message AppendSubjectPaperQuestionsRequest {
+  int64 subject_id = 1;
+  int64 paper_id = 2;
+  // 追加的试卷条目（与 exam.v1.PaperDetail.items 同一结构）；题目 id 引用上一批次入库结果或已存在题库 ID。
+  repeated exam.v1.PaperItem items = 3;
+  // 缺省追加到卷尾；>=0 时表示插在该 order 之后（实现定义与现有题目 order 对齐方式）。
+  int32 insert_after_order = 4;
+}
+
+message AppendSubjectPaperQuestionsResponse {
+  int32 appended_count = 1;
+  int32 question_count_after = 2;
+  string message = 3;
+}
