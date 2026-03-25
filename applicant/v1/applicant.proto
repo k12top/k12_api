@@ -1,0 +1,174 @@
+syntax = "proto3";
+
+package applicant.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "k12_backend/api/applicant/v1";
+
+// ApplicantService 申请人服务
+service ApplicantService {
+  // CreateApplicant 创建申请人信息
+  rpc CreateApplicant(CreateApplicantRequest) returns (Applicant) {
+    option (google.api.http) = {
+      post: "/api/v1/applicant"
+      body: "*"
+    };
+  }
+  
+  // GetApplicant 获取申请人信息
+  rpc GetApplicant(GetApplicantRequest) returns (Applicant) {
+    option (google.api.http) = {
+      get: "/api/v1/applicant/{id}"
+    };
+  }
+  
+  // UpdateApplicant 更新申请人信息
+  rpc UpdateApplicant(UpdateApplicantRequest) returns (Applicant) {
+    option (google.api.http) = {
+      put: "/api/v1/applicant/{id}"
+      body: "*"
+    };
+  }
+  
+  // ListApplicants 列出申请人列表
+  rpc ListApplicants(ListApplicantsRequest) returns (ListApplicantsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/applicants"
+    };
+  }
+  
+  // DeleteApplicant 删除申请人信息
+  rpc DeleteApplicant(DeleteApplicantRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/api/v1/applicant/{id}"
+    };
+  }
+}
+
+// Applicant 申请人信息
+message Applicant {
+  string id = 1;
+  string user_id = 2;
+  string passport_name = 3;
+  string chinese_name = 4;
+  google.protobuf.Timestamp birth_date = 5;
+  string nationality = 6;
+  string birth_place = 7;
+  string gender = 8;
+  string marital_status = 9;
+  string religion = 10;
+  string passport_number = 11;
+  google.protobuf.Timestamp passport_expiry = 12;
+  string home_phone = 13;
+  string email = 14;
+  string wechat = 15;
+  string qq = 16;
+  string home_address = 17;
+  bool has_contact = 18;
+  string contact_name = 19;
+  string contact_relationship = 20;
+  string contact_phone = 21;
+  string contact_email = 22;
+  string contact_type = 23;
+  bool is_chinese_heritage = 24;
+  string chinese_heritage_details = 25;
+  string mailing_address = 26;
+  string mailing_zip = 27;
+  string mailing_country = 28;
+  string clothing_size = 29;
+  google.protobuf.Timestamp created_at = 30;
+  google.protobuf.Timestamp updated_at = 31;
+}
+
+// CreateApplicantRequest 创建申请人请求
+message CreateApplicantRequest {
+  string user_id = 1;
+  string passport_name = 2;
+  string chinese_name = 3;
+  google.protobuf.Timestamp birth_date = 4;
+  string nationality = 5;
+  string birth_place = 6;
+  string gender = 7;
+  string marital_status = 8;
+  string religion = 9;
+  string passport_number = 10;
+  google.protobuf.Timestamp passport_expiry = 11;
+  string home_phone = 12;
+  string email = 13;
+  string wechat = 14;
+  string qq = 15;
+  string home_address = 16;
+  bool has_contact = 17;
+  string contact_name = 18;
+  string contact_relationship = 19;
+  string contact_phone = 20;
+  string contact_email = 21;
+  string contact_type = 22;
+  bool is_chinese_heritage = 23;
+  string chinese_heritage_details = 24;
+  string mailing_address = 25;
+  string mailing_zip = 26;
+  string mailing_country = 27;
+  string clothing_size = 28;
+}
+
+// GetApplicantRequest 获取申请人请求
+message GetApplicantRequest {
+  string id = 1;
+}
+
+// UpdateApplicantRequest 更新申请人请求
+message UpdateApplicantRequest {
+  string id = 1;
+  string user_id = 2;
+  string passport_name = 3;
+  string chinese_name = 4;
+  google.protobuf.Timestamp birth_date = 5;
+  string nationality = 6;
+  string birth_place = 7;
+  string gender = 8;
+  string marital_status = 9;
+  string religion = 10;
+  string passport_number = 11;
+  google.protobuf.Timestamp passport_expiry = 12;
+  string home_phone = 13;
+  string email = 14;
+  string wechat = 15;
+  string qq = 16;
+  string home_address = 17;
+  bool has_contact = 18;
+  string contact_name = 19;
+  string contact_relationship = 20;
+  string contact_phone = 21;
+  string contact_email = 22;
+  string contact_type = 23;
+  bool is_chinese_heritage = 24;
+  string chinese_heritage_details = 25;
+  string mailing_address = 26;
+  string mailing_zip = 27;
+  string mailing_country = 28;
+  string clothing_size = 29;
+}
+
+// ListApplicantsRequest 列出申请人请求
+message ListApplicantsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string keyword = 3;
+}
+
+// ListApplicantsResponse 列出申请人响应
+message ListApplicantsResponse {
+  repeated Applicant applicants = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// DeleteApplicantRequest 删除申请人请求
+message DeleteApplicantRequest {
+  string id = 1;
+}

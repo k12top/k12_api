@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+package document.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "k12_backend/api/document/v1";
+
+// DocumentService 文件服务
+service DocumentService {
+  // UploadDocument 上传文件
+  rpc UploadDocument(UploadDocumentRequest) returns (Document) {
+    option (google.api.http) = {
+      post: "/api/v1/document/upload"
+      body: "*"
+    };
+  }
+  
+  // GetDocument 获取文件信息
+  rpc GetDocument(GetDocumentRequest) returns (Document) {
+    option (google.api.http) = {
+      get: "/api/v1/document/{id}"
+    };
+  }
+  
+  // ListDocuments 列出文件列表
+  rpc ListDocuments(ListDocumentsRequest) returns (ListDocumentsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/documents"
+    };
+  }
+  
+  // DeleteDocument 删除文件
+  rpc DeleteDocument(DeleteDocumentRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/api/v1/document/{id}"
+    };
+  }
+  
+  // VerifyDocument 验证文件
+  rpc VerifyDocument(VerifyDocumentRequest) returns (Document) {
+    option (google.api.http) = {
+      post: "/api/v1/document/{id}/verify"
+      body: "*"
+    };
+  }
+}
+
+// Document 文件信息
+message Document {
+  string id = 1;
+  string application_id = 2;
+  string file_type = 3;
+  string file_url = 4;
+  string file_name = 5;
+  int64 file_size = 6;
+  string file_extension = 7;
+  string uploaded_by = 8;
+  bool verified = 9;
+  string verification_notes = 10;
+  google.protobuf.Timestamp uploaded_at = 11;
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp updated_at = 13;
+}
+
+// UploadDocumentRequest 上传文件请求
+message UploadDocumentRequest {
+  string application_id = 1;
+  string file_type = 2;
+  string file_name = 3;
+  int64 file_size = 4;
+  string file_extension = 5;
+  string file_content = 6; // Base64编码的文件内容
+}
+
+// GetDocumentRequest 获取文件请求
+message GetDocumentRequest {
+  string id = 1;
+}
+
+// ListDocumentsRequest 列出文件请求
+message ListDocumentsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string application_id = 3;
+  string file_type = 4;
+}
+
+// ListDocumentsResponse 列出文件响应
+message ListDocumentsResponse {
+  repeated Document documents = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// DeleteDocumentRequest 删除文件请求
+message DeleteDocumentRequest {
+  string id = 1;
+}
+
+// VerifyDocumentRequest 验证文件请求
+message VerifyDocumentRequest {
+  string id = 1;
+  bool verified = 2;
+  string verification_notes = 3;
+}

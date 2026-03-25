@@ -20,9 +20,10 @@ message CreateTaskRequest {
   int32 max_pages = 2;       // Max pages to process (0 = all)
 
   oneof source {
-    string file_url = 3;     // OSS URL or HTTP link to download from
-    bytes file_content = 4;  // Direct file upload bytes
-    string file_path = 5;    // Local file path (for local testing/access)
+    // MinIO 地址或任意可下载 URL；提供后服务端不会上传，直接按该地址拉取
+    string file_url = 3;     // e.g. minio://bucket/key, https://minio.example.com/bucket/key, 或 OSS/HTTP URL
+    bytes file_content = 4;  // 直接上传文件内容；服务端会写入 MinIO（或落盘 temp）
+    string file_path = 5;    // 本地文件路径（仅测试/本机访问）
   }
 
   string model = 6;          // Optional LLM/VLM model name; if empty, use server default

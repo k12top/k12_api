@@ -1,0 +1,162 @@
+syntax = "proto3";
+
+package application.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "k12_backend/api/application/v1";
+
+// ApplicationService 申请服务
+service ApplicationService {
+  // CreateApplication 创建申请记录
+  rpc CreateApplication(CreateApplicationRequest) returns (Application) {
+    option (google.api.http) = {
+      post: "/api/v1/application"
+      body: "*"
+    };
+  }
+  
+  // GetApplication 获取申请记录
+  rpc GetApplication(GetApplicationRequest) returns (Application) {
+    option (google.api.http) = {
+      get: "/api/v1/application/{id}"
+    };
+  }
+  
+  // UpdateApplication 更新申请记录
+  rpc UpdateApplication(UpdateApplicationRequest) returns (Application) {
+    option (google.api.http) = {
+      put: "/api/v1/application/{id}"
+      body: "*"
+    };
+  }
+  
+  // ListApplications 列出申请列表
+  rpc ListApplications(ListApplicationsRequest) returns (ListApplicationsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/applications"
+    };
+  }
+  
+  // DeleteApplication 删除申请记录
+  rpc DeleteApplication(DeleteApplicationRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/api/v1/application/{id}"
+    };
+  }
+  
+  // SubmitApplication 提交申请
+  rpc SubmitApplication(SubmitApplicationRequest) returns (Application) {
+    option (google.api.http) = {
+      post: "/api/v1/application/{id}/submit"
+      body: "*"
+    };
+  }
+  
+  // ReviewApplication 审核申请
+  rpc ReviewApplication(ReviewApplicationRequest) returns (Application) {
+    option (google.api.http) = {
+      post: "/api/v1/application/{id}/review"
+      body: "*"
+    };
+  }
+}
+
+// Application 申请记录
+message Application {
+  string id = 1;
+  string applicant_id = 2;
+  string status = 3;
+  string education_background = 4;
+  string previous_school = 5;
+  string chinese_level = 6;
+  string chinese_cert = 7;
+  string english_level = 8;
+  string english_cert = 9;
+  string course_type = 10;
+  string study_duration = 11;
+  string funding_source = 12;
+  string application_reason = 13;
+  string scholarship_application = 14;
+  string notes = 15;
+  google.protobuf.Timestamp submitted_at = 16;
+  google.protobuf.Timestamp reviewed_at = 17;
+  google.protobuf.Timestamp created_at = 18;
+  google.protobuf.Timestamp updated_at = 19;
+}
+
+// CreateApplicationRequest 创建申请请求
+message CreateApplicationRequest {
+  string applicant_id = 1;
+  string education_background = 2;
+  string previous_school = 3;
+  string chinese_level = 4;
+  string chinese_cert = 5;
+  string english_level = 6;
+  string english_cert = 7;
+  string course_type = 8;
+  string study_duration = 9;
+  string funding_source = 10;
+  string application_reason = 11;
+  string scholarship_application = 12;
+  string notes = 13;
+}
+
+// GetApplicationRequest 获取申请请求
+message GetApplicationRequest {
+  string id = 1;
+}
+
+// UpdateApplicationRequest 更新申请请求
+message UpdateApplicationRequest {
+  string id = 1;
+  string applicant_id = 2;
+  string education_background = 3;
+  string previous_school = 4;
+  string chinese_level = 5;
+  string chinese_cert = 6;
+  string english_level = 7;
+  string english_cert = 8;
+  string course_type = 9;
+  string study_duration = 10;
+  string funding_source = 11;
+  string application_reason = 12;
+  string scholarship_application = 13;
+  string notes = 14;
+}
+
+// ListApplicationsRequest 列出申请请求
+message ListApplicationsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string keyword = 3;
+  string status = 4;
+  string applicant_id = 5;
+}
+
+// ListApplicationsResponse 列出申请响应
+message ListApplicationsResponse {
+  repeated Application applications = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// DeleteApplicationRequest 删除申请请求
+message DeleteApplicationRequest {
+  string id = 1;
+}
+
+// SubmitApplicationRequest 提交申请请求
+message SubmitApplicationRequest {
+  string id = 1;
+}
+
+// ReviewApplicationRequest 审核申请请求
+message ReviewApplicationRequest {
+  string id = 1;
+  string status = 2;
+  string notes = 3;
+}
