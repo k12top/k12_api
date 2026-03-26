@@ -1,0 +1,132 @@
+syntax = "proto3";
+
+package tdd.v1;
+
+option go_package = "k12_backend/api/tdd/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "exam/v1/exam.proto";
+import "tdd/v1/tdd.proto";
+
+// TddAppService App 端对外查询接口：浏览大组 → 细分集合 → 条目详情。
+service TddAppService {
+  // 获取租户下所有已发布的大组列表。
+  rpc ListGroups(ListGroupsRequest) returns (ListGroupsResponse) {
+    option (google.api.http) = {
+      get: "/v1/tdd/app/groups"
+    };
+  }
+
+  // 获取大组详情（含细分集合概览列表）。
+  rpc GetGroup(GetGroupRequest) returns (GetGroupResponse) {
+    option (google.api.http) = {
+      get: "/v1/tdd/app/groups/{group_id}"
+    };
+  }
+
+  // 获取细分集合详情及其下条目列表。
+  rpc GetCollection(GetCollectionRequest) returns (GetCollectionResponse) {
+    option (google.api.http) = {
+      get: "/v1/tdd/app/collections/{collection_id}"
+    };
+  }
+
+  // 获取单个条目详情（含完整试卷结构与答案）。
+  rpc GetItem(GetItemRequest) returns (GetItemResponse) {
+    option (google.api.http) = {
+      get: "/v1/tdd/app/items/{item_id}"
+    };
+  }
+}
+
+// ---------- ListGroups ----------
+
+message ListGroupsRequest {
+  string tenant_id = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+
+message ListGroupsResponse {
+  repeated TddGroupInfo groups = 1;
+  string next_page_token = 2;
+}
+
+// ---------- GetGroup ----------
+
+message GetGroupRequest {
+  string group_id = 1;
+  string tenant_id = 2;
+}
+
+message GetGroupResponse {
+  TddGroupInfo group = 1;
+}
+
+// ---------- GetCollection ----------
+
+message GetCollectionRequest {
+  string collection_id = 1;
+  string tenant_id = 2;
+  // true 时返回每个条目的试卷详情与答案；false 仅返回摘要列表。
+  bool include_detail = 3;
+  bool include_answer = 4;
+}
+
+message GetCollectionResponse {
+  TddCollectionInfo collection = 1;
+  repeated TddItemInfo items = 2;
+}
+
+// ---------- GetItem ----------
+
+message GetItemRequest {
+  string item_id = 1;
+  string tenant_id = 2;
+  bool include_answer = 3;
+}
+
+message GetItemResponse {
+  TddItemInfo item = 1;
+}
+
+// ---------- 共用视图 ----------
+
+message TddGroupInfo {
+  string group_id = 1;
+  string name = 2;
+  string description = 3;
+  string icon_url = 4;
+  string tenant_id = 5;
+  repeated CollectionSummary collections = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+message TddCollectionInfo {
+  string collection_id = 1;
+  string group_id = 2;
+  string name = 3;
+  string description = 4;
+  string tenant_id = 5;
+  int32 sort_order = 6;
+  int32 item_count = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+// 条目视图，source_type 决定填充哪些字段。
+message TddItemInfo {
+  string item_id = 1;
+  string collection_id = 2;
+  string source_type = 3;
+  string source_id = 4;
+  string title = 5;
+  int32 sort_order = 6;
+
+  // EXAM 类型填充
+  exam.v1.PaperSummary paper_summary = 10;
+  exam.v1.PaperDetail paper_detail = 11;
+  map<string, exam.v1.AnswerConfig> answers = 12;
+
+  google.protobuf.Timestamp updated_at = 15;
+}
