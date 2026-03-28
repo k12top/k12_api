@@ -49,6 +49,23 @@ message PushCollectionRequest {
   
   // 包含其下的所有试卷项
   repeated TddItem items = 6;
+
+  // 包含章节结构
+  repeated SectionDetail sections = 7;
+}
+
+message SectionDetail {
+  string section_id = 1;
+  string name = 2;
+  string description = 3;
+  int32 sort_order = 4;
+  string parent_id = 5;
+  
+  // 章节下的试卷项
+  repeated TddItem items = 6;
+  
+  // 子章节结构
+  repeated SectionDetail sub_sections = 7;
 }
 
 // 题多多条目（指向具体试卷）
@@ -67,6 +84,8 @@ message TddItem {
 
   // 试卷对应的答案与解析（Key 为题目 ID 或条目 ID，保证多样性展示）
   map<string, exam.v1.AnswerConfig> answers = 8;
+
+  string section_id = 9;    // 所属章节 ID
 }
 
 // 常规响应
