@@ -5,6 +5,7 @@ package application.v1;
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
+import "document/v1/document.proto";
 
 option go_package = "k12_backend/api/application/v1";
 
@@ -40,6 +41,13 @@ service ApplicationService {
     };
   }
   
+  // ListAllApplications 列出所有申请列表（管理员用）
+  rpc ListAllApplications(ListApplicationsRequest) returns (ListApplicationsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/applications/all"
+    };
+  }
+  
   // DeleteApplication 删除申请记录
   rpc DeleteApplication(DeleteApplicationRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
@@ -72,19 +80,44 @@ message Application {
   string education_background = 4;
   string previous_school = 5;
   string chinese_level = 6;
-  string chinese_cert = 7;
-  string english_level = 8;
-  string english_cert = 9;
-  string course_type = 10;
-  string study_duration = 11;
-  string funding_source = 12;
-  string application_reason = 13;
-  string scholarship_application = 14;
-  string notes = 15;
-  google.protobuf.Timestamp submitted_at = 16;
-  google.protobuf.Timestamp reviewed_at = 17;
-  google.protobuf.Timestamp created_at = 18;
-  google.protobuf.Timestamp updated_at = 19;
+  string hsk4 = 7;
+  string hsk5 = 8;
+  string english_level = 9;
+  string ielts_score = 10;
+  string toefl_score = 11;
+  string course_type = 12;
+  google.protobuf.Timestamp study_start_date = 13;
+  google.protobuf.Timestamp study_end_date = 14;
+  string funding_source = 15;
+  string application_reason = 16;
+  bool is_chinese_heritage = 17;
+  string chinese_heritage_details = 18;
+  string scholarship_application = 19;
+  string hsk_score = 20;
+  string notes = 21;
+  string scholarship_notes = 22;
+  google.protobuf.Timestamp submitted_at = 23;
+  google.protobuf.Timestamp reviewed_at = 24;
+  google.protobuf.Timestamp created_at = 25;
+  google.protobuf.Timestamp updated_at = 26;
+  // 文件字段
+  string passport = 27;
+  string photo = 28;
+  string medical = 29;
+  string education = 30;
+  string guardian = 31;
+  string guardian_id = 32;
+  string express = 33;
+  repeated string award_cert = 34;
+  string middle_school_diploma = 35;
+  string transcript = 36;
+  string hsk_certificate = 37;
+  string hsk4_certificate = 38;
+  string hsk5_certificate = 39;
+  repeated string competition_awards = 40;
+  string ielts_certificate = 41;
+  string toefl_certificate = 42;
+  repeated document.v1.Document documents = 43;
 }
 
 // CreateApplicationRequest 创建申请请求
@@ -93,15 +126,39 @@ message CreateApplicationRequest {
   string education_background = 2;
   string previous_school = 3;
   string chinese_level = 4;
-  string chinese_cert = 5;
-  string english_level = 6;
-  string english_cert = 7;
-  string course_type = 8;
-  string study_duration = 9;
-  string funding_source = 10;
-  string application_reason = 11;
-  string scholarship_application = 12;
-  string notes = 13;
+  string hsk4 = 5;
+  string hsk5 = 6;
+  string english_level = 7;
+  string ielts_score = 8;
+  string toefl_score = 9;
+  string course_type = 10;
+  string funding_source = 11;
+  string application_reason = 12;
+  bool is_chinese_heritage = 13;
+  string chinese_heritage_details = 14;
+  string scholarship_application = 15;
+  string hsk_score = 16;
+  string notes = 17;
+  string scholarship_notes = 18;
+  google.protobuf.Timestamp study_start_date = 19;
+  google.protobuf.Timestamp study_end_date = 20;
+  // 文件字段
+  string passport = 21;
+  string photo = 22;
+  string medical = 23;
+  string education = 24;
+  string guardian = 25;
+  string guardian_id = 26;
+  string express = 27;
+  repeated string award_cert = 28;
+  string middle_school_diploma = 29;
+  string transcript = 30;
+  string hsk_certificate = 31;
+  string hsk4_certificate = 32;
+  string hsk5_certificate = 33;
+  repeated string competition_awards = 34;
+  string ielts_certificate = 35;
+  string toefl_certificate = 36;
 }
 
 // GetApplicationRequest 获取申请请求
@@ -116,15 +173,39 @@ message UpdateApplicationRequest {
   string education_background = 3;
   string previous_school = 4;
   string chinese_level = 5;
-  string chinese_cert = 6;
-  string english_level = 7;
-  string english_cert = 8;
-  string course_type = 9;
-  string study_duration = 10;
-  string funding_source = 11;
-  string application_reason = 12;
-  string scholarship_application = 13;
-  string notes = 14;
+  string hsk4 = 6;
+  string hsk5 = 7;
+  string english_level = 8;
+  string ielts_score = 9;
+  string toefl_score = 10;
+  string course_type = 11;
+  string funding_source = 12;
+  string application_reason = 13;
+  bool is_chinese_heritage = 14;
+  string chinese_heritage_details = 15;
+  string scholarship_application = 16;
+  string hsk_score = 17;
+  string notes = 18;
+  string scholarship_notes = 19;
+  google.protobuf.Timestamp study_start_date = 20;
+  google.protobuf.Timestamp study_end_date = 21;
+  // 文件字段
+  string passport = 22;
+  string photo = 23;
+  string medical = 24;
+  string education = 25;
+  string guardian = 26;
+  string guardian_id = 27;
+  string express = 28;
+  repeated string award_cert = 29;
+  string middle_school_diploma = 30;
+  string transcript = 31;
+  string hsk_certificate = 32;
+  string hsk4_certificate = 33;
+  string hsk5_certificate = 34;
+  repeated string competition_awards = 35;
+  string ielts_certificate = 36;
+  string toefl_certificate = 37;
 }
 
 // ListApplicationsRequest 列出申请请求
@@ -134,6 +215,8 @@ message ListApplicationsRequest {
   string keyword = 3;
   string status = 4;
   string applicant_id = 5;
+  string course_type = 6;
+  string nationality = 7;
 }
 
 // ListApplicationsResponse 列出申请响应
@@ -159,4 +242,6 @@ message ReviewApplicationRequest {
   string id = 1;
   string status = 2;
   string notes = 3;
+  bool isScholarshipReview = 4;
+  string scholarshipNotes = 5;
 }

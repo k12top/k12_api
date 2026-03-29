@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+package tdd.v1;
+
+import "exam/v1/exam.proto";
+
+option go_package = "k12_backend/api/tdd/v1;v1";
+
+// TddPushService 题多多数据推送服务
+// 由 App 端实现，管理端作为客户端推送数据
+service TddPushService {
+  // 推送/更新大组数据（包含基本信息及其下的目录结构）
+  rpc PushGroup(PushGroupRequest) returns (PushGroupResponse);
+  
+  // 推送/更新细分集合数据（包含该集合下的所有试卷详情）
+  rpc PushCollection(PushCollectionRequest) returns (PushCollectionResponse);
+  
+  // 下架通知（大组或细分集合）
+  rpc Unpublish(UnpublishRequest) returns (UnpublishResponse);
+}
+
+// 推送大组请求
+message PushGroupRequest {
+  string group_id = 1;      // 大组 ID
+  string name = 2;          // 名称
+  string description = 3;   // 描述
+  string icon_url = 4;      // 图标地址
+  string tenant_id = 5;     // 租户 ID
+  
+  // 包含其下的目录概览，用于生成二级菜单/列表
+  repeated CollectionSummary collections = 6;
+}
+
+// 细分集合概览
+message CollectionSummary {
+  string collection_id = 1;
+  string name = 2;
+  string description = 3;
+  int32 sort_order = 4;
+}
+
+// 推送细分集合请求
+message PushCollectionRequest {
+  string collection_id = 1; // 细分集合 ID
+  string group_id = 2;      // 所属大组 ID
+  string name = 3;          // 名称
+  string description = 4;   // 描述
+  string tenant_id = 5;     // 租户 ID
+  
+  // 包含其下的所有试卷项
+  repeated TddItem items = 6;
+
+  // 包含章节结构
+  repeated SectionDetail sections = 7;
+}
+
+message SectionDetail {
+  string section_id = 1;
+  string name = 2;
+  string description = 3;
+  int32 sort_order = 4;
+  string parent_id = 5;
+  
+  // 章节下的试卷项
+  repeated TddItem items = 6;
+  
+  // 子章节结构
+  repeated SectionDetail sub_sections = 7;
+}
+
+// 题多多条目（指向具体试卷）
+message TddItem {
+  string item_id = 1;       // 条目 ID
+  string source_type = 2;   // 来源类型: EXAM
+  string source_id = 3;     // 来源 ID (试卷 ID)
+  string title = 4;         // 显示标题
+  int32 sort_order = 5;     // 排序号
+  
+  // 试卷摘要信息（用于 App 端列表展示）
+  exam.v1.PaperSummary paper_summary = 6;
+
+  // 试卷详情信息（包含题目/选项，用于全量推送到 App 离线展示或直接渲染）
+  exam.v1.PaperDetail paper_detail = 7;
+
+  // 试卷对应的答案与解析（Key 为题目 ID 或条目 ID，保证多样性展示）
+  map<string, exam.v1.AnswerConfig> answers = 8;
+
+  string section_id = 9;    // 所属章节 ID
+}
+
+// 常规响应
+message PushGroupResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message PushCollectionResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 下架请求
+message UnpublishRequest {
+  enum TargetType {
+    TARGET_TYPE_UNSPECIFIED = 0;
+    GROUP = 1;
+    COLLECTION = 2;
+  }
+  TargetType target_type = 1;
+  string target_id = 2;
+  string tenant_id = 3;
+}
+
+message UnpublishResponse {
+  bool success = 1;
+  string message = 2;
+}

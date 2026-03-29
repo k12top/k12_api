@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+package message.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "k12_backend/api/message/v1";
+
+// MessageService 消息服务
+service MessageService {
+  // CreateMessage 创建消息
+  rpc CreateMessage(CreateMessageRequest) returns (Message) {
+    option (google.api.http) = {
+      post: "/api/v1/message"
+      body: "*"
+    };
+  }
+  
+  // GetMessage 获取消息
+  rpc GetMessage(GetMessageRequest) returns (Message) {
+    option (google.api.http) = {
+      get: "/api/v1/message/{id}"
+    };
+  }
+  
+  // ListMessages 列出消息
+  rpc ListMessages(ListMessagesRequest) returns (ListMessagesResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/messages"
+    };
+  }
+  
+  // MarkAsRead 标记消息为已读
+  rpc MarkAsRead(MarkAsReadRequest) returns (Message) {
+    option (google.api.http) = {
+      post: "/api/v1/message/{id}/read"
+      body: "*"
+    };
+  }
+  
+  // SendNotification 发送通知
+  rpc SendNotification(SendNotificationRequest) returns (Message) {
+    option (google.api.http) = {
+      post: "/api/v1/message/notification"
+      body: "*"
+    };
+  }
+}
+
+// Message 消息
+message Message {
+  string id = 1;
+  string applicant_id = 2;
+  string type = 3;
+  string title = 4;
+  string content = 5;
+  bool is_read = 6;
+  bool is_sent = 7;
+  string recipient = 8;
+  string sender = 9;
+  google.protobuf.Timestamp sent_at = 10;
+  google.protobuf.Timestamp read_at = 11;
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp updated_at = 13;
+}
+
+// CreateMessageRequest 创建消息请求
+message CreateMessageRequest {
+  string applicant_id = 1;
+  string type = 2;
+  string title = 3;
+  string content = 4;
+  bool is_read = 5;
+  bool is_sent = 6;
+  string recipient = 7;
+  string sender = 8;
+}
+
+// GetMessageRequest 获取消息请求
+message GetMessageRequest {
+  string id = 1;
+}
+
+// ListMessagesRequest 列出消息请求
+message ListMessagesRequest {
+  string applicant_id = 1;
+  bool is_read = 2;
+}
+
+// ListMessagesResponse 列出消息响应
+message ListMessagesResponse {
+  repeated Message messages = 1;
+}
+
+// MarkAsReadRequest 标记消息为已读请求
+message MarkAsReadRequest {
+  string id = 1;
+}
+
+// SendNotificationRequest 发送通知请求
+message SendNotificationRequest {
+  string applicant_id = 1;
+  string title = 2;
+  string content = 3;
+  string recipient = 4;
+}

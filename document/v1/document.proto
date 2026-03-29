@@ -46,6 +46,54 @@ service DocumentService {
       body: "*"
     };
   }
+  
+  // UpdateDocument 更新文件信息
+  rpc UpdateDocument(UpdateDocumentRequest) returns (Document) {
+    option (google.api.http) = {
+      put: "/api/v1/document/{id}"
+      body: "*"
+    };
+  }
+  
+  // GenerateDocument 生成文档
+  rpc GenerateDocument(GenerateDocumentRequest) returns (GenerateDocumentResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/document/generate"
+      body: "*"
+    };
+  }
+}
+
+// PublicDocumentService 公开文件服务
+service PublicDocumentService {
+  // UploadDocument 上传文件
+  rpc UploadDocument(UploadDocumentRequest) returns (Document) {
+    option (google.api.http) = {
+      post: "/api/v1/public/document/upload"
+      body: "*"
+    };
+  }
+  
+  // GenerateDocument 生成文档
+  rpc GenerateDocument(GenerateDocumentRequest) returns (GenerateDocumentResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/public/document/generate"
+      body: "*"
+    };
+  }
+}
+
+// GenerateDocumentRequest 生成文档请求
+message GenerateDocumentRequest {
+  string application_id = 1;
+  string document_type = 2;
+}
+
+// GenerateDocumentResponse 生成文档响应
+message GenerateDocumentResponse {
+  string document_url = 1;
+  string document_name = 2;
+  int64 document_size = 3;
 }
 
 // Document 文件信息
@@ -106,4 +154,10 @@ message VerifyDocumentRequest {
   string id = 1;
   bool verified = 2;
   string verification_notes = 3;
+}
+
+// UpdateDocumentRequest 更新文件请求
+message UpdateDocumentRequest {
+  string id = 1;
+  string application_id = 2;
 }
