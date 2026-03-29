@@ -26,10 +26,7 @@ message CreateTaskRequest {
     string file_path = 5;    // 本地文件路径（仅测试/本机访问）
   }
 
-  // Optional exam metadata (subject, grade, exam type). If not set, LLM will infer.
-  string subject = 6;        // e.g. 语文, 数学, 英文, 物理, 化学
-  string grade_level = 7;    // e.g. 初中, 高中 or 初一, 初二, 高一
-  string exam_type = 8;      // e.g. 期中, 期末, 模拟, 月考
+  string model = 6;          // Optional LLM/VLM model name; if empty, use server default
 }
 
 message CreateTaskResponse {
@@ -45,14 +42,14 @@ message GetTaskStatusResponse {
   string task_id = 1;
   string status = 2;         // PENDING, PROCESSING, COMPLETED, FAILED
   string error_message = 3;
-  string result_path = 4;    // Path to the parsed JSON
+  string result_path = 4;    // Path to the parsed JSON (e.g. MinIO URI)
   int32 total_pages = 5;
   int32 processed_pages = 6;
   string created_at = 7;
   string updated_at = 8;
   float progress_percent = 9;
   string parsed_result_json = 10; // Contains the full JSON payload if COMPLETED
-  string exam_meta_json = 11;     // Structured exam labels (subject, grade_level, grade_detail, exam_type)
+  string pipeline_version = 11;   // Processing pipeline version that produced this result (e.g. "1.0")
 }
 
 message StreamTaskProgressRequest {
