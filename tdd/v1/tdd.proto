@@ -29,6 +29,8 @@ message PushGroupRequest {
   
   // 包含其下的目录概览，用于生成二级菜单/列表
   repeated CollectionSummary collections = 6;
+  // 推荐位排序：0 表示未上推荐位，>=1 表示在推荐列表中的顺序（数字越小越靠前）
+  int32 featured_order = 7;
 }
 
 // 细分集合概览
