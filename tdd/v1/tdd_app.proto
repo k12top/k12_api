@@ -6,7 +6,6 @@ option go_package = "k12_backend/api/tdd/v1;v1";
 
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
-import "exam/v1/exam.proto";
 import "tdd/v1/tdd.proto";
 
 // TddAppService App 端对外查询接口：浏览大组 → 细分集合 → 条目详情。
@@ -139,10 +138,10 @@ message TddItemInfo {
   // 空表示顶层条目；否则为所属章节 section_id
   string section_id = 7;
 
-  // EXAM 类型填充
-  exam.v1.PaperSummary paper_summary = 10;
-  exam.v1.PaperDetail paper_detail = 11;
-  map<string, exam.v1.AnswerConfig> answers = 12;
+  // EXAM 等来源：与 Push 侧 TddItem 字段一致
+  TddPaperSummary paper_summary = 10;
+  TddStructuredPaper structured_paper = 11;
+  map<string, TddAnswerConfig> answers = 12;
 
   google.protobuf.Timestamp updated_at = 15;
 }
