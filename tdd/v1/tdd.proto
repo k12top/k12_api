@@ -4,107 +4,107 @@ package tdd.v1;
 
 option go_package = "k12_backend/api/tdd/v1;v1";
 
-// TddPushService 题多多数据推送服务
-// 由 App 端实现，管理端作为客户端推送数据
+// TddPushService 题多多数据推送服务：管理端作为 gRPC 客户端向本服务推送/下架内容。
 service TddPushService {
-  // 推送/更新大组数据（包含基本信息及其下的目录结构）
+  // 推送或全量覆盖大组（含基本信息与细分集合概览，用于 App 侧导航/列表）。
   rpc PushGroup(PushGroupRequest) returns (PushGroupResponse);
 
-  // 推送/更新细分集合数据（包含该集合下的所有试卷详情）
+  // 推送或全量覆盖某一细分集合（含章节树与全部条目及试卷载荷）。
   rpc PushCollection(PushCollectionRequest) returns (PushCollectionResponse);
 
-  // 下架通知（大组或细分集合）
+  // 下架指定大组或细分集合（软下架，具体语义由实现约定）。
   rpc Unpublish(UnpublishRequest) returns (UnpublishResponse);
 }
 
-// 推送大组请求
+// 推送大组请求（幂等：同一 group_id 重复推送以最后一次为准）。
 message PushGroupRequest {
-  string group_id = 1;      // 大组 ID
-  string name = 2;          // 名称
-  string description = 3;   // 描述
-  string icon_url = 4;      // 图标地址
-  string tenant_id = 5;     // 租户 ID
+  string group_id = 1;      // 大组业务 ID（全局唯一）
+  string name = 2;          // 展示名称
+  string description = 3;   // 简介/说明
+  string icon_url = 4;      // 封面或图标 URL
+  string tenant_id = 5;     // 租户 ID，用于数据隔离
 
-  // 包含其下的目录概览，用于生成二级菜单/列表
+  // 该大组下细分集合的概览列表（用于二级菜单、集合入口等，不含试卷正文）。
   repeated CollectionSummary collections = 6;
-  // 推荐位排序：0 表示未上推荐位，>=1 表示在推荐列表中的顺序（数字越小越靠前）
+
+  // 推荐位排序：0 表示不参与推荐位展示；>=1 表示上推荐位，数值越小在推荐列表中越靠前。
   int32 featured_order = 7;
 }
 
-// 细分集合概览
+// 细分集合概览（仅元数据，用于大组下列表/导航）。
 message CollectionSummary {
-  string collection_id = 1;
-  string name = 2;
-  string description = 3;
-  int32 sort_order = 4;
+  string collection_id = 1; // 细分集合业务 ID
+  string name = 2;          // 名称
+  string description = 3;   // 描述
+  int32 sort_order = 4;     // 在大组内的展示顺序，越小越靠前
 }
 
-// 列表用试卷摘要（题多多专用，不依赖考试域 proto）
+// 列表场景使用的试卷摘要（题多多域独立定义，不引用考试中心等其他服务的 proto）。
 message TddPaperSummary {
-  string title = 1;
-  string description = 2;
-  int32 duration_sec = 3;
-  double total_score = 4;
-  int32 question_count = 5;
-  string subject = 6;
-  string grade_level = 7;
+  string title = 1;           // 试卷标题
+  string description = 2;     // 试卷说明
+  int32 duration_sec = 3;     // 建议作答时长（秒）
+  double total_score = 4;     // 卷面总分
+  int32 question_count = 5;   // 题目数量（大题或小题计数，与解析约定一致即可）
+  string subject = 6;         // 学科，如语文、数学
+  string grade_level = 7;     // 学段/年级标签，如「高一」
 }
 
-// 判分 / 解析展示用答案配置
+// 单题判分与解析展示用配置（与解析管线、答题卡约定对齐）。
 message TddAnswerConfig {
-  repeated string correct_keys = 1;
-  double score = 2;
-  string explanation = 3;
-  string scoring_rule = 4;
-  string match_rule = 5;
-  map<string, string> correct_pairs = 6;
-  repeated string correct_order = 7;
+  repeated string correct_keys = 1;     // 客观题：正确选项键，如 A、BC
+  double score = 2;                     // 本题分值
+  string explanation = 3;              // 文字解析
+  string scoring_rule = 4;               // 计分规则说明（如多选少选得分）
+  string match_rule = 5;                 // 匹配规则（如填空、排序题）
+  map<string, string> correct_pairs = 6; // 连线题等：键值对正确配对
+  repeated string correct_order = 7;    // 排序题：正确顺序
 }
 
-// 解析管线输出的整卷结构（与 docx/pdf 解析 JSON 对齐，供 App 按 sections 展示）
+// 解析管线输出的整卷结构（与 docx/pdf 解析 JSON 对齐；App 按 pages → sections → questions 展示）。
 message TddStructuredPaper {
-  string format = 1;
-  repeated TddStructuredPage pages = 2;
-  TddExamMeta exam_meta = 3;
-  string source_file = 4;
-  int32 total_pages = 5;
-  string pipeline_version = 6;
+  string format = 1;                      // 结构版本或格式标识
+  repeated TddStructuredPage pages = 2;   // 按页组织的结构化内容
+  TddExamMeta exam_meta = 3;              // 卷级元数据（学科、题型统计等；命名沿用 pipeline，非考试中心业务）
+  string source_file = 4;                 // 原始文件名或来源标识
+  int32 total_pages = 5;                  // 总页数
+  string pipeline_version = 6;            // 解析管线版本号
 }
 
 message TddStructuredPage {
-  string format = 1;
-  string source = 2;
-  int32 page_num = 3;
-  bool cleanup_skipped = 4;
-  TddFinalStructured final_structured = 5;
+  string format = 1;                      // 本页格式标识
+  string source = 2;                      // 来源说明或页类型
+  int32 page_num = 3;                     // 页码（从 1 起）
+  bool cleanup_skipped = 4;               // 是否跳过清洗步骤
+  TddFinalStructured final_structured = 5; // 本页最终结构化结果
 }
 
 message TddFinalStructured {
-  int32 page_num = 1;
-  repeated TddStructuredSection sections = 2;
+  int32 page_num = 1;                     // 页码（与上层一致，便于单页使用）
+  repeated TddStructuredSection sections = 2; // 本页内的章节/大题块
 }
 
 message TddStructuredSection {
-  string title = 1;
-  repeated TddStructuredQuestion questions = 2;
-  string score_info = 3;
+  string title = 1;                       // 章节或大题标题
+  repeated TddStructuredQuestion questions = 2; // 本块下的题目列表
+  string score_info = 3;                  // 分值说明（如「本大题共 30 分」）
 }
 
 message TddStructuredQuestion {
-  string type = 1;
-  string type_cn = 2;
-  string number = 3;
-  string hash_id = 4;
-  double score = 5;
-  repeated TddParserOption options = 6;
-  string question_text = 7;
-  string question_text_format = 8;
-  string answer = 9;
-  repeated TddParserQuestionImage images = 10;
-  string answer_analysis = 11;
-  string material = 12;
-  string material_format = 13;
-  repeated TddStructuredSubQuestion sub_questions = 14;
+  string type = 1;                        // 题型编码（英文/枚举值）
+  string type_cn = 2;                     // 题型中文名
+  string number = 3;                      // 题号展示
+  string hash_id = 4;                     // 题目稳定标识（hash），用于答案映射
+  double score = 5;                       // 本题分值
+  repeated TddParserOption options = 6;   // 选择题选项
+  string question_text = 7;               // 题干（纯文本或富文本依 format）
+  string question_text_format = 8;        // 题干格式：plain、html、markdown 等
+  string answer = 9;                      // 参考答案或标准答（展示用）
+  repeated TddParserQuestionImage images = 10; // 题图
+  string answer_analysis = 11;            // 解析
+  string material = 12;                   // 材料题：材料正文
+  string material_format = 13;            // 材料正文格式
+  repeated TddStructuredSubQuestion sub_questions = 14; // 小题列表
 }
 
 message TddStructuredSubQuestion {
@@ -121,86 +121,86 @@ message TddStructuredSubQuestion {
 }
 
 message TddParserOption {
-  string label = 1;
-  string content = 2;
+  string label = 1;   // 选项标号，如 A、B
+  string content = 2; // 选项内容
 }
 
 message TddParserQuestionImage {
-  string url = 1;
-  string path = 2;
-  int32 index = 3;
-  string description = 4;
+  string url = 1;         // 图片可访问 URL
+  string path = 2;        // 相对路径或存储键
+  int32 index = 3;        // 图片在题内的顺序
+  string description = 4; // 图注或说明
 }
 
+// 卷级元数据（解析结果中的「试卷属性」，非考试业务实体）。
 message TddExamMeta {
-  repeated string tags = 1;
-  string subject = 2;
-  string exam_type = 3;
-  string grade_level = 4;
-  string grade_detail = 5;
-  TddExamClassification classification = 6;
-  map<string, int32> question_type_summary = 7;
+  repeated string tags = 1;                      // 标签
+  string subject = 2;                            // 学科
+  string exam_type = 3;                          // 试卷类型（如「期末」「模拟」）
+  string grade_level = 4;                        // 学段
+  string grade_detail = 5;                       // 更细年级/层次说明
+  TddExamClassification classification = 6;      // 难度、风格、知识点等
+  map<string, int32> question_type_summary = 7;  // 题型 → 题量统计
 }
 
 message TddExamClassification {
-  string difficulty = 1;
-  string question_style = 2;
-  repeated string knowledge_areas = 3;
+  string difficulty = 1;              // 难度
+  string question_style = 2;          // 命题风格
+  repeated string knowledge_areas = 3; // 知识点或考向
 }
 
-// 推送细分集合请求
+// 推送细分集合请求（会全量覆盖该 collection 下章节与条目）。
 message PushCollectionRequest {
-  string collection_id = 1; // 细分集合 ID
+  string collection_id = 1; // 细分集合业务 ID
   string group_id = 2;      // 所属大组 ID
   string name = 3;          // 名称
   string description = 4;   // 描述
   string tenant_id = 5;     // 租户 ID
 
-  // 包含其下的所有试卷项
+  // 不属于任何章节的顶层条目（与 sections 内 items 合并去重后落库，语义与实现一致即可）。
   repeated TddItem items = 6;
 
-  // 包含章节结构
+  // 章节树；子节点通过 parent_id 与 sub_sections 表达。
   repeated SectionDetail sections = 7;
 }
 
 message SectionDetail {
-  string section_id = 1;
-  string name = 2;
-  string description = 3;
-  int32 sort_order = 4;
-  string parent_id = 5;
+  string section_id = 1;   // 章节业务 ID
+  string name = 2;         // 章节标题
+  string description = 3;  // 章节说明
+  int32 sort_order = 4;    // 同级内排序，越小越靠前
+  string parent_id = 5;    // 父章节 ID，空表示根级
 
-  // 章节下的试卷项
+  // 仅挂在当前章节下的条目（不含子章节内条目）。
   repeated TddItem items = 6;
 
-  // 子章节结构
+  // 子章节（递归结构）。
   repeated SectionDetail sub_sections = 7;
 }
 
-// 题多多条目（指向具体试卷）
+// 题多多条目：一条记录对应 App 侧一个可点击的试卷入口，载荷为题多多自有消息类型。
 message TddItem {
-  string item_id = 1;       // 条目 ID
-  string source_type = 2;   // 来源类型: EXAM 等
-  string source_id = 3;     // 来源 ID (试卷 ID)
-  string title = 4;         // 显示标题
-  int32 sort_order = 5;     // 排序号
+  string item_id = 1;       // 条目业务 ID（在集合内或全局唯一，与实现约定一致）
+  string source_type = 2;   // 来源类型枚举字符串，如 EXAM、IMPORT（用于扩展不同上游）
+  string source_id = 3;     // 上游业务主键，如原试卷 ID（可选）
+  string title = 4;         // 列表与详情标题
+  int32 sort_order = 5;     // 同级排序
 
-  // 试卷摘要（列表）
+  // 列表/卡片用摘要。
   TddPaperSummary paper_summary = 6;
 
-  // 解析管线结构化试卷（与解析 JSON 一致；App 优先用于展示）
+  // 整卷结构化内容（与解析 JSON 一致；App 正文展示优先使用本字段）。
   TddStructuredPaper structured_paper = 7;
 
-  // 答案与解析（Key 一般为 hash_id 或题目 ID）
+  // 按题目 hash_id（或题目 ID）索引的答案与解析配置。
   map<string, TddAnswerConfig> answers = 8;
 
-  string section_id = 9;    // 所属章节 ID
+  string section_id = 9;    // 所属章节 ID；空字符串表示顶层条目
 }
 
-// 常规响应
 message PushGroupResponse {
-  bool success = 1;
-  string message = 2;
+  bool success = 1;   // 是否成功
+  string message = 2; // 错误或提示信息
 }
 
 message PushCollectionResponse {
@@ -208,16 +208,16 @@ message PushCollectionResponse {
   string message = 2;
 }
 
-// 下架请求
+// 下架请求：按类型与 ID 指定目标。
 message UnpublishRequest {
   enum TargetType {
     TARGET_TYPE_UNSPECIFIED = 0;
-    GROUP = 1;
-    COLLECTION = 2;
+    GROUP = 1;       // 大组
+    COLLECTION = 2;  // 细分集合
   }
-  TargetType target_type = 1;
-  string target_id = 2;
-  string tenant_id = 3;
+  TargetType target_type = 1; // 下架目标类型
+  string target_id = 2;       // 与 target_type 对应的 group_id 或 collection_id
+  string tenant_id = 3;       // 租户 ID
 }
 
 message UnpublishResponse {
