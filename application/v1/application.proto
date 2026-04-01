@@ -6,6 +6,7 @@ import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "document/v1/document.proto";
+import "applicant/v1/applicant.proto";
 
 option go_package = "k12_backend/api/application/v1";
 
@@ -59,6 +60,14 @@ service ApplicationService {
   rpc SubmitApplication(SubmitApplicationRequest) returns (Application) {
     option (google.api.http) = {
       post: "/api/v1/application/{id}/submit"
+      body: "*"
+    };
+  }
+  
+  // SubmitCompleteApplication 提交完整申请（同时处理申请人和申请记录）
+  rpc SubmitCompleteApplication(SubmitCompleteApplicationRequest) returns (Application) {
+    option (google.api.http) = {
+      post: "/api/v1/application/submit-complete"
       body: "*"
     };
   }
@@ -118,6 +127,7 @@ message Application {
   string ielts_certificate = 41;
   string toefl_certificate = 42;
   repeated document.v1.Document documents = 43;
+  applicant.v1.Applicant applicant = 44;
 }
 
 // CreateApplicationRequest 创建申请请求
@@ -244,4 +254,78 @@ message ReviewApplicationRequest {
   string notes = 3;
   bool isScholarshipReview = 4;
   string scholarshipNotes = 5;
+}
+
+// SubmitCompleteApplicationRequest 提交完整申请请求
+message SubmitCompleteApplicationRequest {
+  // 申请人信息
+  string user_id = 1;
+  string family_name = 2;
+  string middle_name = 3;
+  string given_name = 4;
+  string chinese_name = 5;
+  google.protobuf.Timestamp birth_date = 6;
+  string birth_country = 7;
+  string birth_city = 8;
+  string nationality = 9;
+  string gender = 10;
+  string marital_status = 11;
+  string religion = 12;
+  string passport_number = 13;
+  google.protobuf.Timestamp passport_expiry = 14;
+  string home_phone = 15;
+  string email = 16;
+  string wechat = 17;
+  string qq = 18;
+  string home_address = 19;
+  bool has_contact = 20;
+  string contact_name = 21;
+  string contact_relationship = 22;
+  string contact_phone = 23;
+  string contact_email = 24;
+  string contact_type = 25;
+  bool is_chinese_heritage = 26;
+  string chinese_heritage_details = 27;
+  string family_members = 28; // JSON string
+  string mailing_address = 29;
+  string mailing_zip = 30;
+  string mailing_country = 31;
+  string clothing_size = 32;
+  
+  // 申请记录信息
+  string application_id = 33; // 编辑模式时提供
+  string education_background = 34;
+  string previous_school = 35;
+  string chinese_level = 36;
+  string hsk4 = 37;
+  string hsk5 = 38;
+  string english_level = 39;
+  string ielts_score = 40;
+  string toefl_score = 41;
+  string course_type = 42;
+  google.protobuf.Timestamp study_start_date = 43;
+  google.protobuf.Timestamp study_end_date = 44;
+  string funding_source = 45;
+  string application_reason = 46;
+  string scholarship_application = 47;
+  string hsk_score = 48;
+  string notes = 49;
+  
+  // 文件字段
+  string passport = 50;
+  string photo = 51;
+  string medical = 52;
+  string education = 53;
+  string guardian = 54;
+  string guardian_id = 55;
+  string express = 56;
+  repeated string award_cert = 57;
+  string middle_school_diploma = 58;
+  string transcript = 59;
+  string hsk_certificate = 60;
+  string hsk4_certificate = 61;
+  string hsk5_certificate = 62;
+  repeated string competition_awards = 63;
+  string ielts_certificate = 64;
+  string toefl_certificate = 65;
 }
