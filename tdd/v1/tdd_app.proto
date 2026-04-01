@@ -6,33 +6,32 @@ option go_package = "k12_backend/api/tdd/v1;v1";
 
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
-import "exam/v1/exam.proto";
 import "tdd/v1/tdd.proto";
 
-// TddAppService App 端对外查询接口：浏览大组 → 细分集合 → 条目详情。
+// TddAppService App 端查询：大组列表 → 大组详情 → 细分集合详情 → 单条目详情（HTTP/gRPC）。
 service TddAppService {
-  // 获取租户下所有已发布的大组列表。
+  // 分页列出租户下已发布的大组。
   rpc ListGroups(ListGroupsRequest) returns (ListGroupsResponse) {
     option (google.api.http) = {
       get: "/v1/tdd/app/groups"
     };
   }
 
-  // 获取大组详情（含细分集合概览列表）。
+  // 单个大组详情（含细分集合概览）。
   rpc GetGroup(GetGroupRequest) returns (GetGroupResponse) {
     option (google.api.http) = {
       get: "/v1/tdd/app/groups/{group_id}"
     };
   }
 
-  // 获取细分集合详情及其下条目列表。
+  // 细分集合详情 + 顶层条目 + 章节树（条目是否含 structured_paper/answers 由 include 参数控制）。
   rpc GetCollection(GetCollectionRequest) returns (GetCollectionResponse) {
     option (google.api.http) = {
       get: "/v1/tdd/app/collections/{collection_id}"
     };
   }
 
-  // 获取单个条目详情（含完整试卷结构与答案）。
+  // 单个条目详情（默认返回摘要与结构化试卷；答案是否返回由 include_answer 控制）。
   rpc GetItem(GetItemRequest) returns (GetItemResponse) {
     option (google.api.http) = {
       get: "/v1/tdd/app/items/{item_id}"
@@ -43,21 +42,21 @@ service TddAppService {
 // ---------- ListGroups ----------
 
 message ListGroupsRequest {
-  string tenant_id = 1;
-  int32 page_size = 2;
-  string page_token = 3;
+  string tenant_id = 1;  // 租户 ID，必填
+  int32 page_size = 2;   // 每页条数，<=0 时使用服务端默认
+  string page_token = 3; // 下一页游标，由上次响应的 next_page_token 回填；首页留空
 }
 
 message ListGroupsResponse {
-  repeated TddGroupInfo groups = 1;
-  string next_page_token = 2;
+  repeated TddGroupInfo groups = 1; // 当前页大组列表
+  string next_page_token = 2;       // 下一页游标；空表示没有更多数据
 }
 
 // ---------- GetGroup ----------
 
 message GetGroupRequest {
-  string group_id = 1;
-  string tenant_id = 2;
+  string group_id = 1;  // 大组 ID
+  string tenant_id = 2; // 租户 ID（用于校验，建议必填）
 }
 
 message GetGroupResponse {
@@ -67,45 +66,54 @@ message GetGroupResponse {
 // ---------- GetCollection ----------
 
 message GetCollectionRequest {
-  string collection_id = 1;
-  string tenant_id = 2;
-  // true 时返回每个条目的试卷详情与答案；false 仅返回摘要列表。
+  string collection_id = 1; // 细分集合 ID
+  string tenant_id = 2;     // 租户 ID
+
+  // true：返回每条目的 structured_paper（整卷结构化内容）；false：不返回该字段以减小体积。
   bool include_detail = 3;
+
+  // true：返回 answers 映射；false：不返回答案与解析配置。
   bool include_answer = 4;
 }
 
 message GetCollectionResponse {
-  TddCollectionInfo collection = 1;
-  // 无章节归属的顶层条目（与 PushCollection.items 一致）
+  TddCollectionInfo collection = 1; // 集合元信息
+
+  // 未挂载到任何章节的顶层条目（与 PushCollectionRequest.items 对应）。
   repeated TddItemInfo items = 2;
-  // 章节树；各节点含本层直接条目（子章节在 sub_sections）
+
+  // 章节树；每个节点含本层直接条目，子章节在 sub_sections 中。
   repeated SectionTreeNode sections = 3;
 }
 
-// App 端章节树（条目为 TddItemInfo，与推送侧 SectionDetail 对应）。
+// App 侧章节树节点，结构与推送侧 SectionDetail 对应。
 message SectionTreeNode {
   string section_id = 1;
   string name = 2;
   string description = 3;
   int32 sort_order = 4;
   string parent_id = 5;
+
+  // 直接挂在本节点下的条目（不含子章节中的条目）。
   repeated TddItemInfo items = 6;
+
+  // 子章节。
   repeated SectionTreeNode sub_sections = 7;
 }
 
 // ---------- GetItem ----------
 
 message GetItemRequest {
-  string item_id = 1;
-  string tenant_id = 2;
-  bool include_answer = 3;
+  string item_id = 1;       // 条目 ID
+  string tenant_id = 2;   // 租户 ID（用于校验，建议必填）
+  bool include_answer = 3; // true：返回 answers；false：不返回
 }
 
 message GetItemResponse {
   TddItemInfo item = 1;
 }
 
-// ---------- 共用视图 ----------
+// ---------- 共用视图（与推送侧消息字段语义对齐） ----------
 
 message TddGroupInfo {
   string group_id = 1;
@@ -113,8 +121,8 @@ message TddGroupInfo {
   string description = 3;
   string icon_url = 4;
   string tenant_id = 5;
-  repeated CollectionSummary collections = 6;
-  google.protobuf.Timestamp updated_at = 7;
+  repeated CollectionSummary collections = 6; // 该大组下细分集合概览
+  google.protobuf.Timestamp updated_at = 7;   // 服务端最近更新时间
 }
 
 message TddCollectionInfo {
@@ -123,26 +131,33 @@ message TddCollectionInfo {
   string name = 3;
   string description = 4;
   string tenant_id = 5;
-  int32 sort_order = 6;
-  int32 item_count = 7;
+  int32 sort_order = 6;   // 在大组或业务侧约定的排序
+  int32 item_count = 7;   // 集合下条目总数（含各章节内）
   google.protobuf.Timestamp updated_at = 8;
 }
 
-// 条目视图，source_type 决定填充哪些字段。
+// 条目对外视图：paper_summary / structured_paper / answers 与推送侧 TddItem 一致；是否填充由查询接口的 include 标志决定。
 message TddItemInfo {
+  reserved 8, 9; // 与历史/对齐预留，勿分配字段号
+
   string item_id = 1;
   string collection_id = 2;
-  string source_type = 3;
-  string source_id = 4;
+  string source_type = 3; // 与推送侧 source_type 一致
+  string source_id = 4;   // 与推送侧 source_id 一致
   string title = 5;
   int32 sort_order = 6;
-  // 空表示顶层条目；否则为所属章节 section_id
+
+  // 空：顶层条目；非空：所属章节 section_id。
   string section_id = 7;
 
-  // EXAM 类型填充
-  exam.v1.PaperSummary paper_summary = 10;
-  exam.v1.PaperDetail paper_detail = 11;
-  map<string, exam.v1.AnswerConfig> answers = 12;
+  // 列表/摘要。
+  TddPaperSummary paper_summary = 10;
+
+  // 整卷结构化内容（大字段；GetCollection 受 include_detail 控制）。
+  TddStructuredPaper structured_paper = 11;
+
+  // 答案与解析配置（GetCollection 受 include_answer 控制；GetItem 受 include_answer 控制）。
+  map<string, TddAnswerConfig> answers = 12;
 
   google.protobuf.Timestamp updated_at = 15;
 }
