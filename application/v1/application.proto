@@ -6,6 +6,7 @@ import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "document/v1/document.proto";
+import "applicant/v1/applicant.proto";
 
 option go_package = "k12_backend/api/application/v1";
 
@@ -126,6 +127,7 @@ message Application {
   string ielts_certificate = 41;
   string toefl_certificate = 42;
   repeated document.v1.Document documents = 43;
+  applicant.v1.Applicant applicant = 44;
 }
 
 // CreateApplicationRequest 创建申请请求
