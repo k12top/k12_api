@@ -62,6 +62,20 @@ service DocumentService {
       body: "*"
     };
   }
+  
+  // GetQiniuToken 获取七牛云上传凭证
+  rpc GetQiniuToken(google.protobuf.Empty) returns (GetQiniuTokenResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/document/qiniu/token"
+    };
+  }
+}
+
+// GetQiniuTokenResponse 获取七牛云上传凭证响应
+message GetQiniuTokenResponse {
+  string token = 1; // 七牛云上传凭证
+  string bucket = 2; // 存储桶名称
+  string domain = 3; // 存储桶域名
 }
 
 // PublicDocumentService 公开文件服务
