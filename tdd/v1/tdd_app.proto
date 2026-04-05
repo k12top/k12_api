@@ -10,7 +10,7 @@ import "tdd/v1/tdd.proto";
 
 // TddAppService App 端查询：大组列表 → 大组详情 → 细分集合详情 → 单条目详情（HTTP/gRPC）。
 service TddAppService {
-  // 分页列出租户下已发布的大组。
+  // 分页列出已发布的大组。
   rpc ListGroups(ListGroupsRequest) returns (ListGroupsResponse) {
     option (google.api.http) = {
       get: "/v1/tdd/app/groups"
@@ -94,7 +94,8 @@ service TddAppService {
 // ---------- ListGroups ----------
 
 message ListGroupsRequest {
-  string tenant_id = 1;  // 租户 ID，必填
+  reserved 1;
+  reserved "tenant_id";
   int32 page_size = 2;   // 每页条数，<=0 时使用服务端默认
   string page_token = 3; // 下一页游标，由上次响应的 next_page_token 回填；首页留空
 }
@@ -107,8 +108,9 @@ message ListGroupsResponse {
 // ---------- GetGroup ----------
 
 message GetGroupRequest {
-  string group_id = 1;  // 大组 ID
-  string tenant_id = 2; // 租户 ID（用于校验，建议必填）
+  string group_id = 1; // 大组 ID
+  reserved 2;
+  reserved "tenant_id";
 }
 
 message GetGroupResponse {
@@ -119,7 +121,8 @@ message GetGroupResponse {
 
 message GetCollectionRequest {
   string collection_id = 1; // 细分集合 ID
-  string tenant_id = 2;     // 租户 ID
+  reserved 2;
+  reserved "tenant_id";
 
   // true：返回每条目的 structured_paper（整卷结构化内容）；false：不返回该字段以减小体积。
   bool include_detail = 3;
@@ -157,7 +160,8 @@ message SectionTreeNode {
 
 message GetItemRequest {
   string item_id = 1;       // 条目 ID
-  string tenant_id = 2;   // 租户 ID（必填；须与条目所属细分集合租户一致）
+  reserved 2;
+  reserved "tenant_id";
   bool include_answer = 3; // true：返回 answers；false：不返回
 }
 
@@ -169,7 +173,8 @@ message GetItemResponse {
 
 message SaveUserItemProgressRequest {
   string item_id = 1; // path
-  string tenant_id = 2;
+  reserved 2;
+  reserved "tenant_id";
   // 客户端自定义阶段，如 answering、review。
   string stage = 3;
   // key=题目 hash_id，value=用户作答（选项拼接或文本）。
@@ -184,7 +189,8 @@ message SaveUserItemProgressResponse {
 
 message GetUserItemProgressRequest {
   string item_id = 1;
-  string tenant_id = 2;
+  reserved 2;
+  reserved "tenant_id";
 }
 
 message GetUserItemProgressResponse {
@@ -199,7 +205,8 @@ message GetUserItemProgressResponse {
 // 判分规则：首版仅「与 correct_keys 完全一致」得本题满分，否则 0 分。
 message SubmitTddAttemptRequest {
   string item_id = 1;
-  string tenant_id = 2;
+  reserved 2;
+  reserved "tenant_id";
   map<string, string> user_answers = 3;
 }
 
@@ -222,7 +229,8 @@ message TddQuestionResult {
 
 message GetUserItemStatsRequest {
   string item_id = 1;
-  string tenant_id = 2;
+  reserved 2;
+  reserved "tenant_id";
 }
 
 message GetUserItemStatsResponse {
@@ -279,7 +287,8 @@ message TddGroupInfo {
   string name = 2;
   string description = 3;
   string icon_url = 4;
-  string tenant_id = 5;
+  reserved 5;
+  reserved "tenant_id";
   repeated CollectionSummary collections = 6; // 该大组下细分集合概览
   google.protobuf.Timestamp updated_at = 7;   // 服务端最近更新时间
 }
@@ -289,7 +298,8 @@ message TddCollectionInfo {
   string group_id = 2;
   string name = 3;
   string description = 4;
-  string tenant_id = 5;
+  reserved 5;
+  reserved "tenant_id";
   int32 sort_order = 6;   // 在大组或业务侧约定的排序
   int32 item_count = 7;   // 集合下条目总数（含各章节内）
   google.protobuf.Timestamp updated_at = 8;

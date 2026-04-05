@@ -22,7 +22,8 @@ message PushGroupRequest {
   string name = 2;          // 展示名称
   string description = 3;   // 简介/说明
   string icon_url = 4;      // 封面或图标 URL
-  string tenant_id = 5;     // 租户 ID，用于数据隔离
+  reserved 5;
+  reserved "tenant_id";
 
   // 该大组下细分集合的概览列表（用于二级菜单、集合入口等，不含试卷正文）。
   repeated CollectionSummary collections = 6;
@@ -155,7 +156,8 @@ message PushCollectionRequest {
   string group_id = 2;      // 所属大组 ID
   string name = 3;          // 名称
   string description = 4;   // 描述
-  string tenant_id = 5;     // 租户 ID
+  reserved 5;
+  reserved "tenant_id";
 
   // 不属于任何章节的顶层条目（与 sections 内 items 合并去重后落库，语义与实现一致即可）。
   repeated TddItem items = 6;
@@ -223,7 +225,8 @@ message UnpublishRequest {
   }
   TargetType target_type = 1; // 下架目标类型
   string target_id = 2;       // 与 target_type 对应的 group_id 或 collection_id
-  string tenant_id = 3;       // 租户 ID
+  reserved 3;
+  reserved "tenant_id";
 }
 
 message UnpublishResponse {
