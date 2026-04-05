@@ -196,6 +196,12 @@ message TddItem {
   map<string, TddAnswerConfig> answers = 8;
 
   string section_id = 9;    // 所属章节 ID；空字符串表示顶层条目
+
+  // 偏好匹配标签（可选；推送时填写；与用户偏好一致时列表内置顶）
+  string pref_grade_level = 10; // 年级/学段，可与 paper_summary.grade_level 一致或更细
+  string pref_country = 11;     // 国家，如 CN、US
+  string pref_region = 12;      // 省/州/地区
+  string pref_school = 13;      // 学校名或编码
 }
 
 message PushGroupResponse {
