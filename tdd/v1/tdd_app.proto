@@ -94,10 +94,8 @@ service TddAppService {
 // ---------- ListGroups ----------
 
 message ListGroupsRequest {
-  reserved 1;
-  reserved "tenant_id";
-  int32 page_size = 2;   // 每页条数，<=0 时使用服务端默认
-  string page_token = 3; // 下一页游标，由上次响应的 next_page_token 回填；首页留空
+  int32 page_size = 1;   // 每页条数，<=0 时使用服务端默认
+  string page_token = 2; // 下一页游标，由上次响应的 next_page_token 回填；首页留空
 }
 
 message ListGroupsResponse {
@@ -109,8 +107,6 @@ message ListGroupsResponse {
 
 message GetGroupRequest {
   string group_id = 1; // 大组 ID
-  reserved 2;
-  reserved "tenant_id";
 }
 
 message GetGroupResponse {
@@ -121,14 +117,12 @@ message GetGroupResponse {
 
 message GetCollectionRequest {
   string collection_id = 1; // 细分集合 ID
-  reserved 2;
-  reserved "tenant_id";
 
   // true：返回每条目的 structured_paper（整卷结构化内容）；false：不返回该字段以减小体积。
-  bool include_detail = 3;
+  bool include_detail = 2;
 
   // true：返回 answers 映射；false：不返回答案与解析配置。
-  bool include_answer = 4;
+  bool include_answer = 3;
 }
 
 message GetCollectionResponse {
@@ -160,9 +154,7 @@ message SectionTreeNode {
 
 message GetItemRequest {
   string item_id = 1;       // 条目 ID
-  reserved 2;
-  reserved "tenant_id";
-  bool include_answer = 3; // true：返回 answers；false：不返回
+  bool include_answer = 2; // true：返回 answers；false：不返回
 }
 
 message GetItemResponse {
@@ -173,14 +165,12 @@ message GetItemResponse {
 
 message SaveUserItemProgressRequest {
   string item_id = 1; // path
-  reserved 2;
-  reserved "tenant_id";
   // 客户端自定义阶段，如 answering、review。
-  string stage = 3;
+  string stage = 2;
   // key=题目 hash_id，value=用户作答（选项拼接或文本）。
-  map<string, string> user_answers = 4;
+  map<string, string> user_answers = 3;
   // 可选扩展 JSON。
-  string extra_json = 5;
+  string extra_json = 4;
 }
 
 message SaveUserItemProgressResponse {
@@ -189,8 +179,6 @@ message SaveUserItemProgressResponse {
 
 message GetUserItemProgressRequest {
   string item_id = 1;
-  reserved 2;
-  reserved "tenant_id";
 }
 
 message GetUserItemProgressResponse {
@@ -205,9 +193,7 @@ message GetUserItemProgressResponse {
 // 判分规则：首版仅「与 correct_keys 完全一致」得本题满分，否则 0 分。
 message SubmitTddAttemptRequest {
   string item_id = 1;
-  reserved 2;
-  reserved "tenant_id";
-  map<string, string> user_answers = 3;
+  map<string, string> user_answers = 2;
 }
 
 message SubmitTddAttemptResponse {
@@ -229,8 +215,6 @@ message TddQuestionResult {
 
 message GetUserItemStatsRequest {
   string item_id = 1;
-  reserved 2;
-  reserved "tenant_id";
 }
 
 message GetUserItemStatsResponse {
@@ -287,10 +271,8 @@ message TddGroupInfo {
   string name = 2;
   string description = 3;
   string icon_url = 4;
-  reserved 5;
-  reserved "tenant_id";
-  repeated CollectionSummary collections = 6; // 该大组下细分集合概览
-  google.protobuf.Timestamp updated_at = 7;   // 服务端最近更新时间
+  repeated CollectionSummary collections = 5; // 该大组下细分集合概览
+  google.protobuf.Timestamp updated_at = 6;   // 服务端最近更新时间
 }
 
 message TddCollectionInfo {
@@ -298,11 +280,9 @@ message TddCollectionInfo {
   string group_id = 2;
   string name = 3;
   string description = 4;
-  reserved 5;
-  reserved "tenant_id";
-  int32 sort_order = 6;   // 在大组或业务侧约定的排序
-  int32 item_count = 7;   // 集合下条目总数（含各章节内）
-  google.protobuf.Timestamp updated_at = 8;
+  int32 sort_order = 5;   // 在大组或业务侧约定的排序
+  int32 item_count = 6;   // 集合下条目总数（含各章节内）
+  google.protobuf.Timestamp updated_at = 7;
 }
 
 // 条目对外视图：paper_summary / structured_paper / answers 与推送侧 TddItem 一致；是否填充由查询接口的 include 标志决定。

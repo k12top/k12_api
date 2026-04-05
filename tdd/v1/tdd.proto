@@ -22,14 +22,12 @@ message PushGroupRequest {
   string name = 2;          // 展示名称
   string description = 3;   // 简介/说明
   string icon_url = 4;      // 封面或图标 URL
-  reserved 5;
-  reserved "tenant_id";
 
   // 该大组下细分集合的概览列表（用于二级菜单、集合入口等，不含试卷正文）。
-  repeated CollectionSummary collections = 6;
+  repeated CollectionSummary collections = 5;
 
   // 推荐位排序：0 表示不参与推荐位展示；>=1 表示上推荐位，数值越小在推荐列表中越靠前。
-  int32 featured_order = 7;
+  int32 featured_order = 6;
 }
 
 // 细分集合概览（仅元数据，用于大组下列表/导航）。
@@ -156,14 +154,12 @@ message PushCollectionRequest {
   string group_id = 2;      // 所属大组 ID
   string name = 3;          // 名称
   string description = 4;   // 描述
-  reserved 5;
-  reserved "tenant_id";
 
   // 不属于任何章节的顶层条目（与 sections 内 items 合并去重后落库，语义与实现一致即可）。
-  repeated TddItem items = 6;
+  repeated TddItem items = 5;
 
   // 章节树；子节点通过 parent_id 与 sub_sections 表达。
-  repeated SectionDetail sections = 7;
+  repeated SectionDetail sections = 6;
 }
 
 message SectionDetail {
@@ -225,8 +221,6 @@ message UnpublishRequest {
   }
   TargetType target_type = 1; // 下架目标类型
   string target_id = 2;       // 与 target_type 对应的 group_id 或 collection_id
-  reserved 3;
-  reserved "tenant_id";
 }
 
 message UnpublishResponse {
