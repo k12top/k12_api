@@ -10,7 +10,7 @@ import "tdd/v1/tdd.proto";
 
 // TddAppService App 端查询：大组列表 → 大组详情 → 细分集合详情 → 单条目详情（HTTP/gRPC）。
 service TddAppService {
-  // 分页列出已发布的大组。
+  // 分页列出已发布的大组（支持排序与个性化推荐置顶）。
   rpc ListGroups(ListGroupsRequest) returns (ListGroupsResponse) {
     option (google.api.http) = {
       get: "/v1/tdd/app/groups"
@@ -25,6 +25,7 @@ service TddAppService {
   }
 
   // 细分集合详情 + 顶层条目 + 章节树（条目是否含 structured_paper/answers 由 include 参数控制）。
+  // 如果请求带合法用户 token，每个 TddItemInfo 会附带用户的完成状态与最近得分。
   rpc GetCollection(GetCollectionRequest) returns (GetCollectionResponse) {
     option (google.api.http) = {
       get: "/v1/tdd/app/collections/{collection_id}"
@@ -111,10 +112,24 @@ service TddAppService {
     };
   }
 
-  // 交卷历史（考试/试卷记录；需登录）。
+  // 交卷历史（考试/试卷记录；支持按 item/collection 过滤；需登录）。
   rpc ListUserAttemptHistory(ListUserAttemptHistoryRequest) returns (ListUserAttemptHistoryResponse) {
     option (google.api.http) = {
       get: "/v1/tdd/app/user/attempt-history"
+    };
+  }
+
+  // 推荐位大组列表（按 SaaS 推荐位排序，关联当前用户进度；需登录可选）。
+  rpc ListFeaturedGroups(ListFeaturedGroupsRequest) returns (ListFeaturedGroupsResponse) {
+    option (google.api.http) = {
+      get: "/v1/tdd/app/featured-groups"
+    };
+  }
+
+  // 查看某次交卷的每题详情（溯源；需登录）。
+  rpc GetAttemptDetail(GetAttemptDetailRequest) returns (GetAttemptDetailResponse) {
+    option (google.api.http) = {
+      get: "/v1/tdd/app/attempts/{attempt_id}"
     };
   }
 }
@@ -124,6 +139,8 @@ service TddAppService {
 message ListGroupsRequest {
   int32 page_size = 1;   // 每页条数，<=0 时使用服务端默认
   string page_token = 2; // 下一页游标，由上次响应的 next_page_token 回填；首页留空
+  // 排序方式：空/SORT_DEFAULT = 服务端默认排序；SORT_UPDATED = 按更新时间；SORT_FEATURED = 按推荐位。
+  string sort_by = 3;
 }
 
 message ListGroupsResponse {
@@ -157,6 +174,7 @@ message GetCollectionResponse {
   TddCollectionInfo collection = 1; // 集合元信息
 
   // 未挂载到任何章节的顶层条目（与 PushCollectionRequest.items 对应）。
+  // 如果请求带合法用户 token，每条 TddItemInfo 会携带 completed/last_score/attempt_count/user_stage。
   repeated TddItemInfo items = 2;
 
   // 章节树；每个节点含本层直接条目，子章节在 sub_sections 中。
@@ -218,10 +236,11 @@ message GetUserItemProgressResponse {
 
 // ---------- 交卷与评分 ----------
 
-// 判分规则：首版仅「与 correct_keys 完全一致」得本题满分，否则 0 分。
 message SubmitTddAttemptRequest {
   string item_id = 1;
   map<string, string> user_answers = 2;
+  // 本次作答耗时（秒），由客户端上报。
+  int32 duration_sec = 3;
 }
 
 message SubmitTddAttemptResponse {
@@ -229,6 +248,8 @@ message SubmitTddAttemptResponse {
   double max_score = 2;
   int64 attempt_id = 3;
   repeated TddQuestionResult question_results = 4;
+  // 本次交卷是否包含主观题（前端可据此提示"部分题目待人工批改"）。
+  bool has_subjective_questions = 5;
 }
 
 message TddQuestionResult {
@@ -237,6 +258,12 @@ message TddQuestionResult {
   double earned_score = 3;
   string user_answer = 4;
   repeated string correct_keys = 5;
+  // 本题满分值。
+  double max_score = 6;
+  // 题目类型：objective / subjective。
+  string question_type = 7;
+  // 本题解析。
+  string explanation = 8;
 }
 
 // ---------- 按卷统计 ----------
@@ -282,6 +309,10 @@ message UserItemProgressEntry {
   double last_total_score = 7;
   double last_max_score = 8;
   google.protobuf.Timestamp last_submitted_at = 9;
+  // 历史最高得分。
+  double best_total_score = 10;
+  // 历史最高得分对应卷面满分。
+  double best_max_score = 11;
 }
 
 // ---------- 成绩 / 学习概览 ----------
@@ -326,6 +357,10 @@ message DailyActivityCell {
 message ListUserAttemptHistoryRequest {
   int32 page_size = 1;   // <=0 时用服务端默认
   string page_token = 2; // 下一页：上次响应的 next_page_token
+  // 可选过滤：仅查看此 item 的交卷记录。
+  string item_id = 3;
+  // 可选过滤：仅查看此集合下交卷记录。
+  string collection_id = 4;
 }
 
 message ListUserAttemptHistoryResponse {
@@ -341,6 +376,8 @@ message UserAttemptHistoryEntry {
   double total_score = 5;
   double max_score = 6;
   google.protobuf.Timestamp submitted_at = 7;
+  // 本次作答耗时（秒）。
+  int32 duration_sec = 8;
 }
 
 // ---------- 连续做题 ----------
@@ -379,6 +416,61 @@ message UserPreferences {
   string school = 4;
 }
 
+// ---------- 推荐位大组 ----------
+
+message ListFeaturedGroupsRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message ListFeaturedGroupsResponse {
+  repeated FeaturedGroupEntry groups = 1;
+  string next_page_token = 2;
+}
+
+message FeaturedGroupEntry {
+  TddGroupInfo group = 1;
+  int32 featured_order = 2; // SaaS 推荐位排序值（>=1，越小越靠前）
+
+  // 以下字段仅在请求含合法用户 token 时填充 ↓
+  int32 total_item_count = 3;     // 整个大组下条目总数
+  int32 completed_item_count = 4; // 至少交卷过一次的条目数
+
+  // 当前进度 item（用户最近操作过草稿、或最近交卷的 item）。
+  FeaturedProgressItem current_item = 5;
+  // 下一个待完成 item（按 sort_order 排列的首个未完成）。
+  FeaturedProgressItem next_item = 6;
+  // 整个大组是否已全部完成。
+  bool all_completed = 7;
+}
+
+message FeaturedProgressItem {
+  string item_id = 1;
+  string title = 2;
+  string collection_id = 3;
+  string collection_name = 4;
+  double last_score = 5;
+  double max_score = 6;
+}
+
+// ---------- 交卷详情溯源 ----------
+
+message GetAttemptDetailRequest {
+  int64 attempt_id = 1;
+}
+
+message GetAttemptDetailResponse {
+  int64 attempt_id = 1;
+  string item_id = 2;
+  string item_title = 3;
+  string collection_id = 4;
+  double total_score = 5;
+  double max_score = 6;
+  google.protobuf.Timestamp submitted_at = 7;
+  int32 duration_sec = 8;
+  repeated TddQuestionResult question_results = 9;
+}
+
 // ---------- 共用视图（与推送侧消息字段语义对齐） ----------
 
 message TddGroupInfo {
@@ -388,6 +480,10 @@ message TddGroupInfo {
   string icon_url = 4;
   repeated CollectionSummary collections = 5; // 该大组下细分集合概览
   google.protobuf.Timestamp updated_at = 6;   // 服务端最近更新时间
+  // SaaS 推荐位排序值；0=不上推荐位。
+  int32 featured_order = 7;
+  // 请求带合法用户且本大组内条目与用户偏好匹配时为 true。
+  bool recommended_for_you = 8;
 }
 
 message TddCollectionInfo {
@@ -398,6 +494,8 @@ message TddCollectionInfo {
   int32 sort_order = 5;   // 在大组或业务侧约定的排序
   int32 item_count = 6;   // 集合下条目总数（含各章节内）
   google.protobuf.Timestamp updated_at = 7;
+  // 是否标记为 NEW（到期自动 false）。
+  bool is_new = 8;
 }
 
 // 条目对外视图：paper_summary / structured_paper / answers 与推送侧 TddItem 一致；是否填充由查询接口的 include 标志决定。
@@ -433,4 +531,17 @@ message TddItemInfo {
 
   // 请求带合法用户且本条目与用户偏好匹配（含 exam_meta.tags 中 Region:/Grade: 等前缀标签）时为 true。
   bool recommended_for_you = 20;
+
+  // ---- 以下字段仅在请求带合法用户 token 时填充 ↓ ----
+
+  // 是否已完成（至少提交过一次考试）。
+  bool completed = 21;
+  // 最近一次提交得分。
+  double last_score = 22;
+  // 最近一次提交满分。
+  double last_max_score = 23;
+  // 该 item 累计提交次数。
+  int32 attempt_count = 24;
+  // 草稿阶段（如 answering/review），空表示无草稿。
+  string user_stage = 25;
 }

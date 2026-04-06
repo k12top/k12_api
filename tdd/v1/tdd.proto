@@ -4,6 +4,8 @@ package tdd.v1;
 
 option go_package = "k12_backend/api/tdd/v1;v1";
 
+import "google/protobuf/timestamp.proto";
+
 // TddPushService 题多多数据推送服务：管理端作为 gRPC 客户端向本服务推送/下架内容。
 service TddPushService {
   // 推送或全量覆盖大组（含基本信息与细分集合概览，用于 App 侧导航/列表）。
@@ -36,6 +38,8 @@ message CollectionSummary {
   string name = 2;          // 名称
   string description = 3;   // 描述
   int32 sort_order = 4;     // 在大组内的展示顺序，越小越靠前
+  bool is_new = 5;          // 是否标记为 NEW（SaaS 管理端设置）
+  google.protobuf.Timestamp new_until = 6; // NEW 标签到期时间；为空或过期则视为非 NEW
 }
 
 // 列表场景使用的试卷摘要（题多多域独立定义，不引用考试中心等其他服务的 proto）。
@@ -58,6 +62,10 @@ message TddAnswerConfig {
   string match_rule = 5;                 // 匹配规则（如填空、排序题）
   map<string, string> correct_pairs = 6; // 连线题等：键值对正确配对
   repeated string correct_order = 7;    // 排序题：正确顺序
+  // 题目类型：objective（客观）/ subjective（主观），空默认 objective。
+  string question_type = 8;
+  // 主观题默认给分比例 [0.0, 1.0]；0 表示不给分（待人工批改）；默认 0。
+  double subjective_default_ratio = 9;
 }
 
 // 解析管线输出的整卷结构（与 docx/pdf 解析 JSON 对齐；App 按 pages → sections → questions 展示）。
