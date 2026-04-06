@@ -89,6 +89,34 @@ service TddAppService {
       body: "*"
     };
   }
+
+  // 当前用户在指定细分集合下的进度与得分汇总（各条目草稿阶段 + 最近一次交卷得分；需登录）。
+  rpc GetUserCollectionProgress(GetUserCollectionProgressRequest) returns (GetUserCollectionProgressResponse) {
+    option (google.api.http) = {
+      get: "/v1/tdd/app/collections/{collection_id}/user-progress"
+    };
+  }
+
+  // 成绩/学习概览：累计经验、答题数、交卷次数、连续打卡等（需登录）。
+  rpc GetUserLearningSummary(GetUserLearningSummaryRequest) returns (GetUserLearningSummaryResponse) {
+    option (google.api.http) = {
+      get: "/v1/tdd/app/user/learning-summary"
+    };
+  }
+
+  // 活动打卡热力图：按日交卷次数 + 强度档位（Git 贡献图风格；需登录）。
+  rpc GetUserActivityHeatmap(GetUserActivityHeatmapRequest) returns (GetUserActivityHeatmapResponse) {
+    option (google.api.http) = {
+      get: "/v1/tdd/app/user/activity-heatmap"
+    };
+  }
+
+  // 交卷历史（考试/试卷记录；需登录）。
+  rpc ListUserAttemptHistory(ListUserAttemptHistoryRequest) returns (ListUserAttemptHistoryResponse) {
+    option (google.api.http) = {
+      get: "/v1/tdd/app/user/attempt-history"
+    };
+  }
 }
 
 // ---------- ListGroups ----------
@@ -228,6 +256,93 @@ message TddQuestionStat {
   bool last_is_correct = 4;
 }
 
+// ---------- 细分集合：当前用户进度与得分 ----------
+
+message GetUserCollectionProgressRequest {
+  string collection_id = 1;
+}
+
+message GetUserCollectionProgressResponse {
+  string collection_id = 1;
+  int32 total_item_count = 2;      // 集合内条目总数
+  int32 attempted_item_count = 3;  // 至少交卷过一次的条目数
+  double sum_last_total_score = 4; // 各条目「最近一次交卷」得分之和（仅统计已交卷条目）
+  double sum_last_max_score = 5;   // 同上最近一次卷面满分之和
+  repeated UserItemProgressEntry items = 6;
+}
+
+// 单条目：草稿状态 + 最近一次交卷得分（多次交卷取 submitted_at 最新）。
+message UserItemProgressEntry {
+  string item_id = 1;
+  string title = 2;
+  string stage = 3; // 草稿阶段，无草稿为空
+  bool has_draft = 4;
+  google.protobuf.Timestamp draft_updated_at = 5;
+  int32 attempt_count = 6; // 该条目累计交卷次数
+  double last_total_score = 7;
+  double last_max_score = 8;
+  google.protobuf.Timestamp last_submitted_at = 9;
+}
+
+// ---------- 成绩 / 学习概览 ----------
+
+message GetUserLearningSummaryRequest {
+}
+
+// total_experience_points：全部交卷中单题 earned_score 累计（与累计卷面得分一致，重考重复累计）。
+message GetUserLearningSummaryResponse {
+  double total_experience_points = 1;
+  int64 total_questions_answered = 2;   // 所有交卷中作答过的题目记录条数（含重考）
+  int64 total_attempt_count = 3;        // 交卷次数
+  int64 distinct_paper_count = 4;       // 至少交卷过一次的试卷条目数（item 去重）
+  int32 current_streak = 5;             // 连续有做题记录的天数（与 GetPracticeStreak 一致）
+  string last_practice_date = 6;        // YYYY-MM-DD，最近一次有做题记录的日期
+}
+
+// ---------- 活动热力图（按练习时区切日） ----------
+
+message GetUserActivityHeatmapRequest {
+  // 起止日期（含）YYYY-MM-DD；均空则默认最近 365 天至今日。
+  string start_date = 1;
+  string end_date = 2;
+}
+
+message GetUserActivityHeatmapResponse {
+  // 服务端切日使用的 IANA 时区名（与配置 practice_timezone 一致）。
+  string practice_timezone = 1;
+  // 区间内每个自然日一行（含无交卷的 0），便于前端直接铺网格。
+  repeated DailyActivityCell days = 2;
+}
+
+// activity_level：0 无；1–4 随当日交卷次数升高（用于配色）。
+message DailyActivityCell {
+  string date = 1;              // YYYY-MM-DD
+  int32 submission_count = 2;   // 当日交卷次数
+  int32 activity_level = 3;     // 0–4
+}
+
+// ---------- 交卷历史 ----------
+
+message ListUserAttemptHistoryRequest {
+  int32 page_size = 1;   // <=0 时用服务端默认
+  string page_token = 2; // 下一页：上次响应的 next_page_token
+}
+
+message ListUserAttemptHistoryResponse {
+  repeated UserAttemptHistoryEntry attempts = 1;
+  string next_page_token = 2;
+}
+
+message UserAttemptHistoryEntry {
+  int64 attempt_id = 1;
+  string item_id = 2;
+  string item_title = 3;
+  string collection_id = 4;
+  double total_score = 5;
+  double max_score = 6;
+  google.protobuf.Timestamp submitted_at = 7;
+}
+
 // ---------- 连续做题 ----------
 
 message GetPracticeStreakRequest {
@@ -315,4 +430,7 @@ message TddItemInfo {
   string pref_country = 17;
   string pref_region = 18;
   string pref_school = 19;
+
+  // 请求带合法用户且本条目与用户偏好匹配（含 exam_meta.tags 中 Region:/Grade: 等前缀标签）时为 true。
+  bool recommended_for_you = 20;
 }
