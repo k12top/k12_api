@@ -89,11 +89,13 @@ message Applicant {
   string mailing_address = 30;
   string mailing_zip = 31;
   string mailing_country = 32;
-  string clothing_size = 33;
-  string family_members = 34;
-  string education_id = 35;
-  google.protobuf.Timestamp created_at = 36;
-  google.protobuf.Timestamp updated_at = 37;
+  string height = 33;
+  string weight = 34;
+  string waist = 35;
+  string family_members = 36;
+  string education_id = 37;
+  google.protobuf.Timestamp created_at = 38;
+  google.protobuf.Timestamp updated_at = 39;
 }
 
 // CreateApplicantRequest 创建申请人请求
@@ -129,9 +131,11 @@ message CreateApplicantRequest {
   string mailing_address = 29;
   string mailing_zip = 30;
   string mailing_country = 31;
-  string clothing_size = 32;
-  string family_members = 33;
-  string education_id = 34;
+  string height = 32;
+  string weight = 33;
+  string waist = 34;
+  string family_members = 35;
+  string education_id = 36;
 }
 
 // GetApplicantRequest 获取申请人请求
@@ -173,9 +177,11 @@ message UpdateApplicantRequest {
   string mailing_address = 30;
   string mailing_zip = 31;
   string mailing_country = 32;
-  string clothing_size = 33;
-  string family_members = 34;
-  string education_id = 35;
+  string height = 33;
+  string weight = 34;
+  string waist = 35;
+  string family_members = 36;
+  string education_id = 37;
 }
 
 // ListApplicantsRequest 列出申请人请求
