@@ -39,6 +39,13 @@ service TddAppService {
     };
   }
 
+  // 按条目返回打平后的题目列表（来自 tdd_item_question，无 pages/sections 嵌套）。
+  rpc ListItemQuestions(ListItemQuestionsRequest) returns (ListItemQuestionsResponse) {
+    option (google.api.http) = {
+      get: "/v1/tdd/app/items/{item_id}/questions"
+    };
+  }
+
   // 保存/更新用户在某条目上的草稿与阶段（需登录）。
   rpc SaveUserItemProgress(SaveUserItemProgressRequest) returns (SaveUserItemProgressResponse) {
     option (google.api.http) = {
@@ -205,6 +212,54 @@ message GetItemRequest {
 
 message GetItemResponse {
   TddItemInfo item = 1;
+}
+
+// ---------- ListItemQuestions（扁平题目） ----------
+
+message ListItemQuestionsRequest {
+  string item_id = 1;
+  // true：返回答案、解析、正确选项等；false：仅题干/选项/材料等展示用内容。
+  bool include_answer = 2;
+}
+
+message ListItemQuestionsResponse {
+  string item_id = 1;
+  repeated TddItemQuestionInfo questions = 2;
+  // 来自 tdd_items.paper_summary_json（与 TddPaperSummary.subject 一致）。
+  string subject = 3;
+  // 来自 paper_summary_json，如「高中」。
+  string grade_level = 4;
+}
+
+// 单题一行，与库表 tdd_item_question 对齐；子题通过 parent_hash_id 挂父题。
+message TddItemQuestionInfo {
+  string hash_id = 1;
+  string parent_hash_id = 2;
+  bool is_group = 3;
+  int32 sort_order = 4;
+  string section_title = 5;
+  string section_score_info = 6;
+  string number = 7;
+  string type = 8;
+  string type_cn = 9;
+  double score = 10;
+  string question_text = 11;
+  string question_text_format = 12;
+  string material = 13;
+  string material_format = 14;
+  // []TddParserOption JSON，与 structured_paper 中一致。
+  string options_json = 15;
+  // []TddParserQuestionImage JSON。
+  string images_json = 16;
+  // 以下字段仅在 include_answer=true 时填充（question_type 除外，便于 UI 区分客观/主观）。
+  string answer = 17;
+  string answer_analysis = 18;
+  repeated string correct_keys = 19;
+  string scoring_rule = 20;
+  string match_rule = 21;
+  string question_type = 22;
+  double subjective_default_ratio = 23;
+  string explanation = 24;
 }
 
 // ---------- 用户进度（草稿/阶段） ----------
