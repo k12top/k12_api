@@ -81,9 +81,10 @@ message User {
   string username = 2;
   string email = 3;
   string avatar = 4;
-  string role = 5;
-  string created_time = 6;
-  string last_login_time = 7;
+  repeated string roles = 5; // 支持多个角色
+  string role = 6; // 兼容字段，多个角色用逗号分隔
+  string created_time = 7;
+  string last_login_time = 8;
 }
 
 message ListUsersRequest {
@@ -99,7 +100,7 @@ message ListUsersReply {
 
 message UpdateUserRoleRequest {
   int64 id = 1;
-  string role = 2;
+  repeated string roles = 2; // 支持多个角色
 }
 
 message UpdateUserRoleReply {

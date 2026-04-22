@@ -35,6 +35,14 @@ service PublicExamService {
 
 // ExamService 考试服务 (需要认证)
 service ExamService {
+  // ========== 试卷相关 ==========
+  // 获取试卷列表（需要认证）
+  rpc ListPapers(ListPapersRequest) returns (ListPapersResponse) {
+    option (google.api.http) = {
+      get: "/v1/exam/papers/auth"
+    };
+  }
+
   // ========== 考试会话相关 ==========
   // 开始考试
   rpc StartExam(StartExamRequest) returns (StartExamResponse) {
@@ -263,6 +271,7 @@ message PaperSummary {
   int32 question_count = 6;    // 题目数量
   string category_name = 7;    // 分类名称
   string level = 8;            // 等级
+  string access_role = 9;      // 最低访问角色要求: guest|user|student|teacher|admin
 }
 
 message GetPaperRequest {
@@ -288,14 +297,15 @@ message PaperDetail {
 }
 
 message PaperSettings {
-  bool shuffle_questions = 1;   // 题目乱序
-  bool shuffle_options = 2;     // 选项乱序
-  bool show_result = 3;         // 考完立即出分
-  bool allow_view_answer = 4;   // 允许查看答案
-  int32 max_attempts = 5;       // 最大尝试次数（仅当 allow_retake 为 true 时生效）
-  int32 retake_cooldown = 6;    // 重考冷却时间(秒)（仅当 allow_retake 为 true 时生效）
-  string retake_policy = 7;     // 取分策略: best, latest, first（仅当 allow_retake 为 true 时生效）
-  bool allow_retake = 8;        // 是否允许重考；为 false 时仅允许一次考试，不提供未完成检测/放弃重考等能力
+  string access_role = 1;     // 最低访问角色要求: guest|user|student|teacher|admin
+  bool shuffle_questions = 2;   // 题目乱序
+  bool shuffle_options = 3;     // 选项乱序
+  bool show_result = 4;         // 考完立即出分
+  bool allow_view_answer = 5;   // 允许查看答案
+  int32 max_attempts = 6;       // 最大尝试次数（仅当 allow_retake 为 true 时生效）
+  int32 retake_cooldown = 7;    // 重考冷却时间(秒)（仅当 allow_retake 为 true 时生效）
+  string retake_policy = 8;     // 取分策略: best, latest, first（仅当 allow_retake 为 true 时生效）
+  bool allow_retake = 9;        // 是否允许重考
 }
 
 // 试卷条目（独立题目或题组）

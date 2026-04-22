@@ -53,6 +53,14 @@ service PublicCourseService {
 
 // CourseService 课程服务 (需要认证)
 service CourseService {
+  // ========== 课程相关 ==========
+  // 获取课程列表（需要认证）
+  rpc ListCourses(ListCoursesRequest) returns (ListCoursesResponse) {
+    option (google.api.http) = {
+      get: "/v1/course/courses/auth"
+    };
+  }
+
   // ========== 课件相关 ==========
   // 获取课件详情
   rpc GetCourseware(GetCoursewareRequest) returns (GetCoursewareResponse) {
@@ -264,6 +272,7 @@ message ChapterOutline {
   bool is_free_trial = 6;
   repeated SectionOutline sections = 7;
   optional ChapterProgress progress = 8;
+  map<string, string> settings = 9;  // 章节配置，包含 access_role 等
 }
 
 message SectionOutline {
