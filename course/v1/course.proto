@@ -273,6 +273,7 @@ message ChapterOutline {
   repeated SectionOutline sections = 7;
   optional ChapterProgress progress = 8;
   map<string, string> settings = 9;  // 章节配置，包含 access_role 等
+  string play_url = 10;  // 学习内容链接
 }
 
 message SectionOutline {
