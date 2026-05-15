@@ -296,6 +296,19 @@ message PaperDetail {
   int32 question_count = 8;               // 题目总数（包含题组子题）
 }
 
+message SectionDurations {
+  int32 listening = 1;    // 听力部分时长(秒)
+  int32 reading = 2;      // 阅读部分时长(秒)
+  int32 writing = 3;      // 写作部分时长(秒)
+}
+
+// 题目分组（用于 HSK 等考试显示"第一部分、第二部分"等）
+message QuestionSection {
+  string category = 1;  // 所属题型大类: listening, reading, writing
+  string name = 2;      // 分组名称: "第一部分"、"Part 1" 等
+  int32 question_count = 3;  // 该组题数
+}
+
 message PaperSettings {
   string access_role = 1;     // 最低访问角色要求: guest|user|student|teacher|admin
   bool shuffle_questions = 2;   // 题目乱序
@@ -306,6 +319,8 @@ message PaperSettings {
   int32 retake_cooldown = 7;    // 重考冷却时间(秒)（仅当 allow_retake 为 true 时生效）
   string retake_policy = 8;     // 取分策略: best, latest, first（仅当 allow_retake 为 true 时生效）
   bool allow_retake = 9;        // 是否允许重考
+  SectionDurations section_durations = 10;  // 各部分时长配置
+  repeated QuestionSection question_sections = 11;  // 题目分组配置
 }
 
 // 试卷条目（独立题目或题组）
