@@ -30,7 +30,9 @@ message ListLiveCoursesRequest {
 }
 
 message ListLiveCoursesResponse {
-  repeated LiveCourse courses = 1;
+  repeated LiveCourse live_courses = 1;
+  repeated LiveCourse scheduled_courses = 2;
+  repeated LiveCourse finished_courses = 3;
 }
 
 message LiveCourse {
