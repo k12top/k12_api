@@ -61,6 +61,13 @@ service CourseService {
     };
   }
 
+  // 获取课程详情（需要认证，可获取用户报名状态）
+  rpc GetCourse(GetCourseRequest) returns (GetCourseResponse) {
+    option (google.api.http) = {
+      get: "/v1/course/courses/{course_id}/auth"
+    };
+  }
+
   // ========== 课件相关 ==========
   // 获取课件详情
   rpc GetCourseware(GetCoursewareRequest) returns (GetCoursewareResponse) {
