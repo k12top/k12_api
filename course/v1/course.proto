@@ -188,6 +188,8 @@ message Subject {
   string description = 4;
   string icon_url = 5;
   int32 course_count = 6;
+  string name_i18n = 7;  // JSON: {"zh":"名称","en":"Name"}
+  string desc_i18n = 8;  // JSON: {"zh":"描述","en":"Description"}
 }
 
 // ========== 课程相关 ==========
@@ -220,6 +222,8 @@ message CourseSummary {
   string subject_name = 11;
   int32 enrolled_count = 12;
   optional UserCourseProgress user_progress = 13;
+  string name_i18n = 14;  // JSON: {"zh":"名称","en":"Name"}
+  string desc_i18n = 15;  // JSON: {"zh":"描述","en":"Description"}
 }
 
 message UserCourseProgress {
@@ -251,6 +255,8 @@ message CourseDetail {
   CourseSettings settings = 11;
   Subject subject = 12;
   optional UserCourseProgress user_progress = 13;
+  string name_i18n = 14;  // JSON: {"zh":"名称","en":"Name"}
+  string desc_i18n = 15;  // JSON: {"zh":"描述","en":"Description"}
 }
 
 message CourseSettings {
@@ -281,6 +287,9 @@ message ChapterOutline {
   optional ChapterProgress progress = 8;
   map<string, string> settings = 9;  // 章节配置，包含 access_role 等
   string play_url = 10;  // 学习内容链接
+  string title_i18n = 11;  // JSON: {"zh":"标题","en":"Title"}
+  string desc_i18n = 12;  // JSON: {"zh":"描述","en":"Description"}
+  string play_url_i18n = 13;  // JSON: {"zh":"url","en":"url"}
 }
 
 message SectionOutline {
@@ -292,6 +301,8 @@ message SectionOutline {
   string unlock_rule = 6;
   repeated CoursewareOutline coursewares = 7;
   optional SectionProgress progress = 8;
+  string title_i18n = 9;  // JSON: {"zh":"标题","en":"Title"}
+  string desc_i18n = 10;  // JSON: {"zh":"描述","en":"Description"}
 }
 
 message CoursewareOutline {
