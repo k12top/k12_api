@@ -249,6 +249,16 @@ message Category {
   int32 paper_count = 5;  // 该分类下的试卷数量
   string name_i18n = 6;  // JSON: {"zh":"名称","en":"Name"}
   string desc_i18n = 7;  // JSON: {"zh":"描述","en":"Description"}
+  repeated Subject subjects = 8;  // 该分类下的子科目/等级
+}
+
+// 考试子科目 / 等级（如 HSK 1-6、CSCA 文/理科、CSLT 各学科）
+message Subject {
+  int64 id = 1;
+  string code = 2;        // 与 PaperSummary.level 字段对应，如 "hsk1"、"csca_chinese_liberal"
+  string name = 3;        // 默认名称
+  string name_i18n = 4;   // JSON: {"zh":"名称","en":"Name"}
+  int32 sort_order = 5;   // 排序顺序
 }
 
 // ========== 试卷相关 ==========
