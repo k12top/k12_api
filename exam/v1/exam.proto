@@ -255,18 +255,28 @@ message Category {
 // 考试子科目 / 等级（如 HSK 1-6、CSCA 文/理科、CSLT 各学科）
 message Subject {
   int64 id = 1;
-  string code = 2;        // 与 PaperSummary.level 字段对应，如 "hsk1"、"csca_chinese_liberal"
+  string code = 2;        // 科目标识，如 "图形化"、"python"、"cpp"
   string name = 3;        // 默认名称
   string name_i18n = 4;   // JSON: {"zh":"名称","en":"Name"}
   int32 sort_order = 5;   // 排序顺序
+  repeated Level levels = 6;  // 该科目下的级别列表（如：cie一级、gesp二级）
+}
+
+// 科目下的级别
+message Level {
+  string code = 1;        // 级别标识，如 "cie一级"、"gesp二级"
+  string name = 2;        // 显示名称，如 "CIE 一级"
+  int32 sort_order = 3;   // 排序顺序
 }
 
 // ========== 试卷相关 ==========
 
 message ListPapersRequest {
   int64 category_id = 1;   // 按分类筛选
-  int32 page = 2;
-  int32 page_size = 3;
+  string subject = 2;      // 按科目筛选（如：图形化、Python、C++）
+  string level = 3;         // 按等级筛选（如：一级、二级、三级）
+  int32 page = 4;
+  int32 page_size = 5;
 }
 
 message ListPapersResponse {
@@ -282,10 +292,11 @@ message PaperSummary {
   double total_score = 5;       // 总分
   int32 question_count = 6;    // 题目数量
   string category_name = 7;    // 分类名称
-  string level = 8;            // 等级
+  string level = 8;            // 等级（如：一级、二级、三级）
   string access_role = 9;      // 最低访问角色要求: guest|user|student|teacher|admin
   string title_i18n = 10;  // JSON: {"zh":"标题","en":"Title"}
   string desc_i18n = 11;  // JSON: {"zh":"描述","en":"Description"}
+  string subject = 12;     // 科目（如：图形化、Python、C++）
 }
 
 message GetPaperRequest {
@@ -337,6 +348,7 @@ message PaperSettings {
   bool allow_retake = 9;        // 是否允许重考
   SectionDurations section_durations = 10;  // 各部分时长配置
   repeated QuestionSection question_sections = 11;  // 题目分组配置
+  string display_mode = 12;     // 显示模式: "single"(单题模式,默认) | "scroll"(滚动模式,所有题目列表展示)
 }
 
 // 试卷条目（独立题目或题组）
