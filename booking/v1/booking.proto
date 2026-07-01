@@ -48,6 +48,17 @@ service BookingService {
   }
 }
 
+// PublicBookingService 公共预约服务（无需认证）
+service PublicBookingService {
+  // CreateBooking 创建预约（公开接口）
+  rpc CreateBooking(CreateBookingRequest) returns (Booking) {
+    option (google.api.http) = {
+      post: "/k12-public/api/v1/booking"
+      body: "*"
+    };
+  }
+}
+
 // Booking 预约记录
 message Booking {
   string id = 1;
