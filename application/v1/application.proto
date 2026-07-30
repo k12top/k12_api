@@ -129,6 +129,7 @@ message Application {
   string toefl_certificate = 43;
   repeated document.v1.Document documents = 44;
   applicant.v1.Applicant applicant = 45;
+  string self_introduction_video = 46;
 }
 
 // CreateApplicationRequest 创建申请请求
@@ -171,6 +172,7 @@ message CreateApplicationRequest {
   repeated string competition_awards = 35;
   string ielts_certificate = 36;
   string toefl_certificate = 37;
+  string self_introduction_video = 38;
 }
 
 // GetApplicationRequest 获取申请请求
@@ -219,6 +221,7 @@ message UpdateApplicationRequest {
   repeated string competition_awards = 36;
   string ielts_certificate = 37;
   string toefl_certificate = 38;
+  string self_introduction_video = 39;
 }
 
 // ListApplicationsRequest 列出申请请求
@@ -334,4 +337,5 @@ message SubmitCompleteApplicationRequest {
   repeated string competition_awards = 66;
   string ielts_certificate = 67;
   string toefl_certificate = 68;
+  string self_introduction_video = 69;
 }
