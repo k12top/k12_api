@@ -247,6 +247,8 @@ message Category {
   string name = 3;
   string description = 4;
   int32 paper_count = 5;  // 该分类下的试卷数量
+  string name_i18n = 6;  // JSON: {"zh":"名称","en":"Name"}
+  string desc_i18n = 7;  // JSON: {"zh":"描述","en":"Description"}
 }
 
 // ========== 试卷相关 ==========
@@ -272,6 +274,8 @@ message PaperSummary {
   string category_name = 7;    // 分类名称
   string level = 8;            // 等级
   string access_role = 9;      // 最低访问角色要求: guest|user|student|teacher|admin
+  string title_i18n = 10;  // JSON: {"zh":"标题","en":"Title"}
+  string desc_i18n = 11;  // JSON: {"zh":"描述","en":"Description"}
 }
 
 message GetPaperRequest {
@@ -294,6 +298,8 @@ message PaperDetail {
   // 试题列表顺序由服务端决定（含乱序）；客户端可按 QuestionItem.type / QuestionGroupItem.type 分组展示
   repeated PaperItem items = 7;           // 统一的试题列表（独立题 + 题组）
   int32 question_count = 8;               // 题目总数（包含题组子题）
+  string title_i18n = 9;  // JSON: {"zh":"标题","en":"Title"}
+  string desc_i18n = 10;  // JSON: {"zh":"描述","en":"Description"}
 }
 
 message SectionDurations {

@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package liveclassroom.v1;
+
+option go_package = "k12_backend/api/liveclassroom/v1;v1";
+
+import "google/api/annotations.proto";
+
+// LiveClassroomService 直播课表服务 (需要认证)
+service LiveClassroomService {
+  // 获取用户的直播课程列表（代理到 live.xiangyuwenshu.cn）
+  rpc ListLiveCourses(ListLiveCoursesRequest) returns (ListLiveCoursesResponse) {
+    option (google.api.http) = {
+      get: "/v1/liveclassroom/courses"
+    };
+  }
+
+  // 获取课程访问权限 + 课堂入口 URL（代理到 live.xiangyuwenshu.cn）
+  rpc VerifyCourseAccess(VerifyCourseAccessRequest) returns (VerifyCourseAccessResponse) {
+    option (google.api.http) = {
+      get: "/v1/liveclassroom/courses/{course_id}/verify-access"
+    };
+  }
+}
+
+// ========== 请求/响应消息 ==========
+
+message ListLiveCoursesRequest {
+  string status = 1;
+}
+
+message ListLiveCoursesResponse {
+  repeated LiveCourse live_courses = 1;
+  repeated LiveCourse scheduled_courses = 2;
+  repeated LiveCourse finished_courses = 3;
+}
+
+message LiveCourse {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  int32 room_type = 4;
+  string teacher_id = 5;
+  string teacher_name = 6;
+  string status = 7;
+  string start_time = 8;
+  string end_time = 9;
+  string student_remarks = 10;
+  string created_at = 11;
+  string updated_at = 12;
+  repeated LiveStudent students = 13;
+  string classroom_url = 14;
+}
+
+message LiveStudent {
+  string student_id = 1;
+  string student_name = 2;
+}
+
+message VerifyCourseAccessRequest {
+  string course_id = 1;
+}
+
+message VerifyCourseAccessResponse {
+  bool allowed = 1;
+  string role = 2;
+  CourseInfo course_info = 3;
+  string classroom_url = 4;
+  string reason = 5;
+}
+
+message CourseInfo {
+  string name = 1;
+  int32 room_type = 2;
+  string teacher_name = 3;
+}
