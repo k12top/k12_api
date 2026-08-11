@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+package booking.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "k12_api/booking/v1";
+
+// BookingService 预约服务
+service BookingService {
+  // CreateBooking 创建预约
+  rpc CreateBooking(CreateBookingRequest) returns (Booking) {
+    option (google.api.http) = {
+      post: "/api/v1/booking"
+      body: "*"
+    };
+  }
+
+  // GetBooking 获取预约详情
+  rpc GetBooking(GetBookingRequest) returns (Booking) {
+    option (google.api.http) = {
+      get: "/api/v1/booking/{id}"
+    };
+  }
+
+  // ListBookings 列出预约
+  rpc ListBookings(ListBookingsRequest) returns (ListBookingsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/bookings"
+    };
+  }
+
+  // UpdateBookingStatus 更新预约状态
+  rpc UpdateBookingStatus(UpdateBookingStatusRequest) returns (Booking) {
+    option (google.api.http) = {
+      put: "/api/v1/booking/{id}/status"
+      body: "*"
+    };
+  }
+
+  // DeleteBooking 删除预约
+  rpc DeleteBooking(DeleteBookingRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/api/v1/booking/{id}"
+    };
+  }
+}
+
+// PublicBookingService 公共预约服务（无需认证）
+service PublicBookingService {
+  // CreateBooking 创建预约（公开接口）
+  rpc CreateBooking(CreateBookingRequest) returns (Booking) {
+    option (google.api.http) = {
+      post: "/k12-public/api/v1/booking"
+      body: "*"
+    };
+  }
+}
+
+// Booking 预约记录
+message Booking {
+  string id = 1;
+  string child_name = 2;
+  string grade = 3;
+  string phone = 4;
+  string course = 5;
+  string site_id = 6;
+  string status = 7;
+  string notes = 8;
+  google.protobuf.Timestamp contacted_at = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+// CreateBookingRequest 创建预约请求
+message CreateBookingRequest {
+  string child_name = 1;
+  string grade = 2;
+  string phone = 3;
+  string course = 4;
+  string site_id = 5;
+}
+
+// GetBookingRequest 获取预约请求
+message GetBookingRequest {
+  string id = 1;
+}
+
+// ListBookingsRequest 列出预约请求
+message ListBookingsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string keyword = 3;
+  string status = 4;
+  string site_id = 5;
+}
+
+// ListBookingsResponse 列出预约响应
+message ListBookingsResponse {
+  repeated Booking bookings = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// UpdateBookingStatusRequest 更新预约状态请求
+message UpdateBookingStatusRequest {
+  string id = 1;
+  string status = 2;
+  string notes = 3;
+}
+
+// DeleteBookingRequest 删除预约请求
+message DeleteBookingRequest {
+  string id = 1;
+}
