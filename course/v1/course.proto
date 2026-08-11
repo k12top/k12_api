@@ -303,6 +303,9 @@ message SectionOutline {
   optional SectionProgress progress = 8;
   string title_i18n = 9;  // JSON: {"zh":"标题","en":"Title"}
   string desc_i18n = 10;  // JSON: {"zh":"描述","en":"Description"}
+  string play_url = 11;  // 学习内容链接
+  string play_url_i18n = 12;  // JSON: {"zh":"url","en":"url"}
+  map<string, string> settings = 13;  // 小节配置，包含 access_role 等
 }
 
 message CoursewareOutline {
