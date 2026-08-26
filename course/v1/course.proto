@@ -68,6 +68,36 @@ service CourseService {
     };
   }
 
+  // 获取当前用户对指定课程的访问状态
+  rpc GetCourseAccess(GetCourseAccessRequest) returns (GetCourseAccessResponse) {
+    option (google.api.http) = {
+      get: "/v1/course/courses/{course_id}/access"
+    };
+  }
+
+  // 管理员赠送课程权益
+  rpc GrantCourseEntitlement(GrantCourseEntitlementRequest) returns (GrantCourseEntitlementResponse) {
+    option (google.api.http) = {
+      post: "/v1/course/admin/entitlements/grant"
+      body: "*"
+    };
+  }
+
+  // 管理员撤销课程权益
+  rpc RevokeCourseEntitlement(RevokeCourseEntitlementRequest) returns (RevokeCourseEntitlementResponse) {
+    option (google.api.http) = {
+      post: "/v1/course/admin/entitlements/{entitlement_id}/revoke"
+      body: "*"
+    };
+  }
+
+  // 管理员查询用户的课程权益
+  rpc ListUserEntitlements(ListUserEntitlementsRequest) returns (ListUserEntitlementsResponse) {
+    option (google.api.http) = {
+      get: "/v1/course/admin/users/{user_id}/entitlements"
+    };
+  }
+
   // ========== 课件相关 ==========
   // 获取课件详情
   rpc GetCourseware(GetCoursewareRequest) returns (GetCoursewareResponse) {
@@ -224,6 +254,7 @@ message CourseSummary {
   optional UserCourseProgress user_progress = 13;
   string name_i18n = 14;  // JSON: {"zh":"名称","en":"Name"}
   string desc_i18n = 15;  // JSON: {"zh":"描述","en":"Description"}
+  optional CourseAccessInfo access_info = 16;
 }
 
 message UserCourseProgress {
@@ -257,6 +288,76 @@ message CourseDetail {
   optional UserCourseProgress user_progress = 13;
   string name_i18n = 14;  // JSON: {"zh":"名称","en":"Name"}
   string desc_i18n = 15;  // JSON: {"zh":"描述","en":"Description"}
+  optional CourseAccessInfo access_info = 16;
+}
+
+message CourseAccessInfo {
+  bool can_access = 1;
+  string reason = 2;       // PUBLIC|FREE_TRIAL|ROLE|ENTITLEMENT|NOT_OWNED|EXPIRED
+  string source_type = 3;  // gift|purchase|redeem|promotion|migration
+  optional google.protobuf.Timestamp expires_at = 4;
+  bool can_preview = 5;
+  optional int64 entitlement_id = 6;
+}
+
+message GetCourseAccessRequest {
+  int64 course_id = 1;
+}
+
+message GetCourseAccessResponse {
+  CourseAccessInfo access = 1;
+}
+
+message CourseEntitlement {
+  int64 id = 1;
+  int64 user_id = 2;
+  int64 course_id = 3;
+  string source_type = 4;
+  string source_id = 5;
+  string status = 6;
+  google.protobuf.Timestamp starts_at = 7;
+  optional google.protobuf.Timestamp expires_at = 8;
+  optional int64 granted_by = 9;
+  string grant_reason = 10;
+  optional int64 revoked_by = 11;
+  string revoke_reason = 12;
+  optional google.protobuf.Timestamp revoked_at = 13;
+  google.protobuf.Timestamp created_at = 14;
+}
+
+message GrantCourseEntitlementRequest {
+  int64 user_id = 1;
+  int64 course_id = 2;
+  optional google.protobuf.Timestamp expires_at = 3;
+  string reason = 4;
+  string idempotency_key = 5;
+}
+
+message GrantCourseEntitlementResponse {
+  CourseEntitlement entitlement = 1;
+  int64 enrollment_id = 2;
+  bool already_active = 3;
+}
+
+message RevokeCourseEntitlementRequest {
+  int64 entitlement_id = 1;
+  string reason = 2;
+}
+
+message RevokeCourseEntitlementResponse {
+  CourseEntitlement entitlement = 1;
+}
+
+message ListUserEntitlementsRequest {
+  int64 user_id = 1;
+  string status = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message ListUserEntitlementsResponse {
+  repeated CourseEntitlement entitlements = 1;
+  Pagination pagination = 2;
 }
 
 message CourseSettings {
