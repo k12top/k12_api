@@ -68,6 +68,12 @@ service CourseService {
     };
   }
 
+  rpc GetCourseOutline(GetCourseOutlineRequest) returns (GetCourseOutlineResponse) {
+    option (google.api.http) = {
+      get: "/v1/course/courses/{course_id}/outline/auth"
+    };
+  }
+
   // 获取当前用户对指定课程的访问状态
   rpc GetCourseAccess(GetCourseAccessRequest) returns (GetCourseAccessResponse) {
     option (google.api.http) = {
@@ -134,6 +140,14 @@ service CourseService {
   rpc UpdateLearningProgress(UpdateLearningProgressRequest) returns (UpdateLearningProgressResponse) {
     option (google.api.http) = {
       post: "/v1/course/coursewares/{courseware_id}/progress"
+      body: "*"
+    };
+  }
+
+  // 更新直接挂在章节上的课程内容进度（无 section/courseware 的课程）
+  rpc UpdateChapterProgress(UpdateChapterProgressRequest) returns (UpdateChapterProgressResponse) {
+    option (google.api.http) = {
+      post: "/v1/course/chapters/{chapter_id}/progress"
       body: "*"
     };
   }
@@ -612,6 +626,18 @@ message UpdateLearningProgressRequest {
 }
 
 message UpdateLearningProgressResponse {
+  bool success = 1;
+  string status = 2;
+  int32 new_progress_percent = 3;
+}
+
+message UpdateChapterProgressRequest {
+  int64 chapter_id = 1;
+  int32 progress_percent = 2;
+  int32 study_time_delta = 3;
+}
+
+message UpdateChapterProgressResponse {
   bool success = 1;
   string status = 2;
   int32 new_progress_percent = 3;
