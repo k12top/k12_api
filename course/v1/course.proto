@@ -53,6 +53,23 @@ service PublicCourseService {
 
 // CourseService 课程服务 (需要认证)
 service CourseService {
+  // ========== 管理员课程运营 ==========
+  rpc ListAdminCourses(ListAdminCoursesRequest) returns (ListAdminCoursesResponse) {
+    option (google.api.http) = { get: "/v1/course/admin/courses" };
+  }
+  rpc SaveAdminCourse(SaveAdminCourseRequest) returns (SaveAdminCourseResponse) {
+    option (google.api.http) = { post: "/v1/course/admin/courses" body: "*" };
+  }
+  rpc BatchUpdateCourseStatus(BatchUpdateCourseStatusRequest) returns (BatchUpdateCourseStatusResponse) {
+    option (google.api.http) = { post: "/v1/course/admin/courses/status" body: "*" };
+  }
+  rpc ReorderCourses(ReorderCoursesRequest) returns (ReorderCoursesResponse) {
+    option (google.api.http) = { post: "/v1/course/admin/courses/reorder" body: "*" };
+  }
+  rpc SaveCourseOutline(SaveCourseOutlineRequest) returns (SaveCourseOutlineResponse) {
+    option (google.api.http) = { put: "/v1/course/admin/courses/{course_id}/outline" body: "*" };
+  }
+
   // ========== 课程相关 ==========
   // 获取课程列表（需要认证）
   rpc ListCourses(ListCoursesRequest) returns (ListCoursesResponse) {
@@ -269,7 +286,83 @@ message CourseSummary {
   string name_i18n = 14;  // JSON: {"zh":"名称","en":"Name"}
   string desc_i18n = 15;  // JSON: {"zh":"描述","en":"Description"}
   optional CourseAccessInfo access_info = 16;
+  int32 sort_order = 17;
+  string status = 18;
+  optional google.protobuf.Timestamp published_at = 19;
+  google.protobuf.Timestamp updated_at = 20;
 }
+
+message ListAdminCoursesRequest {
+  string query = 1;
+  int64 subject_id = 2;
+  string stage = 3;
+  string status = 4;
+  int32 page = 5;
+  int32 page_size = 6;
+}
+
+message ListAdminCoursesResponse {
+  repeated CourseSummary courses = 1;
+  Pagination pagination = 2;
+}
+
+message AdminCourseInput {
+  int64 id = 1;
+  string code = 2;
+  string name = 3;
+  string description = 4;
+  string cover_image = 5;
+  string stage = 6;
+  string grade = 7;
+  int32 difficulty = 8;
+  int32 total_hours = 9;
+  int64 subject_id = 10;
+  string name_i18n = 11;
+  string desc_i18n = 12;
+}
+
+message SaveAdminCourseRequest { AdminCourseInput course = 1; }
+message SaveAdminCourseResponse { CourseDetail course = 1; }
+message BatchUpdateCourseStatusRequest { repeated int64 course_ids = 1; string status = 2; }
+message BatchUpdateCourseStatusResponse { int32 updated_count = 1; }
+message CourseOrder { int64 course_id = 1; int32 sort_order = 2; }
+message ReorderCoursesRequest { repeated CourseOrder orders = 1; }
+message ReorderCoursesResponse { int32 updated_count = 1; }
+
+message AdminCoursewareInput {
+  int64 id = 1;
+  string code = 2;
+  string title = 3;
+  string description = 4;
+  string type = 5;
+  int32 estimated_minutes = 6;
+  string video_url = 7;
+}
+message AdminSectionInput {
+  int64 id = 1;
+  string code = 2;
+  string title = 3;
+  string description = 4;
+  int32 estimated_minutes = 5;
+  string video_url = 6;
+  repeated AdminCoursewareInput coursewares = 7;
+}
+message AdminChapterInput {
+  int64 id = 1;
+  string code = 2;
+  string title = 3;
+  string description = 4;
+  int32 estimated_hours = 5;
+  bool is_free_trial = 6;
+  string video_url = 7;
+  repeated AdminSectionInput sections = 8;
+}
+message SaveCourseOutlineRequest {
+  int64 course_id = 1;
+  repeated AdminChapterInput chapters = 2;
+  bool delete_missing = 3;
+}
+message SaveCourseOutlineResponse { repeated ChapterOutline chapters = 1; }
 
 message UserCourseProgress {
   string status = 1;
@@ -303,6 +396,10 @@ message CourseDetail {
   string name_i18n = 14;  // JSON: {"zh":"名称","en":"Name"}
   string desc_i18n = 15;  // JSON: {"zh":"描述","en":"Description"}
   optional CourseAccessInfo access_info = 16;
+  int32 sort_order = 17;
+  string status = 18;
+  optional google.protobuf.Timestamp published_at = 19;
+  google.protobuf.Timestamp updated_at = 20;
 }
 
 message CourseAccessInfo {
@@ -405,6 +502,7 @@ message ChapterOutline {
   string title_i18n = 11;  // JSON: {"zh":"标题","en":"Title"}
   string desc_i18n = 12;  // JSON: {"zh":"描述","en":"Description"}
   string play_url_i18n = 13;  // JSON: {"zh":"url","en":"url"}
+  string code = 14;
 }
 
 message SectionOutline {
@@ -421,6 +519,7 @@ message SectionOutline {
   string play_url = 11;  // 学习内容链接
   string play_url_i18n = 12;  // JSON: {"zh":"url","en":"url"}
   map<string, string> settings = 13;  // 小节配置，包含 access_role 等
+  string code = 14;
 }
 
 message CoursewareOutline {
@@ -430,6 +529,9 @@ message CoursewareOutline {
   int32 sort_order = 4;
   int32 estimated_minutes = 5;
   optional CoursewareProgress progress = 6;
+  string video_url = 7;
+  string code = 8;
+  string description = 9;
 }
 
 message ChapterProgress {
