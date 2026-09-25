@@ -329,6 +329,8 @@ message ClassPlanTimelineItem {
   google.protobuf.Timestamp due_at = 3;
   bool has_due_at = 4;
   bool overridden = 5;
+  string launch_url = 6;
+  string learning_assignment_id = 7;
 }
 message ClassPlanTimeline {
   ClassPlanAssignment assignment = 1;
