@@ -72,6 +72,9 @@ service TeachingPlanService {
   rpc GetMyCourseSchedule(GetMyCourseScheduleRequest) returns (GetMyCourseScheduleResponse) {
     option (google.api.http) = {get: "/v1/courses/{course_id}/schedule"};
   }
+  rpc ReceiveOpenMAICProgressEvent(OpenMAICProgressEventRequest) returns (OpenMAICProgressEventResponse) {
+    option (google.api.http) = {post: "/v1/integrations/openmaic/learning-progress/events" body: "*"};
+  }
 }
 
 enum PlanResourceType {
@@ -339,3 +342,19 @@ message GetMyCourseScheduleResponse {
   bool has_schedule = 1;
   ClassPlanTimeline timeline = 2;
 }
+
+message OpenMAICProgressEventRequest {
+  string event_id = 1;
+  string event_type = 2;
+  string schema_version = 3;
+  google.protobuf.Timestamp occurred_at = 4;
+  string assignment_id = 5;
+  string casdoor_user_id = 6;
+  string course_id = 7;
+  string scene_id = 8;
+  int32 completed_scene_count = 9;
+  int32 required_scene_count = 10;
+  bool course_completed = 11;
+  int64 revision = 12;
+}
+message OpenMAICProgressEventResponse { bool accepted = 1; bool duplicate = 2; }
