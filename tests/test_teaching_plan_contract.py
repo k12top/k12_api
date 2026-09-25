@@ -16,6 +16,9 @@ class TeachingPlanContractTest(unittest.TestCase):
             "ListTeachingClasses",
             "CreateTeachingClass",
             "UpdateTeachingClass",
+            "ListTeachingClassMembers",
+            "AddTeachingClassMember",
+            "RemoveTeachingClassMember",
             "ListTeachingPlanTemplates",
             "CreateTeachingPlanTemplate",
             "GetTeachingPlanTemplate",
@@ -30,9 +33,15 @@ class TeachingPlanContractTest(unittest.TestCase):
             "PutClassPlanItemOverride",
             "DeleteClassPlanItemOverride",
             "PublishClassPlanAssignment",
+            "GetMyCourseSchedule",
         }
         methods = set(re.findall(r"\brpc\s+(\w+)\s*\(", self.source))
         self.assertEqual(expected, methods)
+
+    def test_student_schedule_is_resolved_by_course_and_casdoor_subject(self):
+        self.assertRegex(self.source, r"(?s)message TeachingClassMember\s*\{[^}]*casdoor_subject")
+        self.assertRegex(self.source, r"(?s)message TeachingPlanTemplate\s*\{[^}]*entry_course_id")
+        self.assertIn('get: "/v1/courses/{course_id}/schedule"', self.source)
 
     def test_stable_enum_values(self):
         expected = {
