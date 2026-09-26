@@ -85,6 +85,16 @@ class TeachingPlanContractTest(unittest.TestCase):
         )
         self.assertIn("message ChapterScheduleSummary", self.source)
 
+    def test_scheduling_resources_expose_course_chapters(self):
+        self.assertRegex(
+            self.source,
+            r"(?s)message CoursewareResource\s*\{[^}]*chapter_id",
+        )
+        self.assertRegex(
+            self.source,
+            r"(?s)message CourseResource\s*\{[^}]*repeated ChapterResource chapters",
+        )
+
     def test_launch_and_progress_enums_are_explicit(self):
         expected = {
             "TASK_PROGRESS_STATUS_NOT_STARTED": 1,

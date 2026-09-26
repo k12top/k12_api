@@ -288,13 +288,15 @@ message SaveTeachingPlanDraftRequest {
 }
 message PublishTeachingPlanVersionRequest { int64 version_id = 1; int64 revision = 2; }
 
-message CoursewareResource { int64 id = 1; int64 course_id = 2; string code = 3; string title = 4; string type = 5; }
+message CoursewareResource { int64 id = 1; int64 course_id = 2; string code = 3; string title = 4; string type = 5; int64 chapter_id = 6; }
+message ChapterResource { int64 id = 1; string code = 2; string title = 3; int32 sort_order = 4; }
 message CourseResource {
   int64 id = 1;
   string code = 2;
   string name = 3;
   string cover_image = 4;
   repeated CoursewareResource coursewares = 5;
+  repeated ChapterResource chapters = 6;
 }
 message ExamPaperResource { int64 id = 1; string code = 2; string title = 3; string subject = 4; string level = 5; }
 message LiveCourseResource {
