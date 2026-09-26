@@ -72,8 +72,17 @@ service TeachingPlanService {
   rpc GetMyCourseSchedule(GetMyCourseScheduleRequest) returns (GetMyCourseScheduleResponse) {
     option (google.api.http) = {get: "/v1/courses/{course_id}/schedule"};
   }
+  rpc GetMyChapterSchedule(GetMyChapterScheduleRequest) returns (GetMyChapterScheduleResponse) {
+    option (google.api.http) = {get: "/v1/courses/{course_id}/chapters/{chapter_id}/schedule"};
+  }
+  rpc OpenLearningTask(OpenLearningTaskRequest) returns (OpenLearningTaskResponse) {
+    option (google.api.http) = {post: "/v1/courses/{course_id}/chapters/{chapter_id}/tasks/{plan_item_id}:open" body: "*"};
+  }
   rpc ReceiveOpenMAICProgressEvent(OpenMAICProgressEventRequest) returns (OpenMAICProgressEventResponse) {
     option (google.api.http) = {post: "/v1/integrations/openmaic/learning-progress/events" body: "*"};
+  }
+  rpc ReceiveLiveProgressEvent(LiveProgressEventRequest) returns (LiveProgressEventResponse) {
+    option (google.api.http) = {post: "/v1/integrations/live/attendance/events" body: "*"};
   }
 }
 
@@ -82,6 +91,32 @@ enum PlanResourceType {
   PLAN_RESOURCE_TYPE_COURSE = 1;
   PLAN_RESOURCE_TYPE_COURSEWARE = 2;
   PLAN_RESOURCE_TYPE_EXAM = 3;
+  PLAN_RESOURCE_TYPE_LIVE = 4;
+}
+
+enum TaskProgressStatus {
+  TASK_PROGRESS_STATUS_UNSPECIFIED = 0;
+  TASK_PROGRESS_STATUS_NOT_STARTED = 1;
+  TASK_PROGRESS_STATUS_IN_PROGRESS = 2;
+  TASK_PROGRESS_STATUS_COMPLETED = 3;
+}
+
+enum TaskPresentationStatus {
+  TASK_PRESENTATION_STATUS_UNSPECIFIED = 0;
+  TASK_PRESENTATION_STATUS_AVAILABLE = 1;
+  TASK_PRESENTATION_STATUS_LOCKED = 2;
+  TASK_PRESENTATION_STATUS_PENDING_SYNC = 3;
+  TASK_PRESENTATION_STATUS_LIVE_UPCOMING = 4;
+  TASK_PRESENTATION_STATUS_LIVE_NOW = 5;
+  TASK_PRESENTATION_STATUS_ATTENDANCE_INSUFFICIENT = 6;
+  TASK_PRESENTATION_STATUS_MISSED = 7;
+  TASK_PRESENTATION_STATUS_RESOURCE_UNAVAILABLE = 8;
+}
+
+enum LaunchMode {
+  LAUNCH_MODE_UNSPECIFIED = 0;
+  LAUNCH_MODE_IFRAME = 1;
+  LAUNCH_MODE_NEW_TAB = 2;
 }
 
 enum TeachingRole {
@@ -228,6 +263,8 @@ message TeachingPlanItem {
   bool has_due_offset = 15;
   bool required = 16;
   ExamPolicy exam_policy = 17;
+  int64 chapter_id = 18;
+  string live_course_id = 19;
 }
 
 message TeachingPlanVersion {
@@ -260,11 +297,19 @@ message CourseResource {
   repeated CoursewareResource coursewares = 5;
 }
 message ExamPaperResource { int64 id = 1; string code = 2; string title = 3; string subject = 4; string level = 5; }
+message LiveCourseResource {
+  string id = 1;
+  string title = 2;
+  google.protobuf.Timestamp start_at = 3;
+  google.protobuf.Timestamp end_at = 4;
+  string status = 5;
+}
 message ListSchedulingResourcesRequest { string query = 1; PlanResourceType type = 2; int32 page = 3; int32 page_size = 4; }
 message ListSchedulingResourcesResponse {
   repeated CourseResource courses = 1;
   repeated ExamPaperResource exam_papers = 2;
   PageInfo page_info = 3;
+  repeated LiveCourseResource live_courses = 4;
 }
 
 message ClassPlanAssignment {
@@ -331,6 +376,12 @@ message ClassPlanTimelineItem {
   bool overridden = 5;
   string launch_url = 6;
   string learning_assignment_id = 7;
+  TaskProgressStatus progress_status = 8;
+  TaskPresentationStatus presentation_status = 9;
+  LaunchMode launch_mode = 10;
+  double progress_ratio = 11;
+  double score = 12;
+  bool has_score = 13;
 }
 message ClassPlanTimeline {
   ClassPlanAssignment assignment = 1;
@@ -343,6 +394,38 @@ message GetMyCourseScheduleRequest { int64 course_id = 1; }
 message GetMyCourseScheduleResponse {
   bool has_schedule = 1;
   ClassPlanTimeline timeline = 2;
+  repeated ChapterScheduleSummary chapters = 3;
+}
+
+message ChapterScheduleSummary {
+  int64 chapter_id = 1;
+  string chapter_title = 2;
+  int32 required_item_count = 3;
+  int32 completed_required_item_count = 4;
+  google.protobuf.Timestamp earliest_unlock_at = 5;
+  bool has_schedule = 6;
+  bool completed = 7;
+}
+
+message GetMyChapterScheduleRequest {
+  int64 course_id = 1;
+  int64 chapter_id = 2;
+}
+message GetMyChapterScheduleResponse {
+  bool has_schedule = 1;
+  ChapterScheduleSummary chapter = 2;
+  ClassPlanTimeline timeline = 3;
+}
+
+message OpenLearningTaskRequest {
+  int64 course_id = 1;
+  int64 chapter_id = 2;
+  int64 plan_item_id = 3;
+}
+message OpenLearningTaskResponse {
+  string launch_url = 1;
+  LaunchMode launch_mode = 2;
+  google.protobuf.Timestamp expires_at = 3;
 }
 
 message OpenMAICProgressEventRequest {
@@ -360,3 +443,18 @@ message OpenMAICProgressEventRequest {
   int64 revision = 12;
 }
 message OpenMAICProgressEventResponse { bool accepted = 1; bool duplicate = 2; }
+
+message LiveProgressEventRequest {
+  string event_id = 1;
+  string event_type = 2;
+  string schema_version = 3;
+  google.protobuf.Timestamp occurred_at = 4;
+  string live_course_id = 5;
+  string casdoor_user_id = 6;
+  int64 valid_online_seconds = 7;
+  int64 effective_live_seconds = 8;
+  double attendance_ratio = 9;
+  bool completed = 10;
+  int64 revision = 11;
+}
+message LiveProgressEventResponse { bool accepted = 1; bool duplicate = 2; }

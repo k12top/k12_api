@@ -34,6 +34,10 @@ class TeachingPlanContractTest(unittest.TestCase):
             "DeleteClassPlanItemOverride",
             "PublishClassPlanAssignment",
             "GetMyCourseSchedule",
+            "GetMyChapterSchedule",
+            "OpenLearningTask",
+            "ReceiveOpenMAICProgressEvent",
+            "ReceiveLiveProgressEvent",
         }
         methods = set(re.findall(r"\brpc\s+(\w+)\s*\(", self.source))
         self.assertEqual(expected, methods)
@@ -48,12 +52,46 @@ class TeachingPlanContractTest(unittest.TestCase):
             "PLAN_RESOURCE_TYPE_COURSE": 1,
             "PLAN_RESOURCE_TYPE_COURSEWARE": 2,
             "PLAN_RESOURCE_TYPE_EXAM": 3,
+            "PLAN_RESOURCE_TYPE_LIVE": 4,
             "TEACHING_ROLE_LESSON": 1,
             "TEACHING_ROLE_IN_CLASS_PRACTICE": 2,
             "TEACHING_ROLE_HOMEWORK": 3,
             "TEACHING_ROLE_ASSESSMENT": 4,
             "SCHEDULE_MODE_RELATIVE": 1,
             "SCHEDULE_MODE_ABSOLUTE": 2,
+        }
+        values = {
+            name: int(number)
+            for name, number in re.findall(r"^\s*([A-Z][A-Z0-9_]+)\s*=\s*(\d+)\s*;", self.source, re.M)
+        }
+        for name, number in expected.items():
+            self.assertEqual(number, values.get(name), name)
+
+    def test_chapter_player_contract(self):
+        expected_methods = {
+            "GetMyChapterSchedule",
+            "OpenLearningTask",
+            "ReceiveLiveProgressEvent",
+        }
+        methods = set(re.findall(r"\brpc\s+(\w+)\s*\(", self.source))
+        self.assertTrue(expected_methods.issubset(methods))
+        self.assertRegex(
+            self.source,
+            r"(?s)message TeachingPlanItem\s*\{[^}]*chapter_id[^}]*live_course_id",
+        )
+        self.assertRegex(
+            self.source,
+            r"(?s)message ClassPlanTimelineItem\s*\{[^}]*progress_status[^}]*presentation_status[^}]*launch_mode",
+        )
+        self.assertIn("message ChapterScheduleSummary", self.source)
+
+    def test_launch_and_progress_enums_are_explicit(self):
+        expected = {
+            "TASK_PROGRESS_STATUS_NOT_STARTED": 1,
+            "TASK_PROGRESS_STATUS_IN_PROGRESS": 2,
+            "TASK_PROGRESS_STATUS_COMPLETED": 3,
+            "LAUNCH_MODE_IFRAME": 1,
+            "LAUNCH_MODE_NEW_TAB": 2,
         }
         values = {
             name: int(number)
