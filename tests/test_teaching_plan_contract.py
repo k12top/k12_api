@@ -35,7 +35,11 @@ class TeachingPlanContractTest(unittest.TestCase):
             "PublishClassPlanAssignment",
             "GetMyCourseSchedule",
             "GetMyChapterSchedule",
+            "GetMyLessonSchedule",
+            "InitializeTeachingPlanLessons",
             "OpenLearningTask",
+            "PutClassPlanLessonOverride",
+            "DeleteClassPlanLessonOverride",
             "ReceiveOpenMAICProgressEvent",
             "ReceiveLiveProgressEvent",
         }
@@ -109,6 +113,64 @@ class TeachingPlanContractTest(unittest.TestCase):
         }
         for name, number in expected.items():
             self.assertEqual(number, values.get(name), name)
+
+    def test_lesson_contract_nests_items_and_preserves_legacy_fields(self):
+        lesson = re.search(r"(?s)message TeachingPlanLesson\s*\{(.*?)\n\}", self.source)
+        self.assertIsNotNone(lesson)
+        lesson_source = lesson.group(1)
+        for field in (
+            "id",
+            "title",
+            "lesson_no",
+            "sort_order",
+            "source_chapter_id",
+            "schedule_mode",
+            "relative_day",
+            "time_of_day_minutes",
+            "absolute_unlock_at",
+            "required",
+            "repeated TeachingPlanItem items",
+        ):
+            self.assertIn(field, lesson_source)
+
+        item = re.search(r"(?s)message TeachingPlanItem\s*\{(.*?)\n\}", self.source).group(1)
+        self.assertRegex(item, r"int64 chapter_id\s*=\s*18\s*;")
+        self.assertRegex(item, r"int64 plan_lesson_id\s*=\s*20\s*;")
+
+        version = re.search(r"(?s)message TeachingPlanVersion\s*\{(.*?)\n\}", self.source).group(1)
+        self.assertRegex(version, r"repeated TeachingPlanItem items\s*=\s*7\s*;")
+        self.assertRegex(version, r"repeated TeachingPlanLesson lessons\s*=\s*12\s*;")
+
+        save = re.search(r"(?s)message SaveTeachingPlanDraftRequest\s*\{(.*?)\n\}", self.source).group(1)
+        self.assertRegex(save, r"repeated TeachingPlanItem items\s*=\s*3\s*;")
+        self.assertRegex(save, r"repeated TeachingPlanLesson lessons\s*=\s*4\s*;")
+
+    def test_lesson_routes_are_canonical_and_chapter_routes_remain_compatible(self):
+        expected_routes = {
+            'post: "/v1/admin/teaching-plan-template-versions/{version_id}/lessons:initialize"',
+            'put: "/v1/admin/class-plan-assignments/{assignment_id}/lesson-overrides/{lesson_id}"',
+            'delete: "/v1/admin/class-plan-assignments/{assignment_id}/lesson-overrides/{lesson_id}"',
+            'get: "/v1/courses/{course_id}/lessons/{lesson_id}/schedule"',
+            'post: "/v1/courses/{course_id}/lessons/{plan_lesson_id}/tasks/{plan_item_id}:open"',
+            'post: "/v1/courses/{course_id}/chapters/{chapter_id}/tasks/{plan_item_id}:open"',
+        }
+        for route in expected_routes:
+            self.assertIn(route, self.source)
+        for message in (
+            "LessonScheduleSummary",
+            "ClassPlanLessonTimeline",
+            "ClassPlanLessonOverride",
+        ):
+            self.assertIn(f"message {message}", self.source)
+
+        values = {
+            name: int(number)
+            for name, number in re.findall(r"^\s*([A-Z][A-Z0-9_]+)\s*=\s*(\d+)\s*;", self.source, re.M)
+        }
+        self.assertEqual(1, values.get("STUDENT_LESSON_STATUS_LOCKED"))
+        self.assertEqual(2, values.get("STUDENT_LESSON_STATUS_NOT_STARTED"))
+        self.assertEqual(3, values.get("STUDENT_LESSON_STATUS_IN_PROGRESS"))
+        self.assertEqual(4, values.get("STUDENT_LESSON_STATUS_COMPLETED"))
 
 
 if __name__ == "__main__":

@@ -45,6 +45,9 @@ service TeachingPlanService {
   rpc PublishTeachingPlanVersion(PublishTeachingPlanVersionRequest) returns (TeachingPlanVersion) {
     option (google.api.http) = {post: "/v1/admin/teaching-plan-template-versions/{version_id}/publish" body: "*"};
   }
+  rpc InitializeTeachingPlanLessons(InitializeTeachingPlanLessonsRequest) returns (TeachingPlanVersion) {
+    option (google.api.http) = {post: "/v1/admin/teaching-plan-template-versions/{version_id}/lessons:initialize" body: "*"};
+  }
   rpc ListSchedulingResources(ListSchedulingResourcesRequest) returns (ListSchedulingResourcesResponse) {
     option (google.api.http) = {get: "/v1/admin/scheduling-resources"};
   }
@@ -66,6 +69,12 @@ service TeachingPlanService {
   rpc DeleteClassPlanItemOverride(DeleteClassPlanItemOverrideRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {delete: "/v1/admin/class-plan-assignments/{assignment_id}/overrides/{item_id}"};
   }
+  rpc PutClassPlanLessonOverride(PutClassPlanLessonOverrideRequest) returns (ClassPlanLessonOverride) {
+    option (google.api.http) = {put: "/v1/admin/class-plan-assignments/{assignment_id}/lesson-overrides/{lesson_id}" body: "*"};
+  }
+  rpc DeleteClassPlanLessonOverride(DeleteClassPlanLessonOverrideRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {delete: "/v1/admin/class-plan-assignments/{assignment_id}/lesson-overrides/{lesson_id}"};
+  }
   rpc PublishClassPlanAssignment(PublishClassPlanAssignmentRequest) returns (ClassPlanAssignment) {
     option (google.api.http) = {post: "/v1/admin/class-plan-assignments/{assignment_id}/publish" body: "*"};
   }
@@ -75,8 +84,15 @@ service TeachingPlanService {
   rpc GetMyChapterSchedule(GetMyChapterScheduleRequest) returns (GetMyChapterScheduleResponse) {
     option (google.api.http) = {get: "/v1/courses/{course_id}/chapters/{chapter_id}/schedule"};
   }
+  rpc GetMyLessonSchedule(GetMyLessonScheduleRequest) returns (GetMyLessonScheduleResponse) {
+    option (google.api.http) = {get: "/v1/courses/{course_id}/lessons/{lesson_id}/schedule"};
+  }
   rpc OpenLearningTask(OpenLearningTaskRequest) returns (OpenLearningTaskResponse) {
-    option (google.api.http) = {post: "/v1/courses/{course_id}/chapters/{chapter_id}/tasks/{plan_item_id}:open" body: "*"};
+    option (google.api.http) = {
+      post: "/v1/courses/{course_id}/lessons/{plan_lesson_id}/tasks/{plan_item_id}:open"
+      body: "*"
+      additional_bindings: {post: "/v1/courses/{course_id}/chapters/{chapter_id}/tasks/{plan_item_id}:open" body: "*"}
+    };
   }
   rpc ReceiveOpenMAICProgressEvent(OpenMAICProgressEventRequest) returns (OpenMAICProgressEventResponse) {
     option (google.api.http) = {post: "/v1/integrations/openmaic/learning-progress/events" body: "*"};
@@ -160,6 +176,14 @@ enum LifecycleStatus {
   LIFECYCLE_STATUS_ARCHIVED = 3;
   LIFECYCLE_STATUS_PUBLISHED = 4;
   LIFECYCLE_STATUS_SUPERSEDED = 5;
+}
+
+enum StudentLessonStatus {
+  STUDENT_LESSON_STATUS_UNSPECIFIED = 0;
+  STUDENT_LESSON_STATUS_LOCKED = 1;
+  STUDENT_LESSON_STATUS_NOT_STARTED = 2;
+  STUDENT_LESSON_STATUS_IN_PROGRESS = 3;
+  STUDENT_LESSON_STATUS_COMPLETED = 4;
 }
 
 message PageInfo {
@@ -265,6 +289,21 @@ message TeachingPlanItem {
   ExamPolicy exam_policy = 17;
   int64 chapter_id = 18;
   string live_course_id = 19;
+  int64 plan_lesson_id = 20;
+}
+
+message TeachingPlanLesson {
+  int64 id = 1;
+  string title = 2;
+  int32 lesson_no = 3;
+  int32 sort_order = 4;
+  int64 source_chapter_id = 5;
+  ScheduleMode schedule_mode = 6;
+  int32 relative_day = 7;
+  int32 time_of_day_minutes = 8;
+  google.protobuf.Timestamp absolute_unlock_at = 9;
+  bool required = 10;
+  repeated TeachingPlanItem items = 11;
 }
 
 message TeachingPlanVersion {
@@ -279,14 +318,21 @@ message TeachingPlanVersion {
   google.protobuf.Timestamp published_at = 9;
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp updated_at = 11;
+  repeated TeachingPlanLesson lessons = 12;
 }
 
 message SaveTeachingPlanDraftRequest {
   int64 version_id = 1;
   int64 revision = 2;
   repeated TeachingPlanItem items = 3;
+  repeated TeachingPlanLesson lessons = 4;
 }
 message PublishTeachingPlanVersionRequest { int64 version_id = 1; int64 revision = 2; }
+message InitializeTeachingPlanLessonsRequest {
+  int64 version_id = 1;
+  int64 revision = 2;
+  int64 course_id = 3;
+}
 
 message CoursewareResource { int64 id = 1; int64 course_id = 2; string code = 3; string title = 4; string type = 5; int64 chapter_id = 6; }
 message ChapterResource { int64 id = 1; string code = 2; string title = 3; int32 sort_order = 4; }
@@ -367,6 +413,25 @@ message PutClassPlanItemOverrideRequest {
   string reason = 7;
 }
 message DeleteClassPlanItemOverrideRequest { int64 assignment_id = 1; int64 item_id = 2; int64 assignment_revision = 3; }
+message ClassPlanLessonOverride {
+  int64 id = 1;
+  int64 assignment_id = 2;
+  int64 lesson_id = 3;
+  google.protobuf.Timestamp unlock_at = 4;
+  string reason = 5;
+}
+message PutClassPlanLessonOverrideRequest {
+  int64 assignment_id = 1;
+  int64 lesson_id = 2;
+  int64 assignment_revision = 3;
+  google.protobuf.Timestamp unlock_at = 4;
+  string reason = 5;
+}
+message DeleteClassPlanLessonOverrideRequest {
+  int64 assignment_id = 1;
+  int64 lesson_id = 2;
+  int64 assignment_revision = 3;
+}
 message PublishClassPlanAssignmentRequest { int64 assignment_id = 1; int64 revision = 2; }
 
 message GetClassPlanTimelineRequest { int64 assignment_id = 1; }
@@ -397,6 +462,28 @@ message GetMyCourseScheduleResponse {
   bool has_schedule = 1;
   ClassPlanTimeline timeline = 2;
   repeated ChapterScheduleSummary chapters = 3;
+  repeated LessonScheduleSummary lessons = 4;
+}
+
+message LessonScheduleSummary {
+  int64 lesson_id = 1;
+  int32 lesson_no = 2;
+  string lesson_title = 3;
+  int64 source_chapter_id = 4;
+  int32 required_item_count = 5;
+  int32 completed_required_item_count = 6;
+  google.protobuf.Timestamp unlock_at = 7;
+  StudentLessonStatus status = 8;
+  bool required = 9;
+}
+
+message ClassPlanLessonTimeline {
+  ClassPlanAssignment assignment = 1;
+  TeachingClass teaching_class = 2;
+  string timezone = 3;
+  TeachingPlanLesson lesson = 4;
+  LessonScheduleSummary summary = 5;
+  repeated ClassPlanTimelineItem items = 6;
 }
 
 message ChapterScheduleSummary {
@@ -419,10 +506,21 @@ message GetMyChapterScheduleResponse {
   ClassPlanTimeline timeline = 3;
 }
 
+message GetMyLessonScheduleRequest {
+  int64 course_id = 1;
+  int64 lesson_id = 2;
+}
+message GetMyLessonScheduleResponse {
+  bool has_schedule = 1;
+  LessonScheduleSummary lesson = 2;
+  ClassPlanLessonTimeline timeline = 3;
+}
+
 message OpenLearningTaskRequest {
   int64 course_id = 1;
   int64 chapter_id = 2;
   int64 plan_item_id = 3;
+  int64 plan_lesson_id = 4;
 }
 message OpenLearningTaskResponse {
   string launch_url = 1;
