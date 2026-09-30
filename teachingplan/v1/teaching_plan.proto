@@ -9,28 +9,13 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
 service TeachingPlanService {
-  rpc ListTeachingClasses(ListTeachingClassesRequest) returns (ListTeachingClassesResponse) {
-    option (google.api.http) = {get: "/v1/admin/teaching-classes"};
-  }
-  rpc CreateTeachingClass(CreateTeachingClassRequest) returns (TeachingClass) {
-    option (google.api.http) = {post: "/v1/admin/teaching-classes" body: "*"};
-  }
-  rpc UpdateTeachingClass(UpdateTeachingClassRequest) returns (TeachingClass) {
-    option (google.api.http) = {patch: "/v1/admin/teaching-classes/{id}" body: "*"};
-  }
-  rpc ListTeachingClassMembers(ListTeachingClassMembersRequest) returns (ListTeachingClassMembersResponse) {
-    option (google.api.http) = {get: "/v1/admin/teaching-classes/{class_id}/members"};
-  }
-  rpc AddTeachingClassMember(AddTeachingClassMemberRequest) returns (TeachingClassMember) {
-    option (google.api.http) = {post: "/v1/admin/teaching-classes/{class_id}/members" body: "*"};
-  }
-  rpc RemoveTeachingClassMember(RemoveTeachingClassMemberRequest) returns (google.protobuf.Empty) {
-    option (google.api.http) = {delete: "/v1/admin/teaching-classes/{class_id}/members/{member_id}"};
-  }
   rpc ListClassOfferings(ListClassOfferingsRequest) returns (ListClassOfferingsResponse) { option (google.api.http) = {get: "/v1/admin/class-offerings"}; }
   rpc CreateClassOffering(CreateClassOfferingRequest) returns (ClassOffering) { option (google.api.http) = {post: "/v1/admin/class-offerings" body: "*"}; }
   rpc UpdateClassOffering(UpdateClassOfferingRequest) returns (ClassOffering) { option (google.api.http) = {patch: "/v1/admin/class-offerings/{id}" body: "*"}; }
   rpc PublishClassOffering(PublishClassOfferingRequest) returns (ClassOffering) { option (google.api.http) = {post: "/v1/admin/class-offerings/{id}/publish" body: "*"}; }
+  rpc ListClassOfferingMembers(ListClassOfferingMembersRequest) returns (ListClassOfferingMembersResponse) { option (google.api.http) = {get: "/v1/admin/class-offerings/{class_offering_id}/members"}; }
+  rpc AddClassOfferingMember(AddClassOfferingMemberRequest) returns (ClassOfferingMember) { option (google.api.http) = {post: "/v1/admin/class-offerings/{class_offering_id}/members" body: "*"}; }
+  rpc RemoveClassOfferingMember(RemoveClassOfferingMemberRequest) returns (google.protobuf.Empty) { option (google.api.http) = {delete: "/v1/admin/class-offerings/{class_offering_id}/members/{member_id}"}; }
   rpc ListAvailableClassOfferings(ListAvailableClassOfferingsRequest) returns (ListClassOfferingsResponse) { option (google.api.http) = {get: "/v1/class-offerings"}; }
   rpc EnrollClassOffering(EnrollClassOfferingRequest) returns (EnrollClassOfferingResponse) { option (google.api.http) = {post: "/v1/class-offerings/{offering_id}/enroll" body: "*"}; }
   rpc ListTeachingPlanTemplates(ListTeachingPlanTemplatesRequest) returns (ListTeachingPlanTemplatesResponse) {
@@ -58,11 +43,11 @@ service TeachingPlanService {
   rpc ListSchedulingResources(ListSchedulingResourcesRequest) returns (ListSchedulingResourcesResponse) {
     option (google.api.http) = {get: "/v1/admin/scheduling-resources"};
   }
-  rpc BatchCreateClassPlanAssignments(BatchCreateClassPlanAssignmentsRequest) returns (BatchCreateClassPlanAssignmentsResponse) {
-    option (google.api.http) = {post: "/v1/admin/class-plan-assignments/batch" body: "*"};
+  rpc BatchApplyTeachingPlanToOfferings(BatchApplyTeachingPlanToOfferingsRequest) returns (BatchApplyTeachingPlanToOfferingsResponse) {
+    option (google.api.http) = {post: "/v1/admin/class-offerings:apply-teaching-plan" body: "*"};
   }
   rpc ListClassPlanAssignments(ListClassPlanAssignmentsRequest) returns (ListClassPlanAssignmentsResponse) {
-    option (google.api.http) = {get: "/v1/admin/teaching-classes/{class_id}/plan-assignments"};
+    option (google.api.http) = {get: "/v1/admin/class-offerings/{class_offering_id}/plan-assignments"};
   }
   rpc GetClassPlanTimeline(GetClassPlanTimelineRequest) returns (ClassPlanTimeline) {
     option (google.api.http) = {get: "/v1/admin/class-plan-assignments/{assignment_id}/timeline"};
@@ -199,54 +184,9 @@ message PageInfo {
   int64 total = 3;
 }
 
-message TeachingClass {
-  int64 id = 1;
-  string code = 2;
-  string name = 3;
-  string timezone = 4;
-  LifecycleStatus status = 5;
-  string created_by = 6;
-  google.protobuf.Timestamp created_at = 7;
-  google.protobuf.Timestamp updated_at = 8;
-}
-
-message ListTeachingClassesRequest {
-  int32 page = 1;
-  int32 page_size = 2;
-  LifecycleStatus status = 3;
-}
-message ListTeachingClassesResponse { repeated TeachingClass classes = 1; PageInfo page_info = 2; }
-message CreateTeachingClassRequest { string code = 1; string name = 2; string timezone = 3; }
-message UpdateTeachingClassRequest {
-  int64 id = 1;
-  string name = 2;
-  string timezone = 3;
-  LifecycleStatus status = 4;
-}
-
-message TeachingClassMember {
-  int64 id = 1;
-  int64 class_id = 2;
-  string casdoor_subject = 3;
-  int64 user_id = 4;
-  string role = 5;
-  string status = 6;
-  google.protobuf.Timestamp joined_at = 7;
-  google.protobuf.Timestamp removed_at = 8;
-}
-message ListTeachingClassMembersRequest { int64 class_id = 1; }
-message ListTeachingClassMembersResponse { repeated TeachingClassMember members = 1; }
-message AddTeachingClassMemberRequest {
-  int64 class_id = 1;
-  string casdoor_subject = 2;
-  int64 user_id = 3;
-  string role = 4;
-}
-message RemoveTeachingClassMemberRequest { int64 class_id = 1; int64 member_id = 2; }
-
 message ClassOffering {
-  int64 id = 1; string code = 2; string name = 3; int64 course_id = 4; int64 class_id = 5; int64 template_version_id = 6;
-  string teacher_name = 7; string teacher_casdoor_subject = 8; string schedule_text = 9;
+  int64 id = 1; string code = 2; string name = 3; int64 course_id = 4; int64 template_version_id = 5;
+  string teacher_name = 6; string teacher_casdoor_subject = 7; string schedule_text = 8; string timezone = 9;
   google.protobuf.Timestamp enrollment_starts_at = 10; google.protobuf.Timestamp enrollment_ends_at = 11;
   google.protobuf.Timestamp class_starts_at = 12; google.protobuf.Timestamp class_ends_at = 13;
   int32 capacity = 14; int32 enrolled_count = 15; int64 price_cents = 16; string currency = 17; string status = 18;
@@ -255,8 +195,8 @@ message ClassOffering {
 message ListClassOfferingsRequest { int64 course_id = 1; string status = 2; int32 page = 3; int32 page_size = 4; }
 message ListClassOfferingsResponse { repeated ClassOffering offerings = 1; PageInfo page_info = 2; }
 message CreateClassOfferingRequest {
-  string name = 1; int64 course_id = 2; int64 class_id = 3; int64 template_version_id = 4; string teacher_name = 5;
-  string teacher_casdoor_subject = 6; string schedule_text = 7; google.protobuf.Timestamp enrollment_starts_at = 8;
+  string name = 1; int64 course_id = 2; int64 template_version_id = 3; string teacher_name = 4;
+  string teacher_casdoor_subject = 5; string schedule_text = 6; string timezone = 7; google.protobuf.Timestamp enrollment_starts_at = 8;
   google.protobuf.Timestamp enrollment_ends_at = 9; google.protobuf.Timestamp class_starts_at = 10; google.protobuf.Timestamp class_ends_at = 11;
   int32 capacity = 12; int64 price_cents = 13; string currency = 14;
 }
@@ -270,6 +210,14 @@ message PublishClassOfferingRequest { int64 id = 1; }
 message ListAvailableClassOfferingsRequest { int64 course_id = 1; int32 page = 2; int32 page_size = 3; }
 message EnrollClassOfferingRequest { int64 offering_id = 1; }
 message EnrollClassOfferingResponse { ClassOffering offering = 1; bool already_enrolled = 2; }
+message ClassOfferingMember {
+  int64 id = 1; int64 class_offering_id = 2; int64 user_id = 3; string casdoor_subject = 4;
+  string role = 5; string status = 6; google.protobuf.Timestamp joined_at = 7; google.protobuf.Timestamp removed_at = 8;
+}
+message ListClassOfferingMembersRequest { int64 class_offering_id = 1; }
+message ListClassOfferingMembersResponse { repeated ClassOfferingMember members = 1; }
+message AddClassOfferingMemberRequest { int64 class_offering_id = 1; int64 user_id = 2; string casdoor_subject = 3; string role = 4; }
+message RemoveClassOfferingMemberRequest { int64 class_offering_id = 1; int64 member_id = 2; }
 
 message TeachingPlanTemplate {
   int64 id = 1;
@@ -397,7 +345,7 @@ message ListSchedulingResourcesResponse {
 
 message ClassPlanAssignment {
   int64 id = 1;
-  int64 class_id = 2;
+  int64 class_offering_id = 2;
   int64 template_version_id = 3;
   google.protobuf.Timestamp class_start_at = 4;
   LifecycleStatus status = 5;
@@ -409,19 +357,19 @@ message ClassPlanAssignment {
   google.protobuf.Timestamp updated_at = 11;
 }
 
-message ClassAssignmentInput { int64 class_id = 1; google.protobuf.Timestamp class_start_at = 2; }
-message BatchCreateClassPlanAssignmentsRequest {
+message OfferingAssignmentInput { int64 class_offering_id = 1; google.protobuf.Timestamp class_start_at = 2; }
+message BatchApplyTeachingPlanToOfferingsRequest {
   int64 template_version_id = 1;
-  repeated ClassAssignmentInput classes = 2;
+  repeated OfferingAssignmentInput offerings = 2;
 }
 message ClassAssignmentResult {
-  int64 class_id = 1;
+  int64 class_offering_id = 1;
   ClassPlanAssignment assignment = 2;
   string error_code = 3;
   string error_message = 4;
 }
-message BatchCreateClassPlanAssignmentsResponse { repeated ClassAssignmentResult results = 1; }
-message ListClassPlanAssignmentsRequest { int64 class_id = 1; }
+message BatchApplyTeachingPlanToOfferingsResponse { repeated ClassAssignmentResult results = 1; }
+message ListClassPlanAssignmentsRequest { int64 class_offering_id = 1; }
 message ListClassPlanAssignmentsResponse { repeated ClassPlanAssignment assignments = 1; }
 message UpdateClassPlanAssignmentRequest {
   int64 id = 1;
@@ -487,7 +435,7 @@ message ClassPlanTimelineItem {
 }
 message ClassPlanTimeline {
   ClassPlanAssignment assignment = 1;
-  TeachingClass teaching_class = 2;
+  ClassOffering class_offering = 2;
   string timezone = 3;
   repeated ClassPlanTimelineItem items = 4;
 }
@@ -514,7 +462,7 @@ message LessonScheduleSummary {
 
 message ClassPlanLessonTimeline {
   ClassPlanAssignment assignment = 1;
-  TeachingClass teaching_class = 2;
+  ClassOffering class_offering = 2;
   string timezone = 3;
   TeachingPlanLesson lesson = 4;
   LessonScheduleSummary summary = 5;
