@@ -253,6 +253,8 @@ message ExamPolicy {
 }
 
 message TeachingPlanItem {
+	reserved 19;
+	reserved "live_course_id";
   int64 id = 1;
   string title = 2;
   int32 sort_order = 3;
@@ -271,8 +273,8 @@ message TeachingPlanItem {
   bool required = 16;
   ExamPolicy exam_policy = 17;
   int64 chapter_id = 18;
-  string live_course_id = 19;
-  int64 plan_lesson_id = 20;
+	int64 plan_lesson_id = 20;
+	int32 live_duration_minutes = 21;
 }
 
 message TeachingPlanLesson {
