@@ -70,6 +70,11 @@ service TeachingPlanService {
   rpc PublishClassPlanAssignment(PublishClassPlanAssignmentRequest) returns (ClassPlanAssignment) {
     option (google.api.http) = {post: "/v1/admin/class-plan-assignments/{assignment_id}/publish" body: "*"};
   }
+  rpc ListClassPlanLiveInstances(ListClassPlanLiveInstancesRequest) returns (ListClassPlanLiveInstancesResponse) { option (google.api.http) = {get: "/v1/admin/class-plan-assignments/{assignment_id}/live-instances"}; }
+  rpc PreviewOfferingLiveChanges(PreviewOfferingLiveChangesRequest) returns (OfferingLiveChangePreview) { option (google.api.http) = {post: "/v1/admin/class-offerings/{offering_id}/live-changes:preview" body: "*"}; }
+  rpc ApplyOfferingLiveChanges(ApplyOfferingLiveChangesRequest) returns (google.protobuf.Empty) { option (google.api.http) = {post: "/v1/admin/class-offerings/{offering_id}/live-changes:apply" body: "*"}; }
+  rpc SetLiveInstanceTeacherOverride(SetLiveInstanceTeacherOverrideRequest) returns (google.protobuf.Empty) { option (google.api.http) = {put: "/v1/admin/live-instances/{instance_id}/teacher-override" body: "*"}; }
+  rpc ClearLiveInstanceTeacherOverride(ClearLiveInstanceTeacherOverrideRequest) returns (google.protobuf.Empty) { option (google.api.http) = {delete: "/v1/admin/live-instances/{instance_id}/teacher-override"}; }
   rpc GetMyCourseSchedule(GetMyCourseScheduleRequest) returns (GetMyCourseScheduleResponse) {
     option (google.api.http) = {get: "/v1/courses/{course_id}/schedule"};
   }
@@ -168,6 +173,8 @@ enum LifecycleStatus {
   LIFECYCLE_STATUS_ARCHIVED = 3;
   LIFECYCLE_STATUS_PUBLISHED = 4;
   LIFECYCLE_STATUS_SUPERSEDED = 5;
+  LIFECYCLE_STATUS_PUBLISHING = 6;
+  LIFECYCLE_STATUS_PARTIAL_FAILURE = 7;
 }
 
 enum StudentLessonStatus {
@@ -434,7 +441,38 @@ message ClassPlanTimelineItem {
   double progress_ratio = 11;
   double score = 12;
   bool has_score = 13;
+  string live_course_id = 14;
+  string live_status = 15;
+  string live_classroom_url = 16;
+  string live_replay_url = 17;
+  string live_error_code = 18;
 }
+
+message ClassPlanLiveInstance {
+  int64 id = 1;
+  int64 assignment_id = 2;
+  int64 plan_item_id = 3;
+  string external_live_course_id = 4;
+  string idempotency_key = 5;
+  string title = 6;
+  google.protobuf.Timestamp scheduled_start_at = 7;
+  google.protobuf.Timestamp scheduled_end_at = 8;
+  string teacher_casdoor_subject = 9;
+  string teacher_name = 10;
+  bool teacher_overridden = 11;
+  string status = 12;
+  string last_error_code = 13;
+  int32 retry_count = 14;
+  string classroom_url = 15;
+  string replay_url = 16;
+}
+message ListClassPlanLiveInstancesRequest { int64 assignment_id = 1; }
+message ListClassPlanLiveInstancesResponse { repeated ClassPlanLiveInstance instances = 1; }
+message PreviewOfferingLiveChangesRequest { int64 offering_id = 1; string teacher_casdoor_subject = 2; string teacher_name = 3; google.protobuf.Timestamp class_starts_at = 4; }
+message ApplyOfferingLiveChangesRequest { int64 offering_id = 1; string teacher_casdoor_subject = 2; string teacher_name = 3; google.protobuf.Timestamp class_starts_at = 4; }
+message OfferingLiveChangePreview { int32 affected = 1; int32 locked = 2; int32 unchanged = 3; }
+message SetLiveInstanceTeacherOverrideRequest { int64 instance_id = 1; string teacher_casdoor_subject = 2; string teacher_name = 3; }
+message ClearLiveInstanceTeacherOverrideRequest { int64 instance_id = 1; }
 message ClassPlanTimeline {
   ClassPlanAssignment assignment = 1;
   ClassOffering class_offering = 2;
