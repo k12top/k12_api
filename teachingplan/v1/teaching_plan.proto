@@ -18,6 +18,7 @@ service TeachingPlanService {
   rpc RemoveClassOfferingMember(RemoveClassOfferingMemberRequest) returns (google.protobuf.Empty) { option (google.api.http) = {delete: "/v1/admin/class-offerings/{class_offering_id}/members/{member_id}"}; }
   rpc ListAvailableClassOfferings(ListAvailableClassOfferingsRequest) returns (ListClassOfferingsResponse) { option (google.api.http) = {get: "/v1/class-offerings"}; }
   rpc EnrollClassOffering(EnrollClassOfferingRequest) returns (EnrollClassOfferingResponse) { option (google.api.http) = {post: "/v1/class-offerings/{offering_id}/enroll" body: "*"}; }
+  rpc ListMyClassOfferings(ListMyClassOfferingsRequest) returns (ListMyClassOfferingsResponse) { option (google.api.http) = {get: "/v1/user/class-offerings"}; }
   rpc ListTeachingPlanTemplates(ListTeachingPlanTemplatesRequest) returns (ListTeachingPlanTemplatesResponse) {
     option (google.api.http) = {get: "/v1/admin/teaching-plan-templates"};
   }
@@ -227,6 +228,24 @@ message PublishClassOfferingRequest { int64 id = 1; }
 message ListAvailableClassOfferingsRequest { int64 course_id = 1; int32 page = 2; int32 page_size = 3; }
 message EnrollClassOfferingRequest { int64 offering_id = 1; }
 message EnrollClassOfferingResponse { ClassOffering offering = 1; bool already_enrolled = 2; }
+message ListMyClassOfferingsRequest {}
+message MyClassOfferingSummary {
+  ClassOffering offering = 1;
+  int64 course_id = 2;
+  string course_title = 3;
+  string course_cover_url = 4;
+  int64 assignment_id = 5;
+  int32 total_lesson_count = 6;
+  int32 completed_lesson_count = 7;
+  int64 next_lesson_id = 8;
+  int64 next_task_id = 9;
+  string next_task_title = 10;
+  PlanResourceType next_task_type = 11;
+  google.protobuf.Timestamp next_task_unlock_at = 12;
+  bool schedule_ready = 13;
+  bool completed = 14;
+}
+message ListMyClassOfferingsResponse { repeated MyClassOfferingSummary classes = 1; }
 message ClassOfferingMember {
   int64 id = 1; int64 class_offering_id = 2; int64 user_id = 3; string casdoor_subject = 4;
   string role = 5; string status = 6; google.protobuf.Timestamp joined_at = 7; google.protobuf.Timestamp removed_at = 8;
@@ -494,7 +513,7 @@ message ClassPlanTimeline {
   repeated ClassPlanTimelineItem items = 4;
 }
 
-message GetMyCourseScheduleRequest { int64 course_id = 1; }
+message GetMyCourseScheduleRequest { int64 course_id = 1; int64 offering_id = 2; }
 message GetMyCourseScheduleResponse {
   bool has_schedule = 1;
   ClassPlanTimeline timeline = 2;
@@ -536,6 +555,7 @@ message ChapterScheduleSummary {
 message GetMyChapterScheduleRequest {
   int64 course_id = 1;
   int64 chapter_id = 2;
+  int64 offering_id = 3;
 }
 message GetMyChapterScheduleResponse {
   bool has_schedule = 1;
@@ -546,6 +566,7 @@ message GetMyChapterScheduleResponse {
 message GetMyLessonScheduleRequest {
   int64 course_id = 1;
   int64 lesson_id = 2;
+  int64 offering_id = 3;
 }
 message GetMyLessonScheduleResponse {
   bool has_schedule = 1;
@@ -558,6 +579,7 @@ message OpenLearningTaskRequest {
   int64 chapter_id = 2;
   int64 plan_item_id = 3;
   int64 plan_lesson_id = 4;
+  int64 offering_id = 5;
 }
 message OpenLearningTaskResponse {
   string launch_url = 1;

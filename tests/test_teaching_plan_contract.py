@@ -19,6 +19,7 @@ class TeachingPlanContractTest(unittest.TestCase):
             "PublishClassOffering",
             "ListAvailableClassOfferings",
             "EnrollClassOffering",
+            "ListMyClassOfferings",
             "ListTeachingPlanTemplates",
             "CreateTeachingPlanTemplate",
             "CloneTeachingPlanTemplate",
@@ -101,6 +102,33 @@ class TeachingPlanContractTest(unittest.TestCase):
         self.assertRegex(self.source, r"(?s)message ClassOfferingMember\s*\{[^}]*casdoor_subject")
         self.assertRegex(self.source, r"(?s)message TeachingPlanTemplate\s*\{[^}]*entry_course_id")
         self.assertIn('get: "/v1/courses/{course_id}/schedule"', self.source)
+
+    def test_student_class_list_contract_is_offering_scoped(self):
+        self.assertIn("rpc ListMyClassOfferings(ListMyClassOfferingsRequest) returns (ListMyClassOfferingsResponse)", self.source)
+        self.assertIn('get: "/v1/user/class-offerings"', self.source)
+        summary = re.search(r"(?s)message MyClassOfferingSummary\s*\{(.*?)\n\}", self.source).group(1)
+        for field in (
+            "offering",
+            "course_id",
+            "course_title",
+            "course_cover_url",
+            "assignment_id",
+            "total_lesson_count",
+            "completed_lesson_count",
+            "next_lesson_id",
+            "next_task_id",
+            "next_task_title",
+            "next_task_type",
+            "next_task_unlock_at",
+            "schedule_ready",
+            "completed",
+        ):
+            self.assertIn(field, summary)
+
+    def test_student_schedule_accepts_offering_context(self):
+        for message_name in ("GetMyCourseScheduleRequest", "GetMyChapterScheduleRequest", "GetMyLessonScheduleRequest", "OpenLearningTaskRequest"):
+            request = re.search(rf"(?s)message {message_name}\s*\{{(.*?)\n\}}", self.source).group(1)
+            self.assertIn("offering_id", request, message_name)
 
     def test_stable_enum_values(self):
         expected = {
