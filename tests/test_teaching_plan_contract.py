@@ -13,14 +13,9 @@ class TeachingPlanContractTest(unittest.TestCase):
 
     def test_service_exposes_scheduling_workflow(self):
         expected = {
-            "ListTeachingClasses",
-            "CreateTeachingClass",
-            "UpdateTeachingClass",
-            "ListTeachingClassMembers",
-            "AddTeachingClassMember",
-            "RemoveTeachingClassMember",
             "ListClassOfferings",
             "CreateClassOffering",
+            "UpdateClassOffering",
             "PublishClassOffering",
             "ListAvailableClassOfferings",
             "EnrollClassOffering",
@@ -32,7 +27,7 @@ class TeachingPlanContractTest(unittest.TestCase):
             "SaveTeachingPlanDraft",
             "PublishTeachingPlanVersion",
             "ListSchedulingResources",
-            "BatchCreateClassPlanAssignments",
+            "BatchApplyTeachingPlanToOfferings",
             "ListClassPlanAssignments",
             "GetClassPlanTimeline",
             "UpdateClassPlanAssignment",
@@ -46,14 +41,64 @@ class TeachingPlanContractTest(unittest.TestCase):
             "OpenLearningTask",
             "PutClassPlanLessonOverride",
             "DeleteClassPlanLessonOverride",
+            "CompleteExternalLearningTask",
             "ReceiveOpenMAICProgressEvent",
             "ReceiveLiveProgressEvent",
+            "ListClassOfferingMembers",
+            "AddClassOfferingMember",
+            "RemoveClassOfferingMember",
+            "ListClassPlanLiveInstances",
+            "PreviewOfferingLiveChanges",
+            "ApplyOfferingLiveChanges",
+            "SetLiveInstanceTeacherOverride",
+            "ClearLiveInstanceTeacherOverride",
         }
         methods = set(re.findall(r"\brpc\s+(\w+)\s*\(", self.source))
         self.assertEqual(expected, methods)
 
+    def test_public_live_series_fields_replace_standalone_course_fields(self):
+        offering = re.search(r"(?s)message ClassOffering\s*\{(.*?)\n\}", self.source).group(1)
+        self.assertIn("external_live_series_id", offering)
+        self.assertIn("live_series_status", offering)
+
+        instance = re.search(r"(?s)message ClassPlanLiveInstance\s*\{(.*?)\n\}", self.source).group(1)
+        self.assertIn("external_live_session_id", instance)
+        self.assertIn("sso_embed_url", instance)
+        self.assertNotIn("external_live_course_id", instance)
+        self.assertNotIn("classroom_url", instance)
+
+        timeline = re.search(r"(?s)message ClassPlanTimelineItem\s*\{(.*?)\n\}", self.source).group(1)
+        self.assertIn("external_live_series_id", timeline)
+        self.assertIn("external_live_session_id", timeline)
+        self.assertIn("sso_embed_url", timeline)
+
+    def test_authenticated_external_completion_does_not_accept_learner_identity(self):
+        request = re.search(r"(?s)message CompleteExternalLearningTaskRequest\s*\{(.*?)\n\}", self.source).group(1)
+        for field in (
+            "assignment_id",
+            "plan_item_id",
+            "provider",
+            "event_id",
+            "event_type",
+            "occurred_at",
+            "external_resource_id",
+        ):
+            self.assertIn(field, request)
+        self.assertNotIn("casdoor", request)
+        self.assertNotIn("user_id", request)
+        self.assertIn('post: "/v1/learning/tasks/{plan_item_id}:complete-external"', self.source)
+
+    def test_webhook_payloads_cover_openmaic_and_classin_contracts(self):
+        openmaic = re.search(r"(?s)message OpenMAICShareWebhookEvent\s*\{(.*?)\n\}", self.source).group(1)
+        for field in ("event_id", "event", "occurred_at", "share_token", "external_id"):
+            self.assertIn(field, openmaic)
+
+        classin = re.search(r"(?s)message ClassinLifecycleWebhookEvent\s*\{(.*?)\n\}", self.source).group(1)
+        for field in ("event_id", "event", "occurred_at", "course_id", "session_id"):
+            self.assertIn(field, classin)
+
     def test_student_schedule_is_resolved_by_course_and_casdoor_subject(self):
-        self.assertRegex(self.source, r"(?s)message TeachingClassMember\s*\{[^}]*casdoor_subject")
+        self.assertRegex(self.source, r"(?s)message ClassOfferingMember\s*\{[^}]*casdoor_subject")
         self.assertRegex(self.source, r"(?s)message TeachingPlanTemplate\s*\{[^}]*entry_course_id")
         self.assertIn('get: "/v1/courses/{course_id}/schedule"', self.source)
 
@@ -81,13 +126,13 @@ class TeachingPlanContractTest(unittest.TestCase):
         expected_methods = {
             "GetMyChapterSchedule",
             "OpenLearningTask",
-            "ReceiveLiveProgressEvent",
+            "CompleteExternalLearningTask",
         }
         methods = set(re.findall(r"\brpc\s+(\w+)\s*\(", self.source))
         self.assertTrue(expected_methods.issubset(methods))
         self.assertRegex(
             self.source,
-            r"(?s)message TeachingPlanItem\s*\{[^}]*chapter_id[^}]*live_course_id",
+            r"(?s)message TeachingPlanItem\s*\{[^}]*chapter_id[^}]*live_duration_minutes",
         )
         self.assertRegex(
             self.source,

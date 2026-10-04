@@ -91,9 +91,14 @@ service TeachingPlanService {
       additional_bindings: {post: "/v1/courses/{course_id}/chapters/{chapter_id}/tasks/{plan_item_id}:open" body: "*"}
     };
   }
+  rpc CompleteExternalLearningTask(CompleteExternalLearningTaskRequest) returns (CompleteExternalLearningTaskResponse) {
+    option (google.api.http) = {post: "/v1/learning/tasks/{plan_item_id}:complete-external" body: "*"};
+  }
+  // Deprecated: retained only while K12 migrates to CompleteExternalLearningTask and signed raw-body webhooks.
   rpc ReceiveOpenMAICProgressEvent(OpenMAICProgressEventRequest) returns (OpenMAICProgressEventResponse) {
     option (google.api.http) = {post: "/v1/integrations/openmaic/learning-progress/events" body: "*"};
   }
+  // Deprecated: retained only while K12 migrates to Classin lifecycle webhooks.
   rpc ReceiveLiveProgressEvent(LiveProgressEventRequest) returns (LiveProgressEventResponse) {
     option (google.api.http) = {post: "/v1/integrations/live/attendance/events" body: "*"};
   }
@@ -198,6 +203,11 @@ message ClassOffering {
   google.protobuf.Timestamp class_starts_at = 12; google.protobuf.Timestamp class_ends_at = 13;
   int32 capacity = 14; int32 enrolled_count = 15; int64 price_cents = 16; string currency = 17; string status = 18;
   google.protobuf.Timestamp created_at = 19; google.protobuf.Timestamp updated_at = 20;
+  string external_live_series_id = 21;
+  string live_series_status = 22;
+  string live_series_last_error_code = 23;
+  string live_series_last_error_message = 24;
+  google.protobuf.Timestamp live_series_last_synced_at = 25;
 }
 message ListClassOfferingsRequest { int64 course_id = 1; string status = 2; int32 page = 3; int32 page_size = 4; }
 message ListClassOfferingsResponse { repeated ClassOffering offerings = 1; PageInfo page_info = 2; }
@@ -441,18 +451,19 @@ message ClassPlanTimelineItem {
   double progress_ratio = 11;
   double score = 12;
   bool has_score = 13;
-  string live_course_id = 14;
+  string external_live_session_id = 14;
   string live_status = 15;
-  string live_classroom_url = 16;
+  string sso_embed_url = 16;
   string live_replay_url = 17;
   string live_error_code = 18;
+  string external_live_series_id = 19;
 }
 
 message ClassPlanLiveInstance {
   int64 id = 1;
   int64 assignment_id = 2;
   int64 plan_item_id = 3;
-  string external_live_course_id = 4;
+  string external_live_session_id = 4;
   string idempotency_key = 5;
   string title = 6;
   google.protobuf.Timestamp scheduled_start_at = 7;
@@ -463,8 +474,11 @@ message ClassPlanLiveInstance {
   string status = 12;
   string last_error_code = 13;
   int32 retry_count = 14;
-  string classroom_url = 15;
+  string sso_embed_url = 15;
   string replay_url = 16;
+  string external_join_link_id = 17;
+  string last_error_message = 18;
+  google.protobuf.Timestamp last_synced_at = 19;
 }
 message ListClassPlanLiveInstancesRequest { int64 assignment_id = 1; }
 message ListClassPlanLiveInstancesResponse { repeated ClassPlanLiveInstance instances = 1; }
@@ -549,6 +563,54 @@ message OpenLearningTaskResponse {
   string launch_url = 1;
   LaunchMode launch_mode = 2;
   google.protobuf.Timestamp expires_at = 3;
+}
+
+message CompleteExternalLearningTaskRequest {
+  int64 assignment_id = 1;
+  int64 plan_item_id = 2;
+  string provider = 3;
+  string event_id = 4;
+  string event_type = 5;
+  google.protobuf.Timestamp occurred_at = 6;
+  string external_resource_id = 7;
+}
+message CompleteExternalLearningTaskResponse {
+  bool accepted = 1;
+  bool duplicate = 2;
+  bool task_completed = 3;
+  bool lesson_completed = 4;
+  int64 next_plan_item_id = 5;
+}
+
+message IntegrationWebhookHeaders {
+  string timestamp = 1;
+  string signature = 2;
+  string authorization = 3;
+}
+
+message OpenMAICShareWebhookEvent {
+  string event_id = 1;
+  string event = 2;
+  google.protobuf.Timestamp occurred_at = 3;
+  string share_token = 4;
+  string external_id = 5;
+  string session_id = 6;
+  int64 sequence = 7;
+  string scene_id = 8;
+  int32 page = 9;
+  int32 total_pages = 10;
+  string product_id = 11;
+  string viewer_id = 12;
+}
+
+message ClassinLifecycleWebhookEvent {
+  string event_id = 1;
+  string event = 2;
+  google.protobuf.Timestamp occurred_at = 3;
+  string course_id = 4;
+  string session_id = 5;
+  bool ended = 6;
+  string reason = 7;
 }
 
 message OpenMAICProgressEventRequest {
