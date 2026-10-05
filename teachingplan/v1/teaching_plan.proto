@@ -72,6 +72,7 @@ service TeachingPlanService {
     option (google.api.http) = {post: "/v1/admin/class-plan-assignments/{assignment_id}/publish" body: "*"};
   }
   rpc ListClassPlanLiveInstances(ListClassPlanLiveInstancesRequest) returns (ListClassPlanLiveInstancesResponse) { option (google.api.http) = {get: "/v1/admin/class-plan-assignments/{assignment_id}/live-instances"}; }
+  rpc RetryClassPlanLiveInstance(RetryClassPlanLiveInstanceRequest) returns (google.protobuf.Empty) { option (google.api.http) = {post: "/v1/admin/live-instances/{instance_id}:retry" body: "*"}; }
   rpc PreviewOfferingLiveChanges(PreviewOfferingLiveChangesRequest) returns (OfferingLiveChangePreview) { option (google.api.http) = {post: "/v1/admin/class-offerings/{offering_id}/live-changes:preview" body: "*"}; }
   rpc ApplyOfferingLiveChanges(ApplyOfferingLiveChangesRequest) returns (google.protobuf.Empty) { option (google.api.http) = {post: "/v1/admin/class-offerings/{offering_id}/live-changes:apply" body: "*"}; }
   rpc SetLiveInstanceTeacherOverride(SetLiveInstanceTeacherOverrideRequest) returns (google.protobuf.Empty) { option (google.api.http) = {put: "/v1/admin/live-instances/{instance_id}/teacher-override" body: "*"}; }
@@ -495,6 +496,7 @@ message ClassPlanLiveInstance {
 }
 message ListClassPlanLiveInstancesRequest { int64 assignment_id = 1; }
 message ListClassPlanLiveInstancesResponse { repeated ClassPlanLiveInstance instances = 1; }
+message RetryClassPlanLiveInstanceRequest { int64 instance_id = 1; }
 message PreviewOfferingLiveChangesRequest { int64 offering_id = 1; string teacher_casdoor_subject = 2; string teacher_name = 3; google.protobuf.Timestamp class_starts_at = 4; }
 message ApplyOfferingLiveChangesRequest { int64 offering_id = 1; string teacher_casdoor_subject = 2; string teacher_name = 3; google.protobuf.Timestamp class_starts_at = 4; }
 message OfferingLiveChangePreview { int32 affected = 1; int32 locked = 2; int32 unchanged = 3; }
