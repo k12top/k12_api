@@ -43,8 +43,6 @@ class TeachingPlanContractTest(unittest.TestCase):
             "PutClassPlanLessonOverride",
             "DeleteClassPlanLessonOverride",
             "CompleteExternalLearningTask",
-            "ReceiveOpenMAICProgressEvent",
-            "ReceiveLiveProgressEvent",
             "ListClassOfferingMembers",
             "AddClassOfferingMember",
             "RemoveClassOfferingMember",
@@ -88,15 +86,6 @@ class TeachingPlanContractTest(unittest.TestCase):
         self.assertNotIn("casdoor", request)
         self.assertNotIn("user_id", request)
         self.assertIn('post: "/v1/learning/tasks/{plan_item_id}:complete-external"', self.source)
-
-    def test_webhook_payloads_cover_openmaic_and_classin_contracts(self):
-        openmaic = re.search(r"(?s)message OpenMAICShareWebhookEvent\s*\{(.*?)\n\}", self.source).group(1)
-        for field in ("event_id", "event", "occurred_at", "share_token", "external_id"):
-            self.assertIn(field, openmaic)
-
-        classin = re.search(r"(?s)message ClassinLifecycleWebhookEvent\s*\{(.*?)\n\}", self.source).group(1)
-        for field in ("event_id", "event", "occurred_at", "course_id", "session_id"):
-            self.assertIn(field, classin)
 
     def test_student_schedule_is_resolved_by_course_and_casdoor_subject(self):
         self.assertRegex(self.source, r"(?s)message ClassOfferingMember\s*\{[^}]*casdoor_subject")

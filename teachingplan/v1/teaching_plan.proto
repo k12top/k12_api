@@ -95,14 +95,6 @@ service TeachingPlanService {
   rpc CompleteExternalLearningTask(CompleteExternalLearningTaskRequest) returns (CompleteExternalLearningTaskResponse) {
     option (google.api.http) = {post: "/v1/learning/tasks/{plan_item_id}:complete-external" body: "*"};
   }
-  // Deprecated: retained only while K12 migrates to CompleteExternalLearningTask and signed raw-body webhooks.
-  rpc ReceiveOpenMAICProgressEvent(OpenMAICProgressEventRequest) returns (OpenMAICProgressEventResponse) {
-    option (google.api.http) = {post: "/v1/integrations/openmaic/learning-progress/events" body: "*"};
-  }
-  // Deprecated: retained only while K12 migrates to Classin lifecycle webhooks.
-  rpc ReceiveLiveProgressEvent(LiveProgressEventRequest) returns (LiveProgressEventResponse) {
-    option (google.api.http) = {post: "/v1/integrations/live/attendance/events" body: "*"};
-  }
 }
 
 enum PlanResourceType {
@@ -603,65 +595,3 @@ message CompleteExternalLearningTaskResponse {
   bool lesson_completed = 4;
   int64 next_plan_item_id = 5;
 }
-
-message IntegrationWebhookHeaders {
-  string timestamp = 1;
-  string signature = 2;
-  string authorization = 3;
-}
-
-message OpenMAICShareWebhookEvent {
-  string event_id = 1;
-  string event = 2;
-  google.protobuf.Timestamp occurred_at = 3;
-  string share_token = 4;
-  string external_id = 5;
-  string session_id = 6;
-  int64 sequence = 7;
-  string scene_id = 8;
-  int32 page = 9;
-  int32 total_pages = 10;
-  string product_id = 11;
-  string viewer_id = 12;
-}
-
-message ClassinLifecycleWebhookEvent {
-  string event_id = 1;
-  string event = 2;
-  google.protobuf.Timestamp occurred_at = 3;
-  string course_id = 4;
-  string session_id = 5;
-  bool ended = 6;
-  string reason = 7;
-}
-
-message OpenMAICProgressEventRequest {
-  string event_id = 1;
-  string event_type = 2;
-  string schema_version = 3;
-  google.protobuf.Timestamp occurred_at = 4;
-  string assignment_id = 5;
-  string casdoor_user_id = 6;
-  string course_id = 7;
-  string scene_id = 8;
-  int32 completed_scene_count = 9;
-  int32 required_scene_count = 10;
-  bool course_completed = 11;
-  int64 revision = 12;
-}
-message OpenMAICProgressEventResponse { bool accepted = 1; bool duplicate = 2; }
-
-message LiveProgressEventRequest {
-  string event_id = 1;
-  string event_type = 2;
-  string schema_version = 3;
-  google.protobuf.Timestamp occurred_at = 4;
-  string live_course_id = 5;
-  string casdoor_user_id = 6;
-  int64 valid_online_seconds = 7;
-  int64 effective_live_seconds = 8;
-  double attendance_ratio = 9;
-  bool completed = 10;
-  int64 revision = 11;
-}
-message LiveProgressEventResponse { bool accepted = 1; bool duplicate = 2; }
