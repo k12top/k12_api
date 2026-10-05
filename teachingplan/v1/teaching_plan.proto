@@ -103,6 +103,7 @@ enum PlanResourceType {
   PLAN_RESOURCE_TYPE_COURSEWARE = 2;
   PLAN_RESOURCE_TYPE_EXAM = 3;
   PLAN_RESOURCE_TYPE_LIVE = 4;
+  PLAN_RESOURCE_TYPE_SECTION = 5;
 }
 
 enum TaskProgressStatus {
@@ -303,6 +304,7 @@ message TeachingPlanItem {
   int64 chapter_id = 18;
 	int64 plan_lesson_id = 20;
 	int32 live_duration_minutes = 21;
+	int64 section_id = 22;
 }
 
 message TeachingPlanLesson {
