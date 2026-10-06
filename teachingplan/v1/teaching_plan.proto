@@ -10,7 +10,7 @@ import "google/protobuf/timestamp.proto";
 
 service TeachingPlanService {
   rpc ListClassOfferings(ListClassOfferingsRequest) returns (ListClassOfferingsResponse) { option (google.api.http) = {get: "/v1/admin/class-offerings"}; }
-  rpc CreateClassOffering(CreateClassOfferingRequest) returns (ClassOffering) { option (google.api.http) = {post: "/v1/admin/class-offerings" body: "*"}; }
+  rpc CreateClassOffering(CreateClassOfferingRequest) returns (CreateClassOfferingResult) { option (google.api.http) = {post: "/v1/admin/class-offerings" body: "*"}; }
   rpc UpdateClassOffering(UpdateClassOfferingRequest) returns (ClassOffering) { option (google.api.http) = {patch: "/v1/admin/class-offerings/{id}" body: "*"}; }
   rpc PublishClassOffering(PublishClassOfferingRequest) returns (ClassOffering) { option (google.api.http) = {post: "/v1/admin/class-offerings/{id}/publish" body: "*"}; }
   rpc ListClassOfferingMembers(ListClassOfferingMembersRequest) returns (ListClassOfferingMembersResponse) { option (google.api.http) = {get: "/v1/admin/class-offerings/{class_offering_id}/members"}; }
@@ -24,6 +24,9 @@ service TeachingPlanService {
   }
   rpc CreateTeachingPlanTemplate(CreateTeachingPlanTemplateRequest) returns (TeachingPlanTemplate) {
     option (google.api.http) = {post: "/v1/admin/teaching-plan-templates" body: "*"};
+  }
+  rpc CreateTeachingPlanSetup(CreateTeachingPlanSetupRequest) returns (TeachingPlanSetupResult) {
+    option (google.api.http) = {post: "/v1/admin/teaching-plan-setups" body: "*"};
   }
   rpc CloneTeachingPlanTemplate(CloneTeachingPlanTemplateRequest) returns (TeachingPlanTemplate) { option (google.api.http) = {post: "/v1/admin/teaching-plan-templates/{source_template_id}/clone" body: "*"}; }
   rpc GetTeachingPlanTemplate(GetTeachingPlanTemplateRequest) returns (TeachingPlanTemplateDetail) {
@@ -77,6 +80,8 @@ service TeachingPlanService {
   rpc ApplyOfferingLiveChanges(ApplyOfferingLiveChangesRequest) returns (google.protobuf.Empty) { option (google.api.http) = {post: "/v1/admin/class-offerings/{offering_id}/live-changes:apply" body: "*"}; }
   rpc SetLiveInstanceTeacherOverride(SetLiveInstanceTeacherOverrideRequest) returns (google.protobuf.Empty) { option (google.api.http) = {put: "/v1/admin/live-instances/{instance_id}/teacher-override" body: "*"}; }
   rpc ClearLiveInstanceTeacherOverride(ClearLiveInstanceTeacherOverrideRequest) returns (google.protobuf.Empty) { option (google.api.http) = {delete: "/v1/admin/live-instances/{instance_id}/teacher-override"}; }
+  rpc PreviewClassPlanSync(PreviewClassPlanSyncRequest) returns (ClassPlanSyncPreview) { option (google.api.http) = {post: "/v1/admin/class-offerings/{offering_id}/plan-sync:preview" body: "*"}; }
+  rpc ApplyClassPlanSync(ApplyClassPlanSyncRequest) returns (ClassPlanAssignment) { option (google.api.http) = {post: "/v1/admin/class-offerings/{offering_id}/plan-sync:apply" body: "*"}; }
   rpc GetMyCourseSchedule(GetMyCourseScheduleRequest) returns (GetMyCourseScheduleResponse) {
     option (google.api.http) = {get: "/v1/courses/{course_id}/schedule"};
   }
@@ -177,6 +182,14 @@ enum LifecycleStatus {
   LIFECYCLE_STATUS_PARTIAL_FAILURE = 7;
 }
 
+enum TeachingPlanSetupMode {
+  TEACHING_PLAN_SETUP_MODE_UNSPECIFIED = 0;
+  TEACHING_PLAN_SETUP_MODE_OUTLINE_STANDARD = 1;
+  TEACHING_PLAN_SETUP_MODE_OUTLINE_AI_ONLY = 2;
+  TEACHING_PLAN_SETUP_MODE_OUTLINE_CUSTOM = 3;
+  TEACHING_PLAN_SETUP_MODE_BLANK = 4;
+}
+
 enum StudentLessonStatus {
   STUDENT_LESSON_STATUS_UNSPECIFIED = 0;
   STUDENT_LESSON_STATUS_LOCKED = 1;
@@ -210,7 +223,15 @@ message CreateClassOfferingRequest {
   string name = 1; int64 course_id = 2; int64 template_version_id = 3; string teacher_name = 4;
   string teacher_casdoor_subject = 5; string schedule_text = 6; string timezone = 7; google.protobuf.Timestamp enrollment_starts_at = 8;
   google.protobuf.Timestamp enrollment_ends_at = 9; google.protobuf.Timestamp class_starts_at = 10; google.protobuf.Timestamp class_ends_at = 11;
-  int32 capacity = 12; int64 price_cents = 13; string currency = 14;
+  int32 capacity = 12; int64 price_cents = 13; string currency = 14; string request_id = 15;
+}
+message LiveProvisioningSummary { int32 total = 1; int32 pending = 2; int32 ready = 3; int32 failed = 4; }
+message CreateClassOfferingResult {
+  ClassOffering offering = 1;
+  ClassPlanAssignment assignment = 2;
+  int32 generated_lesson_count = 3;
+  int32 generated_task_count = 4;
+  LiveProvisioningSummary provisioning = 5;
 }
 message UpdateClassOfferingRequest {
   int64 id = 1; string name = 2; string teacher_name = 3; string teacher_casdoor_subject = 4; string schedule_text = 5;
@@ -269,6 +290,26 @@ message TeachingPlanTemplate {
 message ListTeachingPlanTemplatesRequest { int32 page = 1; int32 page_size = 2; LifecycleStatus status = 3; }
 message ListTeachingPlanTemplatesResponse { repeated TeachingPlanTemplate templates = 1; PageInfo page_info = 2; }
 message CreateTeachingPlanTemplateRequest { string code = 1; string name = 2; string description = 3; int64 entry_course_id = 4; }
+message CreateTeachingPlanSetupRequest {
+  string name = 1;
+  string description = 2;
+  int64 entry_course_id = 3;
+  TeachingPlanSetupMode mode = 4;
+  bool include_live = 5;
+  bool include_ai = 6;
+  int32 live_duration_minutes = 7;
+  int32 initial_lesson_count = 8;
+}
+message TeachingPlanBlockingIssue { string code = 1; string message = 2; int32 lesson_no = 3; }
+message TeachingPlanSetupResult {
+  TeachingPlanTemplate template = 1;
+  TeachingPlanVersion version = 2;
+  int32 lesson_count = 3;
+  int32 live_task_count = 4;
+  int32 ai_task_count = 5;
+  bool ready_for_class = 6;
+  repeated TeachingPlanBlockingIssue blocking_issues = 7;
+}
 message CloneTeachingPlanTemplateRequest { int64 source_template_id = 1; string name = 2; }
 message GetTeachingPlanTemplateRequest { int64 id = 1; }
 message TeachingPlanTemplateDetail { TeachingPlanTemplate template = 1; repeated TeachingPlanVersion versions = 2; }
@@ -388,6 +429,21 @@ message ClassPlanAssignment {
   google.protobuf.Timestamp published_at = 9;
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp updated_at = 11;
+}
+
+message PreviewClassPlanSyncRequest { int64 offering_id = 1; int64 target_version_id = 2; }
+message ApplyClassPlanSyncRequest { int64 offering_id = 1; int64 target_version_id = 2; int64 expected_revision = 3; }
+message ClassPlanSyncPreview {
+  int64 offering_id = 1;
+  int64 current_version_id = 2;
+  int64 target_version_id = 3;
+  int64 revision = 4;
+  int32 added_count = 5;
+  int32 removed_count = 6;
+  int32 moved_count = 7;
+  int32 replaced_count = 8;
+  int32 protected_count = 9;
+  repeated int64 protected_item_ids = 10;
 }
 
 message OfferingAssignmentInput { int64 class_offering_id = 1; google.protobuf.Timestamp class_start_at = 2; }

@@ -22,6 +22,7 @@ class TeachingPlanContractTest(unittest.TestCase):
             "ListMyClassOfferings",
             "ListTeachingPlanTemplates",
             "CreateTeachingPlanTemplate",
+            "CreateTeachingPlanSetup",
             "CloneTeachingPlanTemplate",
             "GetTeachingPlanTemplate",
             "CreateTeachingPlanDraft",
@@ -51,9 +52,63 @@ class TeachingPlanContractTest(unittest.TestCase):
             "ApplyOfferingLiveChanges",
             "SetLiveInstanceTeacherOverride",
             "ClearLiveInstanceTeacherOverride",
+            "PreviewClassPlanSync",
+            "ApplyClassPlanSync",
         }
         methods = set(re.findall(r"\brpc\s+(\w+)\s*\(", self.source))
         self.assertEqual(expected, methods)
+
+    def test_guided_teaching_plan_setup_contract_is_explicit(self):
+        self.assertIn(
+            "rpc CreateTeachingPlanSetup(CreateTeachingPlanSetupRequest) returns (TeachingPlanSetupResult)",
+            self.source,
+        )
+        self.assertIn('post: "/v1/admin/teaching-plan-setups"', self.source)
+        values = {
+            name: int(number)
+            for name, number in re.findall(r"^\s*([A-Z][A-Z0-9_]+)\s*=\s*(\d+)\s*;", self.source, re.M)
+        }
+        self.assertEqual(0, values.get("TEACHING_PLAN_SETUP_MODE_UNSPECIFIED"))
+        self.assertEqual(1, values.get("TEACHING_PLAN_SETUP_MODE_OUTLINE_STANDARD"))
+        self.assertEqual(2, values.get("TEACHING_PLAN_SETUP_MODE_OUTLINE_AI_ONLY"))
+        self.assertEqual(3, values.get("TEACHING_PLAN_SETUP_MODE_OUTLINE_CUSTOM"))
+        self.assertEqual(4, values.get("TEACHING_PLAN_SETUP_MODE_BLANK"))
+
+        request = re.search(r"(?s)message CreateTeachingPlanSetupRequest\s*\{(.*?)\n\}", self.source).group(1)
+        for expression in (
+            r"string name\s*=\s*1\s*;",
+            r"string description\s*=\s*2\s*;",
+            r"int64 entry_course_id\s*=\s*3\s*;",
+            r"TeachingPlanSetupMode mode\s*=\s*4\s*;",
+            r"bool include_live\s*=\s*5\s*;",
+            r"bool include_ai\s*=\s*6\s*;",
+            r"int32 live_duration_minutes\s*=\s*7\s*;",
+            r"int32 initial_lesson_count\s*=\s*8\s*;",
+        ):
+            self.assertRegex(request, expression)
+
+        result = re.search(r"(?s)message TeachingPlanSetupResult\s*\{(.*?)\n\}", self.source).group(1)
+        for field in ("template", "version", "lesson_count", "live_task_count", "ai_task_count", "ready_for_class", "blocking_issues"):
+            self.assertIn(field, result)
+
+    def test_class_creation_returns_generated_schedule_and_accepts_idempotency_key(self):
+        self.assertIn("rpc CreateClassOffering(CreateClassOfferingRequest) returns (CreateClassOfferingResult)", self.source)
+        request = re.search(r"(?s)message CreateClassOfferingRequest\s*\{(.*?)\n\}", self.source).group(1)
+        self.assertRegex(request, r"string request_id\s*=\s*15\s*;")
+        result = re.search(r"(?s)message CreateClassOfferingResult\s*\{(.*?)\n\}", self.source).group(1)
+        for field in ("offering", "assignment", "generated_lesson_count", "generated_task_count", "provisioning"):
+            self.assertIn(field, result)
+
+    def test_started_class_plan_sync_has_preview_and_revision_confirmation(self):
+        self.assertIn("rpc PreviewClassPlanSync(PreviewClassPlanSyncRequest) returns (ClassPlanSyncPreview)", self.source)
+        self.assertIn("rpc ApplyClassPlanSync(ApplyClassPlanSyncRequest) returns (ClassPlanAssignment)", self.source)
+        self.assertIn('post: "/v1/admin/class-offerings/{offering_id}/plan-sync:preview"', self.source)
+        self.assertIn('post: "/v1/admin/class-offerings/{offering_id}/plan-sync:apply"', self.source)
+        preview = re.search(r"(?s)message ClassPlanSyncPreview\s*\{(.*?)\n\}", self.source).group(1)
+        for field in ("added_count", "removed_count", "moved_count", "replaced_count", "protected_count", "revision"):
+            self.assertIn(field, preview)
+        apply = re.search(r"(?s)message ApplyClassPlanSyncRequest\s*\{(.*?)\n\}", self.source).group(1)
+        self.assertRegex(apply, r"int64 expected_revision\s*=\s*3\s*;")
 
     def test_public_live_series_fields_replace_standalone_course_fields(self):
         offering = re.search(r"(?s)message ClassOffering\s*\{(.*?)\n\}", self.source).group(1)
