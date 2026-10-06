@@ -48,6 +48,7 @@ class TeachingPlanContractTest(unittest.TestCase):
             "AddClassOfferingMember",
             "RemoveClassOfferingMember",
             "ListClassPlanLiveInstances",
+            "RetryClassPlanLiveInstance",
             "PreviewOfferingLiveChanges",
             "ApplyOfferingLiveChanges",
             "SetLiveInstanceTeacherOverride",
