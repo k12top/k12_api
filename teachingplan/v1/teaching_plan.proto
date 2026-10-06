@@ -1,0 +1,660 @@
+syntax = "proto3";
+
+package teachingplan.v1;
+
+option go_package = "k12_backend/api/teachingplan/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+service TeachingPlanService {
+  rpc ListClassOfferings(ListClassOfferingsRequest) returns (ListClassOfferingsResponse) { option (google.api.http) = {get: "/v1/admin/class-offerings"}; }
+  rpc CreateClassOffering(CreateClassOfferingRequest) returns (CreateClassOfferingResult) { option (google.api.http) = {post: "/v1/admin/class-offerings" body: "*"}; }
+  rpc UpdateClassOffering(UpdateClassOfferingRequest) returns (ClassOffering) { option (google.api.http) = {patch: "/v1/admin/class-offerings/{id}" body: "*"}; }
+  rpc PublishClassOffering(PublishClassOfferingRequest) returns (ClassOffering) { option (google.api.http) = {post: "/v1/admin/class-offerings/{id}/publish" body: "*"}; }
+  rpc ListClassOfferingMembers(ListClassOfferingMembersRequest) returns (ListClassOfferingMembersResponse) { option (google.api.http) = {get: "/v1/admin/class-offerings/{class_offering_id}/members"}; }
+  rpc AddClassOfferingMember(AddClassOfferingMemberRequest) returns (ClassOfferingMember) { option (google.api.http) = {post: "/v1/admin/class-offerings/{class_offering_id}/members" body: "*"}; }
+  rpc RemoveClassOfferingMember(RemoveClassOfferingMemberRequest) returns (google.protobuf.Empty) { option (google.api.http) = {delete: "/v1/admin/class-offerings/{class_offering_id}/members/{member_id}"}; }
+  rpc ListAvailableClassOfferings(ListAvailableClassOfferingsRequest) returns (ListClassOfferingsResponse) { option (google.api.http) = {get: "/v1/class-offerings"}; }
+  rpc EnrollClassOffering(EnrollClassOfferingRequest) returns (EnrollClassOfferingResponse) { option (google.api.http) = {post: "/v1/class-offerings/{offering_id}/enroll" body: "*"}; }
+  rpc ListMyClassOfferings(ListMyClassOfferingsRequest) returns (ListMyClassOfferingsResponse) { option (google.api.http) = {get: "/v1/user/class-offerings"}; }
+  rpc ListTeachingPlanTemplates(ListTeachingPlanTemplatesRequest) returns (ListTeachingPlanTemplatesResponse) {
+    option (google.api.http) = {get: "/v1/admin/teaching-plan-templates"};
+  }
+  rpc CreateTeachingPlanTemplate(CreateTeachingPlanTemplateRequest) returns (TeachingPlanTemplate) {
+    option (google.api.http) = {post: "/v1/admin/teaching-plan-templates" body: "*"};
+  }
+  rpc CreateTeachingPlanSetup(CreateTeachingPlanSetupRequest) returns (TeachingPlanSetupResult) {
+    option (google.api.http) = {post: "/v1/admin/teaching-plan-setups" body: "*"};
+  }
+  rpc CloneTeachingPlanTemplate(CloneTeachingPlanTemplateRequest) returns (TeachingPlanTemplate) { option (google.api.http) = {post: "/v1/admin/teaching-plan-templates/{source_template_id}/clone" body: "*"}; }
+  rpc GetTeachingPlanTemplate(GetTeachingPlanTemplateRequest) returns (TeachingPlanTemplateDetail) {
+    option (google.api.http) = {get: "/v1/admin/teaching-plan-templates/{id}"};
+  }
+  rpc CreateTeachingPlanDraft(CreateTeachingPlanDraftRequest) returns (TeachingPlanVersion) {
+    option (google.api.http) = {post: "/v1/admin/teaching-plan-templates/{template_id}/drafts" body: "*"};
+  }
+  rpc SaveTeachingPlanDraft(SaveTeachingPlanDraftRequest) returns (TeachingPlanVersion) {
+    option (google.api.http) = {put: "/v1/admin/teaching-plan-template-versions/{version_id}" body: "*"};
+  }
+  rpc PublishTeachingPlanVersion(PublishTeachingPlanVersionRequest) returns (TeachingPlanVersion) {
+    option (google.api.http) = {post: "/v1/admin/teaching-plan-template-versions/{version_id}/publish" body: "*"};
+  }
+  rpc InitializeTeachingPlanLessons(InitializeTeachingPlanLessonsRequest) returns (TeachingPlanVersion) {
+    option (google.api.http) = {post: "/v1/admin/teaching-plan-template-versions/{version_id}/lessons:initialize" body: "*"};
+  }
+  rpc ListSchedulingResources(ListSchedulingResourcesRequest) returns (ListSchedulingResourcesResponse) {
+    option (google.api.http) = {get: "/v1/admin/scheduling-resources"};
+  }
+  rpc BatchApplyTeachingPlanToOfferings(BatchApplyTeachingPlanToOfferingsRequest) returns (BatchApplyTeachingPlanToOfferingsResponse) {
+    option (google.api.http) = {post: "/v1/admin/class-offerings:apply-teaching-plan" body: "*"};
+  }
+  rpc ListClassPlanAssignments(ListClassPlanAssignmentsRequest) returns (ListClassPlanAssignmentsResponse) {
+    option (google.api.http) = {get: "/v1/admin/class-offerings/{class_offering_id}/plan-assignments"};
+  }
+  rpc GetClassPlanTimeline(GetClassPlanTimelineRequest) returns (ClassPlanTimeline) {
+    option (google.api.http) = {get: "/v1/admin/class-plan-assignments/{assignment_id}/timeline"};
+  }
+  rpc UpdateClassPlanAssignment(UpdateClassPlanAssignmentRequest) returns (ClassPlanAssignment) {
+    option (google.api.http) = {patch: "/v1/admin/class-plan-assignments/{id}" body: "*"};
+  }
+  rpc PutClassPlanItemOverride(PutClassPlanItemOverrideRequest) returns (ClassPlanItemOverride) {
+    option (google.api.http) = {put: "/v1/admin/class-plan-assignments/{assignment_id}/overrides/{item_id}" body: "*"};
+  }
+  rpc DeleteClassPlanItemOverride(DeleteClassPlanItemOverrideRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {delete: "/v1/admin/class-plan-assignments/{assignment_id}/overrides/{item_id}"};
+  }
+  rpc PutClassPlanLessonOverride(PutClassPlanLessonOverrideRequest) returns (ClassPlanLessonOverride) {
+    option (google.api.http) = {put: "/v1/admin/class-plan-assignments/{assignment_id}/lesson-overrides/{lesson_id}" body: "*"};
+  }
+  rpc DeleteClassPlanLessonOverride(DeleteClassPlanLessonOverrideRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {delete: "/v1/admin/class-plan-assignments/{assignment_id}/lesson-overrides/{lesson_id}"};
+  }
+  rpc PublishClassPlanAssignment(PublishClassPlanAssignmentRequest) returns (ClassPlanAssignment) {
+    option (google.api.http) = {post: "/v1/admin/class-plan-assignments/{assignment_id}/publish" body: "*"};
+  }
+  rpc ListClassPlanLiveInstances(ListClassPlanLiveInstancesRequest) returns (ListClassPlanLiveInstancesResponse) { option (google.api.http) = {get: "/v1/admin/class-plan-assignments/{assignment_id}/live-instances"}; }
+  rpc RetryClassPlanLiveInstance(RetryClassPlanLiveInstanceRequest) returns (google.protobuf.Empty) { option (google.api.http) = {post: "/v1/admin/live-instances/{instance_id}:retry" body: "*"}; }
+  rpc PreviewOfferingLiveChanges(PreviewOfferingLiveChangesRequest) returns (OfferingLiveChangePreview) { option (google.api.http) = {post: "/v1/admin/class-offerings/{offering_id}/live-changes:preview" body: "*"}; }
+  rpc ApplyOfferingLiveChanges(ApplyOfferingLiveChangesRequest) returns (google.protobuf.Empty) { option (google.api.http) = {post: "/v1/admin/class-offerings/{offering_id}/live-changes:apply" body: "*"}; }
+  rpc SetLiveInstanceTeacherOverride(SetLiveInstanceTeacherOverrideRequest) returns (google.protobuf.Empty) { option (google.api.http) = {put: "/v1/admin/live-instances/{instance_id}/teacher-override" body: "*"}; }
+  rpc ClearLiveInstanceTeacherOverride(ClearLiveInstanceTeacherOverrideRequest) returns (google.protobuf.Empty) { option (google.api.http) = {delete: "/v1/admin/live-instances/{instance_id}/teacher-override"}; }
+  rpc PreviewClassPlanSync(PreviewClassPlanSyncRequest) returns (ClassPlanSyncPreview) { option (google.api.http) = {post: "/v1/admin/class-offerings/{offering_id}/plan-sync:preview" body: "*"}; }
+  rpc ApplyClassPlanSync(ApplyClassPlanSyncRequest) returns (ClassPlanAssignment) { option (google.api.http) = {post: "/v1/admin/class-offerings/{offering_id}/plan-sync:apply" body: "*"}; }
+  rpc GetMyCourseSchedule(GetMyCourseScheduleRequest) returns (GetMyCourseScheduleResponse) {
+    option (google.api.http) = {get: "/v1/courses/{course_id}/schedule"};
+  }
+  rpc GetMyChapterSchedule(GetMyChapterScheduleRequest) returns (GetMyChapterScheduleResponse) {
+    option (google.api.http) = {get: "/v1/courses/{course_id}/chapters/{chapter_id}/schedule"};
+  }
+  rpc GetMyLessonSchedule(GetMyLessonScheduleRequest) returns (GetMyLessonScheduleResponse) {
+    option (google.api.http) = {get: "/v1/courses/{course_id}/lessons/{lesson_id}/schedule"};
+  }
+  rpc OpenLearningTask(OpenLearningTaskRequest) returns (OpenLearningTaskResponse) {
+    option (google.api.http) = {
+      post: "/v1/courses/{course_id}/lessons/{plan_lesson_id}/tasks/{plan_item_id}:open"
+      body: "*"
+      additional_bindings: {post: "/v1/courses/{course_id}/chapters/{chapter_id}/tasks/{plan_item_id}:open" body: "*"}
+    };
+  }
+  rpc CompleteExternalLearningTask(CompleteExternalLearningTaskRequest) returns (CompleteExternalLearningTaskResponse) {
+    option (google.api.http) = {post: "/v1/learning/tasks/{plan_item_id}:complete-external" body: "*"};
+  }
+}
+
+enum PlanResourceType {
+  PLAN_RESOURCE_TYPE_UNSPECIFIED = 0;
+  PLAN_RESOURCE_TYPE_COURSE = 1;
+  PLAN_RESOURCE_TYPE_COURSEWARE = 2;
+  PLAN_RESOURCE_TYPE_EXAM = 3;
+  PLAN_RESOURCE_TYPE_LIVE = 4;
+  PLAN_RESOURCE_TYPE_SECTION = 5;
+}
+
+enum TaskProgressStatus {
+  TASK_PROGRESS_STATUS_UNSPECIFIED = 0;
+  TASK_PROGRESS_STATUS_NOT_STARTED = 1;
+  TASK_PROGRESS_STATUS_IN_PROGRESS = 2;
+  TASK_PROGRESS_STATUS_COMPLETED = 3;
+}
+
+enum TaskPresentationStatus {
+  TASK_PRESENTATION_STATUS_UNSPECIFIED = 0;
+  TASK_PRESENTATION_STATUS_AVAILABLE = 1;
+  TASK_PRESENTATION_STATUS_LOCKED = 2;
+  TASK_PRESENTATION_STATUS_PENDING_SYNC = 3;
+  TASK_PRESENTATION_STATUS_LIVE_UPCOMING = 4;
+  TASK_PRESENTATION_STATUS_LIVE_NOW = 5;
+  TASK_PRESENTATION_STATUS_ATTENDANCE_INSUFFICIENT = 6;
+  TASK_PRESENTATION_STATUS_MISSED = 7;
+  TASK_PRESENTATION_STATUS_RESOURCE_UNAVAILABLE = 8;
+}
+
+enum LaunchMode {
+  LAUNCH_MODE_UNSPECIFIED = 0;
+  LAUNCH_MODE_IFRAME = 1;
+  LAUNCH_MODE_NEW_TAB = 2;
+}
+
+enum TeachingRole {
+  TEACHING_ROLE_UNSPECIFIED = 0;
+  TEACHING_ROLE_LESSON = 1;
+  TEACHING_ROLE_IN_CLASS_PRACTICE = 2;
+  TEACHING_ROLE_HOMEWORK = 3;
+  TEACHING_ROLE_ASSESSMENT = 4;
+}
+
+enum ScheduleMode {
+  SCHEDULE_MODE_UNSPECIFIED = 0;
+  SCHEDULE_MODE_RELATIVE = 1;
+  SCHEDULE_MODE_ABSOLUTE = 2;
+}
+
+enum ResultVisibility {
+  RESULT_VISIBILITY_UNSPECIFIED = 0;
+  RESULT_VISIBILITY_IMMEDIATE = 1;
+  RESULT_VISIBILITY_AFTER_DUE = 2;
+  RESULT_VISIBILITY_HIDDEN = 3;
+}
+
+enum AnswerVisibility {
+  ANSWER_VISIBILITY_UNSPECIFIED = 0;
+  ANSWER_VISIBILITY_AFTER_SUBMIT = 1;
+  ANSWER_VISIBILITY_AFTER_DUE = 2;
+  ANSWER_VISIBILITY_HIDDEN = 3;
+}
+
+enum LateSubmissionPolicy {
+  LATE_SUBMISSION_POLICY_UNSPECIFIED = 0;
+  LATE_SUBMISSION_POLICY_REJECT = 1;
+  LATE_SUBMISSION_POLICY_ALLOW = 2;
+}
+
+enum LifecycleStatus {
+  LIFECYCLE_STATUS_UNSPECIFIED = 0;
+  LIFECYCLE_STATUS_DRAFT = 1;
+  LIFECYCLE_STATUS_ACTIVE = 2;
+  LIFECYCLE_STATUS_ARCHIVED = 3;
+  LIFECYCLE_STATUS_PUBLISHED = 4;
+  LIFECYCLE_STATUS_SUPERSEDED = 5;
+  LIFECYCLE_STATUS_PUBLISHING = 6;
+  LIFECYCLE_STATUS_PARTIAL_FAILURE = 7;
+}
+
+enum TeachingPlanSetupMode {
+  TEACHING_PLAN_SETUP_MODE_UNSPECIFIED = 0;
+  TEACHING_PLAN_SETUP_MODE_OUTLINE_STANDARD = 1;
+  TEACHING_PLAN_SETUP_MODE_OUTLINE_AI_ONLY = 2;
+  TEACHING_PLAN_SETUP_MODE_OUTLINE_CUSTOM = 3;
+  TEACHING_PLAN_SETUP_MODE_BLANK = 4;
+}
+
+enum StudentLessonStatus {
+  STUDENT_LESSON_STATUS_UNSPECIFIED = 0;
+  STUDENT_LESSON_STATUS_LOCKED = 1;
+  STUDENT_LESSON_STATUS_NOT_STARTED = 2;
+  STUDENT_LESSON_STATUS_IN_PROGRESS = 3;
+  STUDENT_LESSON_STATUS_COMPLETED = 4;
+}
+
+message PageInfo {
+  int32 page = 1;
+  int32 page_size = 2;
+  int64 total = 3;
+}
+
+message ClassOffering {
+  int64 id = 1; string code = 2; string name = 3; int64 course_id = 4; int64 template_version_id = 5;
+  string teacher_name = 6; string teacher_casdoor_subject = 7; string schedule_text = 8; string timezone = 9;
+  google.protobuf.Timestamp enrollment_starts_at = 10; google.protobuf.Timestamp enrollment_ends_at = 11;
+  google.protobuf.Timestamp class_starts_at = 12; google.protobuf.Timestamp class_ends_at = 13;
+  int32 capacity = 14; int32 enrolled_count = 15; int64 price_cents = 16; string currency = 17; string status = 18;
+  google.protobuf.Timestamp created_at = 19; google.protobuf.Timestamp updated_at = 20;
+  string external_live_series_id = 21;
+  string live_series_status = 22;
+  string live_series_last_error_code = 23;
+  string live_series_last_error_message = 24;
+  google.protobuf.Timestamp live_series_last_synced_at = 25;
+}
+message ListClassOfferingsRequest { int64 course_id = 1; string status = 2; int32 page = 3; int32 page_size = 4; }
+message ListClassOfferingsResponse { repeated ClassOffering offerings = 1; PageInfo page_info = 2; }
+message CreateClassOfferingRequest {
+  string name = 1; int64 course_id = 2; int64 template_version_id = 3; string teacher_name = 4;
+  string teacher_casdoor_subject = 5; string schedule_text = 6; string timezone = 7; google.protobuf.Timestamp enrollment_starts_at = 8;
+  google.protobuf.Timestamp enrollment_ends_at = 9; google.protobuf.Timestamp class_starts_at = 10; google.protobuf.Timestamp class_ends_at = 11;
+  int32 capacity = 12; int64 price_cents = 13; string currency = 14; string request_id = 15;
+}
+message LiveProvisioningSummary { int32 total = 1; int32 pending = 2; int32 ready = 3; int32 failed = 4; }
+message CreateClassOfferingResult {
+  ClassOffering offering = 1;
+  ClassPlanAssignment assignment = 2;
+  int32 generated_lesson_count = 3;
+  int32 generated_task_count = 4;
+  LiveProvisioningSummary provisioning = 5;
+}
+message UpdateClassOfferingRequest {
+  int64 id = 1; string name = 2; string teacher_name = 3; string teacher_casdoor_subject = 4; string schedule_text = 5;
+  google.protobuf.Timestamp enrollment_starts_at = 6; google.protobuf.Timestamp enrollment_ends_at = 7;
+  google.protobuf.Timestamp class_starts_at = 8; google.protobuf.Timestamp class_ends_at = 9;
+  int32 capacity = 10; int64 price_cents = 11; string currency = 12;
+}
+message PublishClassOfferingRequest { int64 id = 1; }
+message ListAvailableClassOfferingsRequest { int64 course_id = 1; int32 page = 2; int32 page_size = 3; }
+message EnrollClassOfferingRequest { int64 offering_id = 1; }
+message EnrollClassOfferingResponse { ClassOffering offering = 1; bool already_enrolled = 2; }
+message ListMyClassOfferingsRequest {}
+message MyClassOfferingSummary {
+  ClassOffering offering = 1;
+  int64 course_id = 2;
+  string course_title = 3;
+  string course_cover_url = 4;
+  int64 assignment_id = 5;
+  int32 total_lesson_count = 6;
+  int32 completed_lesson_count = 7;
+  int64 next_lesson_id = 8;
+  int64 next_task_id = 9;
+  string next_task_title = 10;
+  PlanResourceType next_task_type = 11;
+  google.protobuf.Timestamp next_task_unlock_at = 12;
+  bool schedule_ready = 13;
+  bool completed = 14;
+}
+message ListMyClassOfferingsResponse { repeated MyClassOfferingSummary classes = 1; }
+message ClassOfferingMember {
+  int64 id = 1; int64 class_offering_id = 2; int64 user_id = 3; string casdoor_subject = 4;
+  string role = 5; string status = 6; google.protobuf.Timestamp joined_at = 7; google.protobuf.Timestamp removed_at = 8;
+}
+message ListClassOfferingMembersRequest { int64 class_offering_id = 1; }
+message ListClassOfferingMembersResponse { repeated ClassOfferingMember members = 1; }
+message AddClassOfferingMemberRequest { int64 class_offering_id = 1; int64 user_id = 2; string casdoor_subject = 3; string role = 4; }
+message RemoveClassOfferingMemberRequest { int64 class_offering_id = 1; int64 member_id = 2; }
+
+message TeachingPlanTemplate {
+  int64 id = 1;
+  string code = 2;
+  string name = 3;
+  string description = 4;
+  LifecycleStatus status = 5;
+  int64 current_version_id = 6;
+  int32 current_version_no = 7;
+  int32 item_count = 8;
+  int32 assignment_count = 9;
+  string created_by = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+  // Student-facing course detail page that displays this schedule.
+  int64 entry_course_id = 13;
+}
+
+message ListTeachingPlanTemplatesRequest { int32 page = 1; int32 page_size = 2; LifecycleStatus status = 3; }
+message ListTeachingPlanTemplatesResponse { repeated TeachingPlanTemplate templates = 1; PageInfo page_info = 2; }
+message CreateTeachingPlanTemplateRequest { string code = 1; string name = 2; string description = 3; int64 entry_course_id = 4; }
+message CreateTeachingPlanSetupRequest {
+  string name = 1;
+  string description = 2;
+  int64 entry_course_id = 3;
+  TeachingPlanSetupMode mode = 4;
+  bool include_live = 5;
+  bool include_ai = 6;
+  int32 live_duration_minutes = 7;
+  int32 initial_lesson_count = 8;
+}
+message TeachingPlanBlockingIssue { string code = 1; string message = 2; int32 lesson_no = 3; }
+message TeachingPlanSetupResult {
+  TeachingPlanTemplate template = 1;
+  TeachingPlanVersion version = 2;
+  int32 lesson_count = 3;
+  int32 live_task_count = 4;
+  int32 ai_task_count = 5;
+  bool ready_for_class = 6;
+  repeated TeachingPlanBlockingIssue blocking_issues = 7;
+}
+message CloneTeachingPlanTemplateRequest { int64 source_template_id = 1; string name = 2; }
+message GetTeachingPlanTemplateRequest { int64 id = 1; }
+message TeachingPlanTemplateDetail { TeachingPlanTemplate template = 1; repeated TeachingPlanVersion versions = 2; }
+message CreateTeachingPlanDraftRequest { int64 template_id = 1; string change_summary = 2; }
+
+message ExamPolicy {
+  int32 attempt_limit = 1;
+  double passing_score = 2;
+  ResultVisibility result_visibility = 3;
+  AnswerVisibility answer_visibility = 4;
+  LateSubmissionPolicy late_submission_policy = 5;
+}
+
+message TeachingPlanItem {
+	reserved 19;
+	reserved "live_course_id";
+  int64 id = 1;
+  string title = 2;
+  int32 sort_order = 3;
+  PlanResourceType resource_type = 4;
+  TeachingRole teaching_role = 5;
+  int64 course_id = 6;
+  int64 courseware_id = 7;
+  int64 exam_paper_id = 8;
+  int64 related_item_id = 9;
+  ScheduleMode schedule_mode = 10;
+  int32 relative_day = 11;
+  int32 time_of_day_minutes = 12;
+  google.protobuf.Timestamp absolute_unlock_at = 13;
+  int32 due_offset_minutes = 14;
+  bool has_due_offset = 15;
+  bool required = 16;
+  ExamPolicy exam_policy = 17;
+  int64 chapter_id = 18;
+	int64 plan_lesson_id = 20;
+	int32 live_duration_minutes = 21;
+	int64 section_id = 22;
+}
+
+message TeachingPlanLesson {
+  int64 id = 1;
+  string title = 2;
+  int32 lesson_no = 3;
+  int32 sort_order = 4;
+  int64 source_chapter_id = 5;
+  ScheduleMode schedule_mode = 6;
+  int32 relative_day = 7;
+  int32 time_of_day_minutes = 8;
+  google.protobuf.Timestamp absolute_unlock_at = 9;
+  bool required = 10;
+  repeated TeachingPlanItem items = 11;
+}
+
+message TeachingPlanVersion {
+  int64 id = 1;
+  int64 template_id = 2;
+  int32 version_no = 3;
+  int64 revision = 4;
+  LifecycleStatus status = 5;
+  string change_summary = 6;
+  repeated TeachingPlanItem items = 7;
+  string published_by = 8;
+  google.protobuf.Timestamp published_at = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+  repeated TeachingPlanLesson lessons = 12;
+}
+
+message SaveTeachingPlanDraftRequest {
+  int64 version_id = 1;
+  int64 revision = 2;
+  repeated TeachingPlanItem items = 3;
+  repeated TeachingPlanLesson lessons = 4;
+}
+message PublishTeachingPlanVersionRequest { int64 version_id = 1; int64 revision = 2; }
+message InitializeTeachingPlanLessonsRequest {
+  int64 version_id = 1;
+  int64 revision = 2;
+  int64 course_id = 3;
+}
+
+message CoursewareResource { int64 id = 1; int64 course_id = 2; string code = 3; string title = 4; string type = 5; int64 chapter_id = 6; }
+message ChapterResource { int64 id = 1; string code = 2; string title = 3; int32 sort_order = 4; }
+message CourseResource {
+  int64 id = 1;
+  string code = 2;
+  string name = 3;
+  string cover_image = 4;
+  repeated CoursewareResource coursewares = 5;
+  repeated ChapterResource chapters = 6;
+  string subject = 7;
+  string stage = 8;
+  string grade = 9;
+}
+message ExamPaperResource { int64 id = 1; string code = 2; string title = 3; string subject = 4; string level = 5; }
+message LiveCourseResource {
+  string id = 1;
+  string title = 2;
+  google.protobuf.Timestamp start_at = 3;
+  google.protobuf.Timestamp end_at = 4;
+  string status = 5;
+}
+message ListSchedulingResourcesRequest { string query = 1; PlanResourceType type = 2; int32 page = 3; int32 page_size = 4; }
+message ListSchedulingResourcesResponse {
+  repeated CourseResource courses = 1;
+  repeated ExamPaperResource exam_papers = 2;
+  PageInfo page_info = 3;
+  repeated LiveCourseResource live_courses = 4;
+}
+
+message ClassPlanAssignment {
+  int64 id = 1;
+  int64 class_offering_id = 2;
+  int64 template_version_id = 3;
+  google.protobuf.Timestamp class_start_at = 4;
+  LifecycleStatus status = 5;
+  int64 revision = 6;
+  string created_by = 7;
+  string published_by = 8;
+  google.protobuf.Timestamp published_at = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+message PreviewClassPlanSyncRequest { int64 offering_id = 1; int64 target_version_id = 2; }
+message ApplyClassPlanSyncRequest { int64 offering_id = 1; int64 target_version_id = 2; int64 expected_revision = 3; }
+message ClassPlanSyncPreview {
+  int64 offering_id = 1;
+  int64 current_version_id = 2;
+  int64 target_version_id = 3;
+  int64 revision = 4;
+  int32 added_count = 5;
+  int32 removed_count = 6;
+  int32 moved_count = 7;
+  int32 replaced_count = 8;
+  int32 protected_count = 9;
+  repeated int64 protected_item_ids = 10;
+}
+
+message OfferingAssignmentInput { int64 class_offering_id = 1; google.protobuf.Timestamp class_start_at = 2; }
+message BatchApplyTeachingPlanToOfferingsRequest {
+  int64 template_version_id = 1;
+  repeated OfferingAssignmentInput offerings = 2;
+}
+message ClassAssignmentResult {
+  int64 class_offering_id = 1;
+  ClassPlanAssignment assignment = 2;
+  string error_code = 3;
+  string error_message = 4;
+}
+message BatchApplyTeachingPlanToOfferingsResponse { repeated ClassAssignmentResult results = 1; }
+message ListClassPlanAssignmentsRequest { int64 class_offering_id = 1; }
+message ListClassPlanAssignmentsResponse { repeated ClassPlanAssignment assignments = 1; }
+message UpdateClassPlanAssignmentRequest {
+  int64 id = 1;
+  int64 revision = 2;
+  google.protobuf.Timestamp class_start_at = 3;
+}
+
+message ClassPlanItemOverride {
+  int64 id = 1;
+  int64 assignment_id = 2;
+  int64 item_id = 3;
+  google.protobuf.Timestamp unlock_at = 4;
+  google.protobuf.Timestamp due_at = 5;
+  bool has_due_at = 6;
+  string reason = 7;
+}
+message PutClassPlanItemOverrideRequest {
+  int64 assignment_id = 1;
+  int64 item_id = 2;
+  int64 assignment_revision = 3;
+  google.protobuf.Timestamp unlock_at = 4;
+  google.protobuf.Timestamp due_at = 5;
+  bool has_due_at = 6;
+  string reason = 7;
+}
+message DeleteClassPlanItemOverrideRequest { int64 assignment_id = 1; int64 item_id = 2; int64 assignment_revision = 3; }
+message ClassPlanLessonOverride {
+  int64 id = 1;
+  int64 assignment_id = 2;
+  int64 lesson_id = 3;
+  google.protobuf.Timestamp unlock_at = 4;
+  string reason = 5;
+}
+message PutClassPlanLessonOverrideRequest {
+  int64 assignment_id = 1;
+  int64 lesson_id = 2;
+  int64 assignment_revision = 3;
+  google.protobuf.Timestamp unlock_at = 4;
+  string reason = 5;
+}
+message DeleteClassPlanLessonOverrideRequest {
+  int64 assignment_id = 1;
+  int64 lesson_id = 2;
+  int64 assignment_revision = 3;
+}
+message PublishClassPlanAssignmentRequest { int64 assignment_id = 1; int64 revision = 2; }
+
+message GetClassPlanTimelineRequest { int64 assignment_id = 1; }
+message ClassPlanTimelineItem {
+  TeachingPlanItem item = 1;
+  google.protobuf.Timestamp unlock_at = 2;
+  google.protobuf.Timestamp due_at = 3;
+  bool has_due_at = 4;
+  bool overridden = 5;
+  string launch_url = 6;
+  string learning_assignment_id = 7;
+  TaskProgressStatus progress_status = 8;
+  TaskPresentationStatus presentation_status = 9;
+  LaunchMode launch_mode = 10;
+  double progress_ratio = 11;
+  double score = 12;
+  bool has_score = 13;
+  string external_live_session_id = 14;
+  string live_status = 15;
+  string sso_embed_url = 16;
+  string live_replay_url = 17;
+  string live_error_code = 18;
+  string external_live_series_id = 19;
+}
+
+message ClassPlanLiveInstance {
+  int64 id = 1;
+  int64 assignment_id = 2;
+  int64 plan_item_id = 3;
+  string external_live_session_id = 4;
+  string idempotency_key = 5;
+  string title = 6;
+  google.protobuf.Timestamp scheduled_start_at = 7;
+  google.protobuf.Timestamp scheduled_end_at = 8;
+  string teacher_casdoor_subject = 9;
+  string teacher_name = 10;
+  bool teacher_overridden = 11;
+  string status = 12;
+  string last_error_code = 13;
+  int32 retry_count = 14;
+  string sso_embed_url = 15;
+  string replay_url = 16;
+  string external_join_link_id = 17;
+  string last_error_message = 18;
+  google.protobuf.Timestamp last_synced_at = 19;
+}
+message ListClassPlanLiveInstancesRequest { int64 assignment_id = 1; }
+message ListClassPlanLiveInstancesResponse { repeated ClassPlanLiveInstance instances = 1; }
+message RetryClassPlanLiveInstanceRequest { int64 instance_id = 1; }
+message PreviewOfferingLiveChangesRequest { int64 offering_id = 1; string teacher_casdoor_subject = 2; string teacher_name = 3; google.protobuf.Timestamp class_starts_at = 4; }
+message ApplyOfferingLiveChangesRequest { int64 offering_id = 1; string teacher_casdoor_subject = 2; string teacher_name = 3; google.protobuf.Timestamp class_starts_at = 4; }
+message OfferingLiveChangePreview { int32 affected = 1; int32 locked = 2; int32 unchanged = 3; }
+message SetLiveInstanceTeacherOverrideRequest { int64 instance_id = 1; string teacher_casdoor_subject = 2; string teacher_name = 3; }
+message ClearLiveInstanceTeacherOverrideRequest { int64 instance_id = 1; }
+message ClassPlanTimeline {
+  ClassPlanAssignment assignment = 1;
+  ClassOffering class_offering = 2;
+  string timezone = 3;
+  repeated ClassPlanTimelineItem items = 4;
+}
+
+message GetMyCourseScheduleRequest { int64 course_id = 1; int64 offering_id = 2; }
+message GetMyCourseScheduleResponse {
+  bool has_schedule = 1;
+  ClassPlanTimeline timeline = 2;
+  repeated ChapterScheduleSummary chapters = 3;
+  repeated LessonScheduleSummary lessons = 4;
+}
+
+message LessonScheduleSummary {
+  int64 lesson_id = 1;
+  int32 lesson_no = 2;
+  string lesson_title = 3;
+  int64 source_chapter_id = 4;
+  int32 required_item_count = 5;
+  int32 completed_required_item_count = 6;
+  google.protobuf.Timestamp unlock_at = 7;
+  StudentLessonStatus status = 8;
+  bool required = 9;
+}
+
+message ClassPlanLessonTimeline {
+  ClassPlanAssignment assignment = 1;
+  ClassOffering class_offering = 2;
+  string timezone = 3;
+  TeachingPlanLesson lesson = 4;
+  LessonScheduleSummary summary = 5;
+  repeated ClassPlanTimelineItem items = 6;
+}
+
+message ChapterScheduleSummary {
+  int64 chapter_id = 1;
+  string chapter_title = 2;
+  int32 required_item_count = 3;
+  int32 completed_required_item_count = 4;
+  google.protobuf.Timestamp earliest_unlock_at = 5;
+  bool has_schedule = 6;
+  bool completed = 7;
+}
+
+message GetMyChapterScheduleRequest {
+  int64 course_id = 1;
+  int64 chapter_id = 2;
+  int64 offering_id = 3;
+}
+message GetMyChapterScheduleResponse {
+  bool has_schedule = 1;
+  ChapterScheduleSummary chapter = 2;
+  ClassPlanTimeline timeline = 3;
+}
+
+message GetMyLessonScheduleRequest {
+  int64 course_id = 1;
+  int64 lesson_id = 2;
+  int64 offering_id = 3;
+}
+message GetMyLessonScheduleResponse {
+  bool has_schedule = 1;
+  LessonScheduleSummary lesson = 2;
+  ClassPlanLessonTimeline timeline = 3;
+}
+
+message OpenLearningTaskRequest {
+  int64 course_id = 1;
+  int64 chapter_id = 2;
+  int64 plan_item_id = 3;
+  int64 plan_lesson_id = 4;
+  int64 offering_id = 5;
+}
+message OpenLearningTaskResponse {
+  string launch_url = 1;
+  LaunchMode launch_mode = 2;
+  google.protobuf.Timestamp expires_at = 3;
+}
+
+message CompleteExternalLearningTaskRequest {
+  int64 assignment_id = 1;
+  int64 plan_item_id = 2;
+  string provider = 3;
+  string event_id = 4;
+  string event_type = 5;
+  google.protobuf.Timestamp occurred_at = 6;
+  string external_resource_id = 7;
+}
+message CompleteExternalLearningTaskResponse {
+  bool accepted = 1;
+  bool duplicate = 2;
+  bool task_completed = 3;
+  bool lesson_completed = 4;
+  int64 next_plan_item_id = 5;
+}
