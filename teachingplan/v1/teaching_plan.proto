@@ -400,6 +400,9 @@ message CourseResource {
   string cover_image = 4;
   repeated CoursewareResource coursewares = 5;
   repeated ChapterResource chapters = 6;
+  string subject = 7;
+  string stage = 8;
+  string grade = 9;
 }
 message ExamPaperResource { int64 id = 1; string code = 2; string title = 3; string subject = 4; string level = 5; }
 message LiveCourseResource {

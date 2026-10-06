@@ -222,6 +222,9 @@ class TeachingPlanContractTest(unittest.TestCase):
             self.source,
             r"(?s)message CourseResource\s*\{[^}]*repeated ChapterResource chapters",
         )
+        course = re.search(r"(?s)message CourseResource\s*\{(.*?)\n\}", self.source).group(1)
+        for field in ("subject", "stage", "grade"):
+            self.assertIn(field, course)
 
     def test_launch_and_progress_enums_are_explicit(self):
         expected = {
