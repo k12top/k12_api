@@ -55,6 +55,9 @@ class TeachingPlanContractTest(unittest.TestCase):
             "ClearLiveInstanceTeacherOverride",
             "PreviewClassPlanSync",
             "ApplyClassPlanSync",
+            "SaveTeachingPlanLesson",
+            "PreviewTeachingPlanLessonSync",
+            "ApplyTeachingPlanLessonSync",
         }
         methods = set(re.findall(r"\brpc\s+(\w+)\s*\(", self.source))
         self.assertEqual(expected, methods)
