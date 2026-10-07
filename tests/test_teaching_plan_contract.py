@@ -96,6 +96,56 @@ class TeachingPlanContractTest(unittest.TestCase):
         for field in ("template", "version", "lesson_count", "live_task_count", "ai_task_count", "ready_for_class", "blocking_issues"):
             self.assertIn(field, result)
 
+    def test_recurring_schedule_contract_preserves_presence_and_room_types(self):
+        defaults = re.search(
+            r"(?s)message TeachingPlanScheduleDefaults\s*\{(.*?)\n\}", self.source
+        )
+        self.assertIsNotNone(defaults)
+        defaults_body = defaults.group(1)
+        for expression in (
+            r"string timezone\s*=\s*1\s*;",
+            r"repeated int32 weekdays\s*=\s*2\s*;",
+            r"string local_start_time\s*=\s*3\s*;",
+            r"int32 live_duration_minutes\s*=\s*4\s*;",
+            r"int32 live_room_type\s*=\s*5\s*;",
+        ):
+            self.assertRegex(defaults_body, expression)
+
+        lesson = re.search(
+            r"(?s)message TeachingPlanLesson\s*\{(.*?)\n\}", self.source
+        ).group(1)
+        for expression in (
+            r"optional int32 schedule_weekday_override\s*=\s*12\s*;",
+            r"optional string schedule_local_start_time_override\s*=\s*13\s*;",
+            r"optional int32 live_duration_minutes_override\s*=\s*14\s*;",
+            r"optional int32 live_room_type_override\s*=\s*15\s*;",
+        ):
+            self.assertRegex(lesson, expression)
+
+        version = re.search(
+            r"(?s)message TeachingPlanVersion\s*\{(.*?)\n\}", self.source
+        ).group(1)
+        self.assertRegex(
+            version, r"TeachingPlanScheduleDefaults schedule_defaults\s*=\s*13\s*;"
+        )
+        setup = re.search(
+            r"(?s)message CreateTeachingPlanSetupRequest\s*\{(.*?)\n\}", self.source
+        ).group(1)
+        self.assertRegex(
+            setup, r"TeachingPlanScheduleDefaults schedule_defaults\s*=\s*10\s*;"
+        )
+        draft = re.search(
+            r"(?s)message SaveTeachingPlanDraftRequest\s*\{(.*?)\n\}", self.source
+        ).group(1)
+        self.assertRegex(
+            draft, r"TeachingPlanScheduleDefaults schedule_defaults\s*=\s*5\s*;"
+        )
+
+        self.assertIn("0=one-to-one", self.source)
+        self.assertIn("4=small class (default)", self.source)
+        self.assertIn("2=large class", self.source)
+        self.assertIn("10=public class", self.source)
+
     def test_ai_playback_snapshots_and_outline_groups_preserve_existing_types(self):
         values = {
             name: int(number)
