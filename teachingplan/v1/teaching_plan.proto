@@ -462,6 +462,7 @@ message InitializeTeachingPlanLessonsRequest {
 
 message CoursewareResource { int64 id = 1; int64 course_id = 2; string code = 3; string title = 4; string type = 5; int64 chapter_id = 6; }
 message ChapterResource { int64 id = 1; string code = 2; string title = 3; int32 sort_order = 4; }
+message SectionResource { int64 id = 1; int64 chapter_id = 2; string title = 3; int32 sort_order = 4; }
 message CourseResource {
   int64 id = 1;
   string code = 2;
@@ -472,6 +473,7 @@ message CourseResource {
   string subject = 7;
   string stage = 8;
   string grade = 9;
+  repeated SectionResource sections = 10;
 }
 message ExamPaperResource { int64 id = 1; string code = 2; string title = 3; string subject = 4; string level = 5; }
 message LiveCourseResource {
