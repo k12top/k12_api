@@ -88,12 +88,44 @@ class TeachingPlanContractTest(unittest.TestCase):
             r"bool include_ai\s*=\s*6\s*;",
             r"int32 live_duration_minutes\s*=\s*7\s*;",
             r"int32 initial_lesson_count\s*=\s*8\s*;",
+            r"repeated OutlineLessonGroup outline_lesson_groups\s*=\s*9\s*;",
         ):
             self.assertRegex(request, expression)
 
         result = re.search(r"(?s)message TeachingPlanSetupResult\s*\{(.*?)\n\}", self.source).group(1)
         for field in ("template", "version", "lesson_count", "live_task_count", "ai_task_count", "ready_for_class", "blocking_issues"):
             self.assertIn(field, result)
+
+    def test_ai_playback_snapshots_and_outline_groups_preserve_existing_types(self):
+        values = {
+            name: int(number)
+            for name, number in re.findall(
+                r"^\s*([A-Z][A-Z0-9_]+)\s*=\s*(\d+)\s*;", self.source, re.M
+            )
+        }
+        self.assertEqual(1, values.get("PLAN_RESOURCE_TYPE_COURSE"))
+        self.assertEqual(5, values.get("PLAN_RESOURCE_TYPE_SECTION"))
+        self.assertNotIn("PLAN_RESOURCE_TYPE_EXTERNAL_AI", values)
+
+        item = re.search(
+            r"(?s)message TeachingPlanItem\s*\{(.*?)\n\}", self.source
+        ).group(1)
+        self.assertRegex(item, r"string play_url\s*=\s*23\s*;")
+        self.assertRegex(
+            item, r"map<string, string> play_url_i18n\s*=\s*24\s*;"
+        )
+
+        node = re.search(
+            r"(?s)message OutlineNodeRef\s*\{(.*?)\n\}", self.source
+        ).group(1)
+        self.assertRegex(node, r"int64 chapter_id\s*=\s*1\s*;")
+        self.assertRegex(node, r"int64 section_id\s*=\s*2\s*;")
+
+        group = re.search(
+            r"(?s)message OutlineLessonGroup\s*\{(.*?)\n\}", self.source
+        ).group(1)
+        self.assertRegex(group, r"string title\s*=\s*1\s*;")
+        self.assertRegex(group, r"repeated OutlineNodeRef nodes\s*=\s*2\s*;")
 
     def test_class_creation_returns_generated_schedule_and_accepts_idempotency_key(self):
         self.assertIn("rpc CreateClassOffering(CreateClassOfferingRequest) returns (CreateClassOfferingResult)", self.source)
