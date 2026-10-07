@@ -38,6 +38,15 @@ service TeachingPlanService {
   rpc SaveTeachingPlanDraft(SaveTeachingPlanDraftRequest) returns (TeachingPlanVersion) {
     option (google.api.http) = {put: "/v1/admin/teaching-plan-template-versions/{version_id}" body: "*"};
   }
+  rpc SaveTeachingPlanLesson(SaveTeachingPlanLessonRequest) returns (SaveTeachingPlanLessonResponse) {
+    option (google.api.http) = {put: "/v1/admin/teaching-plan-versions/{version_id}/lessons/{lesson_id}" body: "*"};
+  }
+  rpc PreviewTeachingPlanLessonSync(PreviewTeachingPlanLessonSyncRequest) returns (TeachingPlanLessonSyncPreview) {
+    option (google.api.http) = {post: "/v1/admin/teaching-plan-versions/{version_id}/lessons/{lesson_id}:preview-sync" body: "*"};
+  }
+  rpc ApplyTeachingPlanLessonSync(ApplyTeachingPlanLessonSyncRequest) returns (ApplyTeachingPlanLessonSyncResponse) {
+    option (google.api.http) = {post: "/v1/admin/teaching-plan-versions/{version_id}/lessons/{lesson_id}:apply-sync" body: "*"};
+  }
   rpc PublishTeachingPlanVersion(PublishTeachingPlanVersionRequest) returns (TeachingPlanVersion) {
     option (google.api.http) = {post: "/v1/admin/teaching-plan-template-versions/{version_id}/publish" body: "*"};
   }
@@ -383,6 +392,49 @@ message SaveTeachingPlanDraftRequest {
   int64 revision = 2;
   repeated TeachingPlanItem items = 3;
   repeated TeachingPlanLesson lessons = 4;
+}
+message SaveTeachingPlanLessonRequest {
+  int64 version_id = 1;
+  int64 lesson_id = 2;
+  int64 expected_revision = 3;
+  TeachingPlanLesson lesson = 4;
+}
+message SaveTeachingPlanLessonResponse {
+  TeachingPlanLesson lesson = 1;
+  int64 version_revision = 2;
+}
+message PreviewTeachingPlanLessonSyncRequest {
+  int64 version_id = 1;
+  int64 lesson_id = 2;
+}
+message TeachingPlanLessonSyncOffering {
+  int64 offering_id = 1;
+  string offering_name = 2;
+  bool eligible = 3;
+  string skip_reason = 4;
+  int64 assignment_revision = 5;
+  bool live_change = 6;
+}
+message TeachingPlanLessonSyncPreview {
+  int64 version_id = 1;
+  int64 lesson_id = 2;
+  string preview_revision = 3;
+  repeated TeachingPlanLessonSyncOffering offerings = 4;
+}
+message ApplyTeachingPlanLessonSyncRequest {
+  int64 version_id = 1;
+  int64 lesson_id = 2;
+  string preview_revision = 3;
+  repeated int64 offering_ids = 4;
+}
+message TeachingPlanLessonSyncResult {
+  int64 offering_id = 1;
+  string status = 2;
+  string reason = 3;
+  int64 assignment_revision = 4;
+}
+message ApplyTeachingPlanLessonSyncResponse {
+  repeated TeachingPlanLessonSyncResult results = 1;
 }
 message PublishTeachingPlanVersionRequest { int64 version_id = 1; int64 revision = 2; }
 message InitializeTeachingPlanLessonsRequest {
