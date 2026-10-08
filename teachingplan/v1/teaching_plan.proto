@@ -226,7 +226,16 @@ message ClassOffering {
   string live_series_last_error_message = 24;
   google.protobuf.Timestamp live_series_last_synced_at = 25;
 }
-message ListClassOfferingsRequest { int64 course_id = 1; string status = 2; int32 page = 3; int32 page_size = 4; }
+message ListClassOfferingsRequest {
+  int64 course_id = 1;
+  string status = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+  string query = 5;
+  string teacher_name = 6;
+  google.protobuf.Timestamp starts_after = 7;
+  google.protobuf.Timestamp starts_before = 8;
+}
 message ListClassOfferingsResponse { repeated ClassOffering offerings = 1; PageInfo page_info = 2; }
 message CreateClassOfferingRequest {
   string name = 1; int64 course_id = 2; int64 template_version_id = 3; string teacher_name = 4;
@@ -296,7 +305,13 @@ message TeachingPlanTemplate {
   int64 entry_course_id = 13;
 }
 
-message ListTeachingPlanTemplatesRequest { int32 page = 1; int32 page_size = 2; LifecycleStatus status = 3; }
+message ListTeachingPlanTemplatesRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  LifecycleStatus status = 3;
+  string query = 4;
+  int64 entry_course_id = 5;
+}
 message ListTeachingPlanTemplatesResponse { repeated TeachingPlanTemplate templates = 1; PageInfo page_info = 2; }
 message CreateTeachingPlanTemplateRequest { string code = 1; string name = 2; string description = 3; int64 entry_course_id = 4; }
 // Identifies one node in the canonical course-outline order. A section node
