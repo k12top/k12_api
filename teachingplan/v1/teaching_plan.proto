@@ -739,6 +739,7 @@ message OpenLearningTaskRequest {
   int64 plan_item_id = 3;
   int64 plan_lesson_id = 4;
   int64 offering_id = 5;
+  string locale = 6;
 }
 message OpenLearningTaskResponse {
   string launch_url = 1;
