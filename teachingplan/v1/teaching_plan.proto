@@ -9,6 +9,14 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
 service TeachingPlanService {
+  rpc GetTeachingPlanRetentionPreview(GetRetentionPreviewRequest) returns (RetentionPreview) { option (google.api.http) = {get: "/v1/admin/teaching-plan-templates/{id}/retention"}; }
+  rpc ArchiveTeachingPlanTemplate(RetentionMutationRequest) returns (TeachingPlanTemplate) { option (google.api.http) = {post: "/v1/admin/teaching-plan-templates/{id}:archive" body: "*"}; }
+  rpc RestoreTeachingPlanTemplate(RetentionMutationRequest) returns (TeachingPlanTemplate) { option (google.api.http) = {post: "/v1/admin/teaching-plan-templates/{id}:restore" body: "*"}; }
+  rpc DeleteTeachingPlanTemplate(DeleteRetentionResourceRequest) returns (google.protobuf.Empty) { option (google.api.http) = {delete: "/v1/admin/teaching-plan-templates/{id}"}; }
+  rpc GetClassOfferingRetentionPreview(GetRetentionPreviewRequest) returns (RetentionPreview) { option (google.api.http) = {get: "/v1/admin/class-offerings/{id}/retention"}; }
+  rpc ArchiveClassOffering(RetentionMutationRequest) returns (ClassOffering) { option (google.api.http) = {post: "/v1/admin/class-offerings/{id}:archive" body: "*"}; }
+  rpc RestoreClassOffering(RetentionMutationRequest) returns (ClassOffering) { option (google.api.http) = {post: "/v1/admin/class-offerings/{id}:restore" body: "*"}; }
+  rpc DeleteClassOffering(DeleteRetentionResourceRequest) returns (google.protobuf.Empty) { option (google.api.http) = {delete: "/v1/admin/class-offerings/{id}"}; }
   rpc ListClassOfferings(ListClassOfferingsRequest) returns (ListClassOfferingsResponse) { option (google.api.http) = {get: "/v1/admin/class-offerings"}; }
   rpc CreateClassOffering(CreateClassOfferingRequest) returns (CreateClassOfferingResult) { option (google.api.http) = {post: "/v1/admin/class-offerings" body: "*"}; }
   rpc UpdateClassOffering(UpdateClassOfferingRequest) returns (ClassOffering) { option (google.api.http) = {patch: "/v1/admin/class-offerings/{id}" body: "*"}; }
@@ -110,6 +118,25 @@ service TeachingPlanService {
   rpc CompleteExternalLearningTask(CompleteExternalLearningTaskRequest) returns (CompleteExternalLearningTaskResponse) {
     option (google.api.http) = {post: "/v1/learning/tasks/{plan_item_id}:complete-external" body: "*"};
   }
+}
+
+message GetRetentionPreviewRequest { int64 id = 1; }
+message RetentionMutationRequest { int64 id = 1; }
+message DeleteRetentionResourceRequest { int64 id = 1; string confirmation_name = 2; }
+message RetentionBlocker { string code = 1; string message = 2; }
+message RetentionPreview {
+  string current_status = 1;
+  bool can_archive = 2;
+  bool can_restore = 3;
+  bool can_delete = 4;
+  repeated RetentionBlocker archive_blockers = 5;
+  repeated RetentionBlocker delete_blockers = 6;
+  int32 class_offering_count = 7;
+  int32 enrollment_count = 8;
+  int32 progress_count = 9;
+  int32 live_instance_count = 10;
+  int32 active_live_instance_count = 11;
+  int32 provisioning_job_count = 12;
 }
 
 enum PlanResourceType {
