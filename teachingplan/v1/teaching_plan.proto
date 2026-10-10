@@ -27,6 +27,8 @@ service TeachingPlanService {
   rpc ListAvailableClassOfferings(ListAvailableClassOfferingsRequest) returns (ListClassOfferingsResponse) { option (google.api.http) = {get: "/v1/class-offerings"}; }
   rpc EnrollClassOffering(EnrollClassOfferingRequest) returns (EnrollClassOfferingResponse) { option (google.api.http) = {post: "/v1/class-offerings/{offering_id}/enroll" body: "*"}; }
   rpc ListMyClassOfferings(ListMyClassOfferingsRequest) returns (ListMyClassOfferingsResponse) { option (google.api.http) = {get: "/v1/user/class-offerings"}; }
+  rpc ListPrograms(ListProgramsRequest) returns (ListProgramsResponse) { option (google.api.http) = {get: "/v1/programs"}; }
+  rpc GetProgram(GetProgramRequest) returns (ProgramDetail) { option (google.api.http) = {get: "/v1/programs/{program_id}"}; }
   rpc ListTeachingPlanTemplates(ListTeachingPlanTemplatesRequest) returns (ListTeachingPlanTemplatesResponse) {
     option (google.api.http) = {get: "/v1/admin/teaching-plan-templates"};
   }
@@ -334,6 +336,55 @@ message ListClassOfferingMembersRequest { int64 class_offering_id = 1; }
 message ListClassOfferingMembersResponse { repeated ClassOfferingMember members = 1; }
 message AddClassOfferingMemberRequest { int64 class_offering_id = 1; int64 user_id = 2; string casdoor_subject = 3; string role = 4; }
 message RemoveClassOfferingMemberRequest { int64 class_offering_id = 1; int64 member_id = 2; }
+
+message ListProgramsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string query = 3;
+  string subject_code = 4;
+  string stage_code = 5;
+}
+message ProgramSummary {
+  int64 program_id = 1;
+  string public_title = 2;
+  string public_summary = 3;
+  string cover_url = 4;
+  string subject_code = 5;
+  string stage_code = 6;
+  int32 lesson_count = 7;
+  int32 available_offering_count = 8;
+}
+message ListProgramsResponse {
+  repeated ProgramSummary programs = 1;
+  PageInfo page_info = 2;
+}
+message ProgramTaskTypeSummary {
+  PlanResourceType resource_type = 1;
+  int32 count = 2;
+}
+message ProgramLessonSummary {
+  int32 lesson_no = 1;
+  string title = 2;
+  repeated ProgramTaskTypeSummary task_types = 3;
+}
+message ProgramOfferingSummary {
+  int64 offering_id = 1;
+  string name = 2;
+  string teacher_name = 3;
+  google.protobuf.Timestamp first_lesson_at = 4;
+  int32 room_type = 5;
+  int32 capacity = 6;
+  int32 enrolled_count = 7;
+  double price = 8;
+  string currency = 9;
+  string enrollment_status = 10;
+}
+message GetProgramRequest { int64 program_id = 1; }
+message ProgramDetail {
+  ProgramSummary program = 1;
+  repeated ProgramLessonSummary lessons = 2;
+  repeated ProgramOfferingSummary offerings = 3;
+}
 
 message TeachingPlanTemplate {
   int64 id = 1;
