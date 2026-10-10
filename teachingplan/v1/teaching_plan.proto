@@ -30,6 +30,12 @@ service TeachingPlanService {
   rpc ListTeachingPlanTemplates(ListTeachingPlanTemplatesRequest) returns (ListTeachingPlanTemplatesResponse) {
     option (google.api.http) = {get: "/v1/admin/teaching-plan-templates"};
   }
+  rpc UpdateTeachingPlanPublicProfile(UpdateTeachingPlanPublicProfileRequest) returns (TeachingPlanTemplate) {
+    option (google.api.http) = {patch: "/v1/admin/teaching-plan-templates/{id}/public-profile" body: "*"};
+  }
+  rpc SetTeachingPlanPublicationStatus(SetTeachingPlanPublicationStatusRequest) returns (TeachingPlanTemplate) {
+    option (google.api.http) = {post: "/v1/admin/teaching-plan-templates/{id}:set-publication-status" body: "*"};
+  }
   rpc CreateTeachingPlanTemplate(CreateTeachingPlanTemplateRequest) returns (TeachingPlanTemplate) {
     option (google.api.http) = {post: "/v1/admin/teaching-plan-templates" body: "*"};
   }
@@ -226,6 +232,13 @@ enum TeachingPlanSetupMode {
   TEACHING_PLAN_SETUP_MODE_BLANK = 4;
 }
 
+enum TeachingPlanPublicationStatus {
+  TEACHING_PLAN_PUBLICATION_STATUS_UNSPECIFIED = 0;
+  TEACHING_PLAN_PUBLICATION_STATUS_DRAFT = 1;
+  TEACHING_PLAN_PUBLICATION_STATUS_PUBLISHED = 2;
+  TEACHING_PLAN_PUBLICATION_STATUS_OFFLINE = 3;
+}
+
 enum StudentLessonStatus {
   STUDENT_LESSON_STATUS_UNSPECIFIED = 0;
   STUDENT_LESSON_STATUS_LOCKED = 1;
@@ -330,6 +343,13 @@ message TeachingPlanTemplate {
   google.protobuf.Timestamp updated_at = 12;
   // Student-facing course detail page that displays this schedule.
   int64 entry_course_id = 13;
+  string public_title = 14;
+  string public_summary = 15;
+  string cover_url = 16;
+  string subject_code = 17;
+  string stage_code = 18;
+  TeachingPlanPublicationStatus publication_status = 19;
+  google.protobuf.Timestamp published_at = 20;
 }
 
 message ListTeachingPlanTemplatesRequest {
@@ -338,8 +358,21 @@ message ListTeachingPlanTemplatesRequest {
   LifecycleStatus status = 3;
   string query = 4;
   int64 entry_course_id = 5;
+  TeachingPlanPublicationStatus publication_status = 6;
 }
 message ListTeachingPlanTemplatesResponse { repeated TeachingPlanTemplate templates = 1; PageInfo page_info = 2; }
+message UpdateTeachingPlanPublicProfileRequest {
+  int64 id = 1;
+  string public_title = 2;
+  string public_summary = 3;
+  string cover_url = 4;
+  string subject_code = 5;
+  string stage_code = 6;
+}
+message SetTeachingPlanPublicationStatusRequest {
+  int64 id = 1;
+  TeachingPlanPublicationStatus publication_status = 2;
+}
 message CreateTeachingPlanTemplateRequest { string code = 1; string name = 2; string description = 3; int64 entry_course_id = 4; }
 // Identifies one node in the canonical course-outline order. A section node
 // carries both IDs; a chapter fallback node leaves section_id unset.

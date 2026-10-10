@@ -58,9 +58,34 @@ class TeachingPlanContractTest(unittest.TestCase):
             "SaveTeachingPlanLesson",
             "PreviewTeachingPlanLessonSync",
             "ApplyTeachingPlanLessonSync",
+            "UpdateTeachingPlanPublicProfile",
+            "SetTeachingPlanPublicationStatus",
+            "GetTeachingPlanRetentionPreview",
+            "ArchiveTeachingPlanTemplate",
+            "RestoreTeachingPlanTemplate",
+            "DeleteTeachingPlanTemplate",
+            "GetClassOfferingRetentionPreview",
+            "ArchiveClassOffering",
+            "RestoreClassOffering",
+            "DeleteClassOffering",
         }
         methods = set(re.findall(r"\brpc\s+(\w+)\s*\(", self.source))
         self.assertEqual(expected, methods)
+
+    def test_program_catalog_admin_contract_is_explicit(self):
+        self.assertIn("rpc UpdateTeachingPlanPublicProfile", self.source)
+        self.assertIn("rpc SetTeachingPlanPublicationStatus", self.source)
+        template = re.search(r"(?s)message TeachingPlanTemplate\s*\{(.*?)\n\}", self.source).group(1)
+        for field in ("public_title", "public_summary", "cover_url", "subject_code", "stage_code", "publication_status", "published_at"):
+            self.assertIn(field, template)
+        listing = re.search(r"(?s)message ListTeachingPlanTemplatesRequest\s*\{(.*?)\n\}", self.source).group(1)
+        self.assertIn("publication_status", listing)
+        for value in (
+            "TEACHING_PLAN_PUBLICATION_STATUS_DRAFT",
+            "TEACHING_PLAN_PUBLICATION_STATUS_PUBLISHED",
+            "TEACHING_PLAN_PUBLICATION_STATUS_OFFLINE",
+        ):
+            self.assertIn(value, self.source)
 
     def test_guided_teaching_plan_setup_contract_is_explicit(self):
         self.assertIn(
