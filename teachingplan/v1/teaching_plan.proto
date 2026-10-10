@@ -27,8 +27,16 @@ service TeachingPlanService {
   rpc ListAvailableClassOfferings(ListAvailableClassOfferingsRequest) returns (ListClassOfferingsResponse) { option (google.api.http) = {get: "/v1/class-offerings"}; }
   rpc EnrollClassOffering(EnrollClassOfferingRequest) returns (EnrollClassOfferingResponse) { option (google.api.http) = {post: "/v1/class-offerings/{offering_id}/enroll" body: "*"}; }
   rpc ListMyClassOfferings(ListMyClassOfferingsRequest) returns (ListMyClassOfferingsResponse) { option (google.api.http) = {get: "/v1/user/class-offerings"}; }
+  rpc ListPrograms(ListProgramsRequest) returns (ListProgramsResponse) { option (google.api.http) = {get: "/v1/programs"}; }
+  rpc GetProgram(GetProgramRequest) returns (ProgramDetail) { option (google.api.http) = {get: "/v1/programs/{program_id}"}; }
   rpc ListTeachingPlanTemplates(ListTeachingPlanTemplatesRequest) returns (ListTeachingPlanTemplatesResponse) {
     option (google.api.http) = {get: "/v1/admin/teaching-plan-templates"};
+  }
+  rpc UpdateTeachingPlanPublicProfile(UpdateTeachingPlanPublicProfileRequest) returns (TeachingPlanTemplate) {
+    option (google.api.http) = {patch: "/v1/admin/teaching-plan-templates/{id}/public-profile" body: "*"};
+  }
+  rpc SetTeachingPlanPublicationStatus(SetTeachingPlanPublicationStatusRequest) returns (TeachingPlanTemplate) {
+    option (google.api.http) = {post: "/v1/admin/teaching-plan-templates/{id}:set-publication-status" body: "*"};
   }
   rpc CreateTeachingPlanTemplate(CreateTeachingPlanTemplateRequest) returns (TeachingPlanTemplate) {
     option (google.api.http) = {post: "/v1/admin/teaching-plan-templates" body: "*"};
@@ -224,6 +232,20 @@ enum TeachingPlanSetupMode {
   TEACHING_PLAN_SETUP_MODE_OUTLINE_AI_ONLY = 2;
   TEACHING_PLAN_SETUP_MODE_OUTLINE_CUSTOM = 3;
   TEACHING_PLAN_SETUP_MODE_BLANK = 4;
+  TEACHING_PLAN_SETUP_MODE_LIVE_ONLY = 5;
+}
+
+enum TeachingPlanAISource {
+  TEACHING_PLAN_AI_SOURCE_UNSPECIFIED = 0;
+  TEACHING_PLAN_AI_SOURCE_COURSE = 1;
+  TEACHING_PLAN_AI_SOURCE_SHARE = 2;
+}
+
+enum TeachingPlanPublicationStatus {
+  TEACHING_PLAN_PUBLICATION_STATUS_UNSPECIFIED = 0;
+  TEACHING_PLAN_PUBLICATION_STATUS_DRAFT = 1;
+  TEACHING_PLAN_PUBLICATION_STATUS_PUBLISHED = 2;
+  TEACHING_PLAN_PUBLICATION_STATUS_OFFLINE = 3;
 }
 
 enum StudentLessonStatus {
@@ -315,6 +337,55 @@ message ListClassOfferingMembersResponse { repeated ClassOfferingMember members 
 message AddClassOfferingMemberRequest { int64 class_offering_id = 1; int64 user_id = 2; string casdoor_subject = 3; string role = 4; }
 message RemoveClassOfferingMemberRequest { int64 class_offering_id = 1; int64 member_id = 2; }
 
+message ListProgramsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string query = 3;
+  string subject_code = 4;
+  string stage_code = 5;
+}
+message ProgramSummary {
+  int64 program_id = 1;
+  string public_title = 2;
+  string public_summary = 3;
+  string cover_url = 4;
+  string subject_code = 5;
+  string stage_code = 6;
+  int32 lesson_count = 7;
+  int32 available_offering_count = 8;
+}
+message ListProgramsResponse {
+  repeated ProgramSummary programs = 1;
+  PageInfo page_info = 2;
+}
+message ProgramTaskTypeSummary {
+  PlanResourceType resource_type = 1;
+  int32 count = 2;
+}
+message ProgramLessonSummary {
+  int32 lesson_no = 1;
+  string title = 2;
+  repeated ProgramTaskTypeSummary task_types = 3;
+}
+message ProgramOfferingSummary {
+  int64 offering_id = 1;
+  string name = 2;
+  string teacher_name = 3;
+  google.protobuf.Timestamp first_lesson_at = 4;
+  int32 room_type = 5;
+  int32 capacity = 6;
+  int32 enrolled_count = 7;
+  double price = 8;
+  string currency = 9;
+  string enrollment_status = 10;
+}
+message GetProgramRequest { int64 program_id = 1; }
+message ProgramDetail {
+  ProgramSummary program = 1;
+  repeated ProgramLessonSummary lessons = 2;
+  repeated ProgramOfferingSummary offerings = 3;
+}
+
 message TeachingPlanTemplate {
   int64 id = 1;
   string code = 2;
@@ -330,6 +401,13 @@ message TeachingPlanTemplate {
   google.protobuf.Timestamp updated_at = 12;
   // Student-facing course detail page that displays this schedule.
   int64 entry_course_id = 13;
+  string public_title = 14;
+  string public_summary = 15;
+  string cover_url = 16;
+  string subject_code = 17;
+  string stage_code = 18;
+  TeachingPlanPublicationStatus publication_status = 19;
+  google.protobuf.Timestamp published_at = 20;
 }
 
 message ListTeachingPlanTemplatesRequest {
@@ -338,8 +416,23 @@ message ListTeachingPlanTemplatesRequest {
   LifecycleStatus status = 3;
   string query = 4;
   int64 entry_course_id = 5;
+  TeachingPlanPublicationStatus publication_status = 6;
+  string subject_code = 7;
+  string stage_code = 8;
 }
 message ListTeachingPlanTemplatesResponse { repeated TeachingPlanTemplate templates = 1; PageInfo page_info = 2; }
+message UpdateTeachingPlanPublicProfileRequest {
+  int64 id = 1;
+  string public_title = 2;
+  string public_summary = 3;
+  string cover_url = 4;
+  string subject_code = 5;
+  string stage_code = 6;
+}
+message SetTeachingPlanPublicationStatusRequest {
+  int64 id = 1;
+  TeachingPlanPublicationStatus publication_status = 2;
+}
 message CreateTeachingPlanTemplateRequest { string code = 1; string name = 2; string description = 3; int64 entry_course_id = 4; }
 // Identifies one node in the canonical course-outline order. A section node
 // carries both IDs; a chapter fallback node leaves section_id unset.
@@ -363,6 +456,19 @@ message TeachingPlanScheduleDefaults {
   int32 live_duration_minutes = 4;
   int32 live_room_type = 5;
 }
+message TeachingPlanManualLessonInput {
+  string title = 1;
+  string description = 2;
+}
+message TeachingPlanShareTaskInput {
+  string title = 1;
+  string play_url = 2;
+  map<string, string> language_links = 3;
+}
+message TeachingPlanShareLessonInput {
+  string title = 1;
+  repeated TeachingPlanShareTaskInput tasks = 2;
+}
 message CreateTeachingPlanSetupRequest {
   string name = 1;
   string description = 2;
@@ -374,6 +480,14 @@ message CreateTeachingPlanSetupRequest {
   int32 initial_lesson_count = 8;
   repeated OutlineLessonGroup outline_lesson_groups = 9;
   TeachingPlanScheduleDefaults schedule_defaults = 10;
+  TeachingPlanAISource ai_source = 11;
+  repeated TeachingPlanManualLessonInput manual_lessons = 12;
+  repeated TeachingPlanShareLessonInput share_lessons = 13;
+  string public_title = 14;
+  string public_summary = 15;
+  string cover_url = 16;
+  string subject_code = 17;
+  string stage_code = 18;
 }
 message TeachingPlanBlockingIssue { string code = 1; string message = 2; int32 lesson_no = 3; }
 message TeachingPlanSetupResult {

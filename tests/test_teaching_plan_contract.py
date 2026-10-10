@@ -58,9 +58,34 @@ class TeachingPlanContractTest(unittest.TestCase):
             "SaveTeachingPlanLesson",
             "PreviewTeachingPlanLessonSync",
             "ApplyTeachingPlanLessonSync",
+            "UpdateTeachingPlanPublicProfile",
+            "SetTeachingPlanPublicationStatus",
+            "GetTeachingPlanRetentionPreview",
+            "ArchiveTeachingPlanTemplate",
+            "RestoreTeachingPlanTemplate",
+            "DeleteTeachingPlanTemplate",
+            "GetClassOfferingRetentionPreview",
+            "ArchiveClassOffering",
+            "RestoreClassOffering",
+            "DeleteClassOffering",
         }
         methods = set(re.findall(r"\brpc\s+(\w+)\s*\(", self.source))
         self.assertEqual(expected, methods)
+
+    def test_program_catalog_admin_contract_is_explicit(self):
+        self.assertIn("rpc UpdateTeachingPlanPublicProfile", self.source)
+        self.assertIn("rpc SetTeachingPlanPublicationStatus", self.source)
+        template = re.search(r"(?s)message TeachingPlanTemplate\s*\{(.*?)\n\}", self.source).group(1)
+        for field in ("public_title", "public_summary", "cover_url", "subject_code", "stage_code", "publication_status", "published_at"):
+            self.assertIn(field, template)
+        listing = re.search(r"(?s)message ListTeachingPlanTemplatesRequest\s*\{(.*?)\n\}", self.source).group(1)
+        self.assertIn("publication_status", listing)
+        for value in (
+            "TEACHING_PLAN_PUBLICATION_STATUS_DRAFT",
+            "TEACHING_PLAN_PUBLICATION_STATUS_PUBLISHED",
+            "TEACHING_PLAN_PUBLICATION_STATUS_OFFLINE",
+        ):
+            self.assertIn(value, self.source)
 
     def test_guided_teaching_plan_setup_contract_is_explicit(self):
         self.assertIn(
@@ -77,6 +102,7 @@ class TeachingPlanContractTest(unittest.TestCase):
         self.assertEqual(2, values.get("TEACHING_PLAN_SETUP_MODE_OUTLINE_AI_ONLY"))
         self.assertEqual(3, values.get("TEACHING_PLAN_SETUP_MODE_OUTLINE_CUSTOM"))
         self.assertEqual(4, values.get("TEACHING_PLAN_SETUP_MODE_BLANK"))
+        self.assertEqual(5, values.get("TEACHING_PLAN_SETUP_MODE_LIVE_ONLY"))
 
         request = re.search(r"(?s)message CreateTeachingPlanSetupRequest\s*\{(.*?)\n\}", self.source).group(1)
         for expression in (
@@ -89,8 +115,16 @@ class TeachingPlanContractTest(unittest.TestCase):
             r"int32 live_duration_minutes\s*=\s*7\s*;",
             r"int32 initial_lesson_count\s*=\s*8\s*;",
             r"repeated OutlineLessonGroup outline_lesson_groups\s*=\s*9\s*;",
+            r"TeachingPlanAISource ai_source\s*=\s*11\s*;",
+            r"repeated TeachingPlanManualLessonInput manual_lessons\s*=\s*12\s*;",
+            r"repeated TeachingPlanShareLessonInput share_lessons\s*=\s*13\s*;",
         ):
             self.assertRegex(request, expression)
+
+        self.assertIn("TEACHING_PLAN_AI_SOURCE_COURSE", self.source)
+        self.assertIn("TEACHING_PLAN_AI_SOURCE_SHARE", self.source)
+        self.assertIn("message TeachingPlanShareTaskInput", self.source)
+        self.assertIn("repeated TeachingPlanShareTaskInput tasks", self.source)
 
         result = re.search(r"(?s)message TeachingPlanSetupResult\s*\{(.*?)\n\}", self.source).group(1)
         for field in ("template", "version", "lesson_count", "live_task_count", "ai_task_count", "ready_for_class", "blocking_issues"):
