@@ -430,6 +430,11 @@ message CreateTeachingPlanSetupRequest {
   TeachingPlanAISource ai_source = 11;
   repeated TeachingPlanManualLessonInput manual_lessons = 12;
   repeated TeachingPlanShareLessonInput share_lessons = 13;
+  string public_title = 14;
+  string public_summary = 15;
+  string cover_url = 16;
+  string subject_code = 17;
+  string stage_code = 18;
 }
 message TeachingPlanBlockingIssue { string code = 1; string message = 2; int32 lesson_no = 3; }
 message TeachingPlanSetupResult {
