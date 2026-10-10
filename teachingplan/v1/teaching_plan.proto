@@ -366,6 +366,8 @@ message ListTeachingPlanTemplatesRequest {
   string query = 4;
   int64 entry_course_id = 5;
   TeachingPlanPublicationStatus publication_status = 6;
+  string subject_code = 7;
+  string stage_code = 8;
 }
 message ListTeachingPlanTemplatesResponse { repeated TeachingPlanTemplate templates = 1; PageInfo page_info = 2; }
 message UpdateTeachingPlanPublicProfileRequest {
