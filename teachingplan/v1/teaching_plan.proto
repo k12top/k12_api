@@ -230,6 +230,13 @@ enum TeachingPlanSetupMode {
   TEACHING_PLAN_SETUP_MODE_OUTLINE_AI_ONLY = 2;
   TEACHING_PLAN_SETUP_MODE_OUTLINE_CUSTOM = 3;
   TEACHING_PLAN_SETUP_MODE_BLANK = 4;
+  TEACHING_PLAN_SETUP_MODE_LIVE_ONLY = 5;
+}
+
+enum TeachingPlanAISource {
+  TEACHING_PLAN_AI_SOURCE_UNSPECIFIED = 0;
+  TEACHING_PLAN_AI_SOURCE_COURSE = 1;
+  TEACHING_PLAN_AI_SOURCE_SHARE = 2;
 }
 
 enum TeachingPlanPublicationStatus {
@@ -396,6 +403,19 @@ message TeachingPlanScheduleDefaults {
   int32 live_duration_minutes = 4;
   int32 live_room_type = 5;
 }
+message TeachingPlanManualLessonInput {
+  string title = 1;
+  string description = 2;
+}
+message TeachingPlanShareTaskInput {
+  string title = 1;
+  string play_url = 2;
+  map<string, string> language_links = 3;
+}
+message TeachingPlanShareLessonInput {
+  string title = 1;
+  repeated TeachingPlanShareTaskInput tasks = 2;
+}
 message CreateTeachingPlanSetupRequest {
   string name = 1;
   string description = 2;
@@ -407,6 +427,9 @@ message CreateTeachingPlanSetupRequest {
   int32 initial_lesson_count = 8;
   repeated OutlineLessonGroup outline_lesson_groups = 9;
   TeachingPlanScheduleDefaults schedule_defaults = 10;
+  TeachingPlanAISource ai_source = 11;
+  repeated TeachingPlanManualLessonInput manual_lessons = 12;
+  repeated TeachingPlanShareLessonInput share_lessons = 13;
 }
 message TeachingPlanBlockingIssue { string code = 1; string message = 2; int32 lesson_no = 3; }
 message TeachingPlanSetupResult {

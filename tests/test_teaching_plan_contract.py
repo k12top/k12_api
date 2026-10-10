@@ -102,6 +102,7 @@ class TeachingPlanContractTest(unittest.TestCase):
         self.assertEqual(2, values.get("TEACHING_PLAN_SETUP_MODE_OUTLINE_AI_ONLY"))
         self.assertEqual(3, values.get("TEACHING_PLAN_SETUP_MODE_OUTLINE_CUSTOM"))
         self.assertEqual(4, values.get("TEACHING_PLAN_SETUP_MODE_BLANK"))
+        self.assertEqual(5, values.get("TEACHING_PLAN_SETUP_MODE_LIVE_ONLY"))
 
         request = re.search(r"(?s)message CreateTeachingPlanSetupRequest\s*\{(.*?)\n\}", self.source).group(1)
         for expression in (
@@ -114,8 +115,16 @@ class TeachingPlanContractTest(unittest.TestCase):
             r"int32 live_duration_minutes\s*=\s*7\s*;",
             r"int32 initial_lesson_count\s*=\s*8\s*;",
             r"repeated OutlineLessonGroup outline_lesson_groups\s*=\s*9\s*;",
+            r"TeachingPlanAISource ai_source\s*=\s*11\s*;",
+            r"repeated TeachingPlanManualLessonInput manual_lessons\s*=\s*12\s*;",
+            r"repeated TeachingPlanShareLessonInput share_lessons\s*=\s*13\s*;",
         ):
             self.assertRegex(request, expression)
+
+        self.assertIn("TEACHING_PLAN_AI_SOURCE_COURSE", self.source)
+        self.assertIn("TEACHING_PLAN_AI_SOURCE_SHARE", self.source)
+        self.assertIn("message TeachingPlanShareTaskInput", self.source)
+        self.assertIn("repeated TeachingPlanShareTaskInput tasks", self.source)
 
         result = re.search(r"(?s)message TeachingPlanSetupResult\s*\{(.*?)\n\}", self.source).group(1)
         for field in ("template", "version", "lesson_count", "live_task_count", "ai_task_count", "ready_for_class", "blocking_issues"):
