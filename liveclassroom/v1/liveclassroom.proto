@@ -6,6 +6,21 @@ option go_package = "k12_backend/api/liveclassroom/v1;v1";
 
 import "google/api/annotations.proto";
 
+enum LiveAccessMode {
+  LIVE_ACCESS_MODE_UNSPECIFIED = 0;
+  LIVE_ACCESS_MODE_SCHEDULED = 1;
+  LIVE_ACCESS_MODE_LIVE = 2;
+  LIVE_ACCESS_MODE_PROCESSING = 3;
+  LIVE_ACCESS_MODE_PLAYBACK = 4;
+  LIVE_ACCESS_MODE_FINISHED = 5;
+}
+
+enum LiveTargetBehavior {
+  LIVE_TARGET_BEHAVIOR_UNSPECIFIED = 0;
+  LIVE_TARGET_BEHAVIOR_IFRAME = 1;
+  LIVE_TARGET_BEHAVIOR_NEW_TAB = 2;
+}
+
 // LiveClassroomService 直播课表服务 (需要认证)
 service LiveClassroomService {
   // 获取用户的直播课程列表（代理到 live.xiangyuwenshu.cn）
@@ -67,10 +82,18 @@ message VerifyCourseAccessResponse {
   CourseInfo course_info = 3;
   string classroom_url = 4;
   string reason = 5;
+  LiveAccessMode access_mode = 6;
+  string target_url = 7;
+  LiveTargetBehavior target_behavior = 8;
+  string playback_url = 9;
+  string record_url = 10;
 }
 
 message CourseInfo {
   string name = 1;
   int32 room_type = 2;
   string teacher_name = 3;
+  string status = 4;
+  string start_time = 5;
+  string end_time = 6;
 }

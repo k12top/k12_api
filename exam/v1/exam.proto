@@ -321,6 +321,8 @@ message PaperDetail {
   int32 question_count = 8;               // 题目总数（包含题组子题）
   string title_i18n = 9;  // JSON: {"zh":"标题","en":"Title"}
   string desc_i18n = 10;  // JSON: {"zh":"描述","en":"Description"}
+  string subject = 11;       // 稳定科目标识，如 hsk1、hsk2
+  string category_name = 12; // 分类名称，如 hsk
 }
 
 message SectionDurations {
