@@ -68,6 +68,8 @@ class TeachingPlanContractTest(unittest.TestCase):
             "ArchiveClassOffering",
             "RestoreClassOffering",
             "DeleteClassOffering",
+            "ListPrograms",
+            "GetProgram",
         }
         methods = set(re.findall(r"\brpc\s+(\w+)\s*\(", self.source))
         self.assertEqual(expected, methods)
