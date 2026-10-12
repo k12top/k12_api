@@ -70,6 +70,7 @@ class TeachingPlanContractTest(unittest.TestCase):
             "DeleteClassOffering",
             "ListPrograms",
             "GetProgram",
+            "ListProgramCategories",
         }
         methods = set(re.findall(r"\brpc\s+(\w+)\s*\(", self.source))
         self.assertEqual(expected, methods)
@@ -88,6 +89,28 @@ class TeachingPlanContractTest(unittest.TestCase):
             "TEACHING_PLAN_PUBLICATION_STATUS_OFFLINE",
         ):
             self.assertIn(value, self.source)
+
+    def test_program_category_contract_is_explicit(self):
+        self.assertIn(
+            "rpc ListProgramCategories(ListProgramCategoriesRequest) returns (ListProgramCategoriesResponse)",
+            self.source,
+        )
+        self.assertIn('get: "/v1/program-categories"', self.source)
+        category = re.search(
+            r"(?s)message ProgramCategory\s*\{(.*?)\n\}", self.source
+        )
+        self.assertIsNotNone(category)
+        category_body = category.group(1)
+        for expression in (
+            r"int64 id\s*=\s*1\s*;",
+            r"string code\s*=\s*2\s*;",
+            r"string name\s*=\s*3\s*;",
+            r"string name_i18n\s*=\s*4\s*;",
+            r"int32 sort_order\s*=\s*5\s*;",
+            r"bool is_active\s*=\s*6\s*;",
+            r"repeated ProgramCategory children\s*=\s*7\s*;",
+        ):
+            self.assertRegex(category_body, expression)
 
     def test_guided_teaching_plan_setup_contract_is_explicit(self):
         self.assertIn(

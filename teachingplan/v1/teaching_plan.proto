@@ -29,6 +29,7 @@ service TeachingPlanService {
   rpc ListMyClassOfferings(ListMyClassOfferingsRequest) returns (ListMyClassOfferingsResponse) { option (google.api.http) = {get: "/v1/user/class-offerings"}; }
   rpc ListPrograms(ListProgramsRequest) returns (ListProgramsResponse) { option (google.api.http) = {get: "/v1/programs"}; }
   rpc GetProgram(GetProgramRequest) returns (ProgramDetail) { option (google.api.http) = {get: "/v1/programs/{program_id}"}; }
+  rpc ListProgramCategories(ListProgramCategoriesRequest) returns (ListProgramCategoriesResponse) { option (google.api.http) = {get: "/v1/program-categories"}; }
   rpc ListTeachingPlanTemplates(ListTeachingPlanTemplatesRequest) returns (ListTeachingPlanTemplatesResponse) {
     option (google.api.http) = {get: "/v1/admin/teaching-plan-templates"};
   }
@@ -336,6 +337,18 @@ message ListClassOfferingMembersRequest { int64 class_offering_id = 1; }
 message ListClassOfferingMembersResponse { repeated ClassOfferingMember members = 1; }
 message AddClassOfferingMemberRequest { int64 class_offering_id = 1; int64 user_id = 2; string casdoor_subject = 3; string role = 4; }
 message RemoveClassOfferingMemberRequest { int64 class_offering_id = 1; int64 member_id = 2; }
+
+message ListProgramCategoriesRequest {}
+message ListProgramCategoriesResponse { repeated ProgramCategory categories = 1; }
+message ProgramCategory {
+  int64 id = 1;
+  string code = 2;
+  string name = 3;
+  string name_i18n = 4;
+  int32 sort_order = 5;
+  bool is_active = 6;
+  repeated ProgramCategory children = 7;
+}
 
 message ListProgramsRequest {
   int32 page = 1;
