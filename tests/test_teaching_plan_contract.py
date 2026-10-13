@@ -71,9 +71,88 @@ class TeachingPlanContractTest(unittest.TestCase):
             "ListPrograms",
             "GetProgram",
             "ListProgramCategories",
+            "StartPublishedCourseProgramSync",
+            "GetCourseProgramSyncJob",
+            "ListCourseProgramSyncItems",
+            "RetryCourseProgramSyncItems",
         }
         methods = set(re.findall(r"\brpc\s+(\w+)\s*\(", self.source))
         self.assertEqual(expected, methods)
+
+    def test_course_program_sync_contract_is_explicit(self):
+        routes = {
+            "StartPublishedCourseProgramSync": 'post: "/v1/admin/program-course-sync-jobs"',
+            "GetCourseProgramSyncJob": 'get: "/v1/admin/program-course-sync-jobs/{id}"',
+            "ListCourseProgramSyncItems": 'get: "/v1/admin/program-course-sync-jobs/{job_id}/items"',
+            "RetryCourseProgramSyncItems": 'post: "/v1/admin/program-course-sync-jobs/{job_id}:retry"',
+        }
+        for rpc, route in routes.items():
+            self.assertIn(f"rpc {rpc}", self.source)
+            self.assertIn(route, self.source)
+
+        for name, values in {
+            "ProgramCourseSyncJobStatus": (
+                "PROGRAM_COURSE_SYNC_JOB_STATUS_PENDING",
+                "PROGRAM_COURSE_SYNC_JOB_STATUS_RUNNING",
+                "PROGRAM_COURSE_SYNC_JOB_STATUS_COMPLETED",
+                "PROGRAM_COURSE_SYNC_JOB_STATUS_COMPLETED_WITH_ERRORS",
+                "PROGRAM_COURSE_SYNC_JOB_STATUS_FAILED",
+            ),
+            "ProgramCourseSyncItemStatus": (
+                "PROGRAM_COURSE_SYNC_ITEM_STATUS_PENDING",
+                "PROGRAM_COURSE_SYNC_ITEM_STATUS_PROCESSING",
+                "PROGRAM_COURSE_SYNC_ITEM_STATUS_CREATED",
+                "PROGRAM_COURSE_SYNC_ITEM_STATUS_UPDATED",
+                "PROGRAM_COURSE_SYNC_ITEM_STATUS_SKIPPED",
+                "PROGRAM_COURSE_SYNC_ITEM_STATUS_FAILED",
+            ),
+        }.items():
+            body = re.search(rf"(?s)enum {name}\s*\{{(.*?)\n\}}", self.source)
+            self.assertIsNotNone(body)
+            for value in values:
+                self.assertIn(value, body.group(1))
+
+        job = re.search(r"(?s)message ProgramCourseSyncJob\s*\{(.*?)\n\}", self.source)
+        self.assertIsNotNone(job)
+        for expression in (
+            r"int64 id\s*=\s*1\s*;",
+            r"ProgramCourseSyncJobStatus status\s*=\s*2\s*;",
+            r"int32 total_count\s*=\s*4\s*;",
+            r"int32 failed_count\s*=\s*9\s*;",
+            r"google.protobuf.Timestamp created_at\s*=\s*12\s*;",
+        ):
+            self.assertRegex(job.group(1), expression)
+
+        item = re.search(r"(?s)message ProgramCourseSyncItem\s*\{(.*?)\n\}", self.source)
+        self.assertIsNotNone(item)
+        for expression in (
+            r"int64 job_id\s*=\s*2\s*;",
+            r"int64 course_id\s*=\s*3\s*;",
+            r"ProgramCourseSyncItemStatus status\s*=\s*5\s*;",
+            r"string error_code\s*=\s*6\s*;",
+            r"string error_message\s*=\s*7\s*;",
+        ):
+            self.assertRegex(item.group(1), expression)
+
+        start = re.search(r"(?s)message StartPublishedCourseProgramSyncRequest\s*\{(.*?)\n\}", self.source)
+        self.assertIsNotNone(start)
+        self.assertRegex(start.group(1), r"string idempotency_key\s*=\s*1\s*;")
+        listing = re.search(r"(?s)message ListCourseProgramSyncItemsRequest\s*\{(.*?)\n\}", self.source)
+        self.assertIsNotNone(listing)
+        for expression in (
+            r"int64 job_id\s*=\s*1\s*;",
+            r"int32 page\s*=\s*2\s*;",
+            r"int32 page_size\s*=\s*3\s*;",
+            r"ProgramCourseSyncItemStatus status\s*=\s*4\s*;",
+        ):
+            self.assertRegex(listing.group(1), expression)
+        retry = re.search(r"(?s)message RetryCourseProgramSyncItemsRequest\s*\{(.*?)\n\}", self.source)
+        self.assertIsNotNone(retry)
+        self.assertRegex(retry.group(1), r"repeated int64 item_ids\s*=\s*2\s*;")
+        self.assertRegex(retry.group(1), r"string idempotency_key\s*=\s*3\s*;")
+
+        template = re.search(r"(?s)message TeachingPlanTemplate\s*\{(.*?)\n\}", self.source).group(1)
+        self.assertRegex(template, r"int32 sort_order\s*=\s*21\s*;")
 
     def test_program_catalog_admin_contract_is_explicit(self):
         self.assertIn("rpc UpdateTeachingPlanPublicProfile", self.source)
