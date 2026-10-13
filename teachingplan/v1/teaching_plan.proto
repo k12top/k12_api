@@ -644,6 +644,7 @@ message TeachingPlanLesson {
   optional string schedule_local_start_time_override = 13;
   optional int32 live_duration_minutes_override = 14;
   optional int32 live_room_type_override = 15;
+  map<string, string> settings = 16; // access_role controls Program lesson access.
 }
 
 message TeachingPlanVersion {
@@ -916,6 +917,8 @@ message LessonScheduleSummary {
   google.protobuf.Timestamp unlock_at = 7;
   StudentLessonStatus status = 8;
   bool required = 9;
+  string access_role = 10;
+  bool role_allowed = 11;
 }
 
 message ClassPlanLessonTimeline {
