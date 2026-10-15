@@ -861,6 +861,9 @@ message ClassPlanTimelineItem {
   string live_replay_url = 17;
   string live_error_code = 18;
   string external_live_series_id = 19;
+  int32 lesson_no = 20;
+  string lesson_title = 21;
+  int32 lesson_sort_order = 22;
 }
 
 message ClassPlanLiveInstance {
