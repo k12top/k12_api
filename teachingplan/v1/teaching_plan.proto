@@ -289,6 +289,7 @@ message ListClassOfferingsRequest {
   string teacher_name = 6;
   google.protobuf.Timestamp starts_after = 7;
   google.protobuf.Timestamp starts_before = 8;
+  int64 template_id = 9;
 }
 message ListClassOfferingsResponse { repeated ClassOffering offerings = 1; PageInfo page_info = 2; }
 message CreateClassOfferingRequest {

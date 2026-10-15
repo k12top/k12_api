@@ -169,6 +169,14 @@ class TeachingPlanContractTest(unittest.TestCase):
         ):
             self.assertIn(value, self.source)
 
+    def test_class_offering_list_can_filter_by_teaching_plan_template(self):
+        request = re.search(
+            r"(?s)message ListClassOfferingsRequest\s*\{(.*?)\n\}",
+            self.source,
+        )
+        self.assertIsNotNone(request)
+        self.assertRegex(request.group(1), r"int64 template_id\s*=\s*9\s*;")
+
     def test_program_category_contract_is_explicit(self):
         self.assertIn(
             "rpc ListProgramCategories(ListProgramCategoriesRequest) returns (ListProgramCategoriesResponse)",
