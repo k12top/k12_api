@@ -289,6 +289,7 @@ message ListClassOfferingsRequest {
   string teacher_name = 6;
   google.protobuf.Timestamp starts_after = 7;
   google.protobuf.Timestamp starts_before = 8;
+  int64 template_id = 9;
 }
 message ListClassOfferingsResponse { repeated ClassOffering offerings = 1; PageInfo page_info = 2; }
 message CreateClassOfferingRequest {
@@ -861,6 +862,9 @@ message ClassPlanTimelineItem {
   string live_replay_url = 17;
   string live_error_code = 18;
   string external_live_series_id = 19;
+  int32 lesson_no = 20;
+  string lesson_title = 21;
+  int32 lesson_sort_order = 22;
 }
 
 message ClassPlanLiveInstance {

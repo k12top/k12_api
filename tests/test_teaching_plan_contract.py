@@ -169,6 +169,14 @@ class TeachingPlanContractTest(unittest.TestCase):
         ):
             self.assertIn(value, self.source)
 
+    def test_class_offering_list_can_filter_by_teaching_plan_template(self):
+        request = re.search(
+            r"(?s)message ListClassOfferingsRequest\s*\{(.*?)\n\}",
+            self.source,
+        )
+        self.assertIsNotNone(request)
+        self.assertRegex(request.group(1), r"int64 template_id\s*=\s*9\s*;")
+
     def test_program_category_contract_is_explicit(self):
         self.assertIn(
             "rpc ListProgramCategories(ListProgramCategoriesRequest) returns (ListProgramCategoriesResponse)",
@@ -349,6 +357,9 @@ class TeachingPlanContractTest(unittest.TestCase):
         self.assertIn("external_live_series_id", timeline)
         self.assertIn("external_live_session_id", timeline)
         self.assertIn("sso_embed_url", timeline)
+        self.assertRegex(timeline, r"int32 lesson_no\s*=\s*20\s*;")
+        self.assertRegex(timeline, r"string lesson_title\s*=\s*21\s*;")
+        self.assertRegex(timeline, r"int32 lesson_sort_order\s*=\s*22\s*;")
 
     def test_authenticated_external_completion_does_not_accept_learner_identity(self):
         request = re.search(r"(?s)message CompleteExternalLearningTaskRequest\s*\{(.*?)\n\}", self.source).group(1)
