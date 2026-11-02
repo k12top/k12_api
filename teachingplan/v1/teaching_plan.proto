@@ -26,6 +26,7 @@ service TeachingPlanService {
   rpc RemoveClassOfferingMember(RemoveClassOfferingMemberRequest) returns (google.protobuf.Empty) { option (google.api.http) = {delete: "/v1/admin/class-offerings/{class_offering_id}/members/{member_id}"}; }
   rpc ListAvailableClassOfferings(ListAvailableClassOfferingsRequest) returns (ListClassOfferingsResponse) { option (google.api.http) = {get: "/v1/class-offerings"}; }
   rpc CreateClassOfferingCheckout(CreateClassOfferingCheckoutRequest) returns (CreateClassOfferingCheckoutResponse) { option (google.api.http) = {post: "/v1/class-offerings/{offering_id}/checkout" body: "*"}; }
+  rpc GetClassOfferingCheckout(GetClassOfferingCheckoutRequest) returns (GetClassOfferingCheckoutResponse) { option (google.api.http) = {get: "/v1/class-offering-checkouts/{checkout_key}"}; }
   rpc EnrollClassOffering(EnrollClassOfferingRequest) returns (EnrollClassOfferingResponse) { option (google.api.http) = {post: "/v1/class-offerings/{offering_id}/enroll" body: "*"}; }
   rpc ListMyClassOfferings(ListMyClassOfferingsRequest) returns (ListMyClassOfferingsResponse) { option (google.api.http) = {get: "/v1/user/class-offerings"}; }
   rpc ListPrograms(ListProgramsRequest) returns (ListProgramsResponse) { option (google.api.http) = {get: "/v1/programs"}; }
@@ -346,6 +347,14 @@ message CreateClassOfferingCheckoutResponse {
   google.protobuf.Timestamp expires_at = 8;
   int64 amount_cents = 9;
   string currency = 10;
+}
+message GetClassOfferingCheckoutRequest { string checkout_key = 1; }
+message GetClassOfferingCheckoutResponse {
+  string checkout_key = 1;
+  int64 offering_id = 2;
+  string order_id = 3;
+  string status = 4;
+  google.protobuf.Timestamp expires_at = 5;
 }
 message EnrollClassOfferingRequest { int64 offering_id = 1; }
 message EnrollClassOfferingResponse { ClassOffering offering = 1; bool already_enrolled = 2; }
