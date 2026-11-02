@@ -25,6 +25,7 @@ service TeachingPlanService {
   rpc AddClassOfferingMember(AddClassOfferingMemberRequest) returns (ClassOfferingMember) { option (google.api.http) = {post: "/v1/admin/class-offerings/{class_offering_id}/members" body: "*"}; }
   rpc RemoveClassOfferingMember(RemoveClassOfferingMemberRequest) returns (google.protobuf.Empty) { option (google.api.http) = {delete: "/v1/admin/class-offerings/{class_offering_id}/members/{member_id}"}; }
   rpc ListAvailableClassOfferings(ListAvailableClassOfferingsRequest) returns (ListClassOfferingsResponse) { option (google.api.http) = {get: "/v1/class-offerings"}; }
+  rpc CreateClassOfferingCheckout(CreateClassOfferingCheckoutRequest) returns (CreateClassOfferingCheckoutResponse) { option (google.api.http) = {post: "/v1/class-offerings/{offering_id}/checkout" body: "*"}; }
   rpc EnrollClassOffering(EnrollClassOfferingRequest) returns (EnrollClassOfferingResponse) { option (google.api.http) = {post: "/v1/class-offerings/{offering_id}/enroll" body: "*"}; }
   rpc ListMyClassOfferings(ListMyClassOfferingsRequest) returns (ListMyClassOfferingsResponse) { option (google.api.http) = {get: "/v1/user/class-offerings"}; }
   rpc ListPrograms(ListProgramsRequest) returns (ListProgramsResponse) { option (google.api.http) = {get: "/v1/programs"}; }
@@ -317,6 +318,35 @@ message UpdateClassOfferingRequest {
 }
 message PublishClassOfferingRequest { int64 id = 1; }
 message ListAvailableClassOfferingsRequest { int64 course_id = 1; int32 page = 2; int32 page_size = 3; }
+enum CheckoutPaymentProvider {
+  CHECKOUT_PAYMENT_PROVIDER_UNSPECIFIED = 0;
+  CHECKOUT_PAYMENT_PROVIDER_WECHAT = 1;
+  CHECKOUT_PAYMENT_PROVIDER_STRIPE = 2;
+}
+enum CheckoutScene {
+  CHECKOUT_SCENE_UNSPECIFIED = 0;
+  CHECKOUT_SCENE_DESKTOP_WEB = 1;
+  CHECKOUT_SCENE_MOBILE_WEB = 2;
+}
+message CreateClassOfferingCheckoutRequest {
+  int64 offering_id = 1;
+  CheckoutPaymentProvider provider = 2;
+  CheckoutScene checkout_scene = 3;
+  string return_url = 4;
+  string idempotency_key = 5;
+}
+message CreateClassOfferingCheckoutResponse {
+  string reservation_key = 1;
+  string order_id = 2;
+  string order_no = 3;
+  string order_status = 4;
+  string payment_intent_id = 5;
+  string payment_status = 6;
+  string checkout_url = 7;
+  google.protobuf.Timestamp expires_at = 8;
+  int64 amount_cents = 9;
+  string currency = 10;
+}
 message EnrollClassOfferingRequest { int64 offering_id = 1; }
 message EnrollClassOfferingResponse { ClassOffering offering = 1; bool already_enrolled = 2; }
 message ListMyClassOfferingsRequest {}
