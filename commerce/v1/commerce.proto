@@ -1,0 +1,187 @@
+syntax = "proto3";
+
+package commerce.v1;
+
+option go_package = "k12_backend/api/commerce/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+service CommerceService {
+  rpc GetResourceCommerce(GetResourceCommerceRequest) returns (ResourceCommerce) {
+    option (google.api.http) = {get: "/v1/commerce/resources/{resource_type}/{resource_id}"};
+  }
+  rpc CreateCommerceCheckout(CreateCommerceCheckoutRequest) returns (CommerceCheckout) {
+    option (google.api.http) = {post: "/v1/commerce/checkouts" body: "*"};
+  }
+  rpc GetCommerceCheckout(GetCommerceCheckoutRequest) returns (CommerceCheckout) {
+    option (google.api.http) = {get: "/v1/commerce/checkouts/{checkout_key}"};
+  }
+  rpc CheckRefundEligibility(CheckRefundEligibilityRequest) returns (RefundEligibility) {
+    option (google.api.http) = {get: "/v1/commerce/orders/{nexus_order_id}/refund-eligibility"};
+  }
+  rpc GrantResourceAccess(GrantResourceAccessRequest) returns (CommerceEntitlement) {
+    option (google.api.http) = {post: "/v1/admin/commerce/resource-grants" body: "*"};
+  }
+  rpc RevokeResourceAccess(RevokeResourceAccessRequest) returns (CommerceEntitlement) {
+    option (google.api.http) = {post: "/v1/admin/commerce/resource-grants/{entitlement_id}:revoke" body: "*"};
+  }
+  rpc ListFulfillmentFailures(ListFulfillmentFailuresRequest) returns (ListFulfillmentFailuresResponse) {
+    option (google.api.http) = {get: "/v1/admin/commerce/fulfillment-failures"};
+  }
+  rpc ReplayCommerceFulfillment(ReplayCommerceFulfillmentRequest) returns (CommerceFulfillment) {
+    option (google.api.http) = {post: "/v1/admin/commerce/fulfillments/{fulfillment_id}:replay" body: "*"};
+  }
+}
+
+enum CommerceResourceType {
+  COMMERCE_RESOURCE_TYPE_UNSPECIFIED = 0;
+  COMMERCE_RESOURCE_TYPE_CLASS_OFFERING_SEAT = 1;
+  COMMERCE_RESOURCE_TYPE_EXAM_ATTEMPT = 2;
+}
+
+enum CommerceAccessState {
+  COMMERCE_ACCESS_STATE_UNSPECIFIED = 0;
+  COMMERCE_ACCESS_STATE_FREE = 1;
+  COMMERCE_ACCESS_STATE_PURCHASE_REQUIRED = 2;
+  COMMERCE_ACCESS_STATE_CHECKOUT_PENDING = 3;
+  COMMERCE_ACCESS_STATE_FULFILLMENT_PENDING = 4;
+  COMMERCE_ACCESS_STATE_ACTIVE = 5;
+  COMMERCE_ACCESS_STATE_CONSUMED = 6;
+  COMMERCE_ACCESS_STATE_REFUND_PENDING = 7;
+  COMMERCE_ACCESS_STATE_REFUNDED = 8;
+  COMMERCE_ACCESS_STATE_ROLE_BYPASS = 9;
+}
+
+enum CommerceCheckoutStatus {
+  COMMERCE_CHECKOUT_STATUS_UNSPECIFIED = 0;
+  COMMERCE_CHECKOUT_STATUS_PENDING_PAYMENT = 1;
+  COMMERCE_CHECKOUT_STATUS_PAYMENT_PROCESSING = 2;
+  COMMERCE_CHECKOUT_STATUS_FULFILLMENT_PENDING = 3;
+  COMMERCE_CHECKOUT_STATUS_FULFILLED = 4;
+  COMMERCE_CHECKOUT_STATUS_CLOSED = 5;
+  COMMERCE_CHECKOUT_STATUS_REFUND_PENDING = 6;
+  COMMERCE_CHECKOUT_STATUS_REFUNDED = 7;
+  COMMERCE_CHECKOUT_STATUS_FAILED = 8;
+}
+
+message CommerceResourceKey {
+  CommerceResourceType resource_type = 1;
+  string resource_id = 2;
+}
+
+message CommerceOfferSummary {
+  string offer_id = 1;
+  string product_id = 2;
+  string product_version_id = 3;
+  string name = 4;
+  string currency = 5;
+  string display_amount = 6;
+  repeated CommerceOfferItem items = 7;
+}
+
+message CommerceOfferItem {
+  CommerceResourceKey resource = 1;
+  string name = 2;
+  string quantity = 3;
+  string kind = 4;
+}
+
+message ResourceCommerce {
+  CommerceResourceKey resource = 1;
+  bool paid = 2;
+  bool purchasable = 3;
+  CommerceAccessState access_state = 4;
+  CommerceOfferSummary offer = 5;
+  string reason = 6;
+  string active_entitlement_id = 7;
+}
+
+message GetResourceCommerceRequest {
+  CommerceResourceType resource_type = 1;
+  string resource_id = 2;
+}
+
+message CreateCommerceCheckoutRequest {
+  string offer_id = 1;
+  CommerceResourceType resource_type = 2;
+  string resource_id = 3;
+  string payment_provider = 4;
+  string return_url = 5;
+  string idempotency_key = 6;
+  string checkout_scene = 7;
+}
+
+message CommerceCheckout {
+  string checkout_key = 1;
+  string nexus_order_id = 2;
+  string order_no = 3;
+  CommerceCheckoutStatus status = 4;
+  CommerceOfferSummary offer = 5;
+  string payment_provider = 6;
+  string code_url = 7;
+  string redirect_url = 8;
+  string failure_code = 9;
+  string failure_message = 10;
+  google.protobuf.Timestamp expires_at = 11;
+}
+
+message GetCommerceCheckoutRequest { string checkout_key = 1; }
+
+message CheckRefundEligibilityRequest { string nexus_order_id = 1; }
+message RefundEligibility {
+  bool eligible = 1;
+  string reason_code = 2;
+  string reason = 3;
+  repeated CommerceResourceKey used_resources = 4;
+}
+
+message CommerceEntitlement {
+  string id = 1;
+  CommerceResourceKey resource = 2;
+  int64 user_id = 3;
+  CommerceAccessState state = 4;
+  string nexus_grant_id = 5;
+  string source_type = 6;
+  google.protobuf.Timestamp valid_from = 7;
+  google.protobuf.Timestamp expires_at = 8;
+}
+
+message GrantResourceAccessRequest {
+  CommerceResourceType resource_type = 1;
+  string resource_id = 2;
+  int64 user_id = 3;
+  string reason = 4;
+  string idempotency_key = 5;
+  google.protobuf.Timestamp expires_at = 6;
+}
+
+message RevokeResourceAccessRequest {
+  string entitlement_id = 1;
+  string reason = 2;
+  string idempotency_key = 3;
+}
+
+message CommerceFulfillment {
+  string id = 1;
+  string nexus_order_id = 2;
+  string status = 3;
+  string last_error = 4;
+  int32 attempt_count = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message ListFulfillmentFailuresRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+}
+message ListFulfillmentFailuresResponse {
+  repeated CommerceFulfillment fulfillments = 1;
+  int32 total = 2;
+}
+
+message ReplayCommerceFulfillmentRequest {
+  string fulfillment_id = 1;
+  string reason = 2;
+  string idempotency_key = 3;
+}

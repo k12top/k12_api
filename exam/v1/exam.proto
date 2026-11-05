@@ -400,6 +400,15 @@ message GroupSubQuestion {
 
 // ========== 考试会话相关 ==========
 
+enum ExamCommerceState {
+  EXAM_COMMERCE_STATE_UNSPECIFIED = 0;
+  EXAM_COMMERCE_STATE_FREE = 1;
+  EXAM_COMMERCE_STATE_PURCHASE_REQUIRED = 2;
+  EXAM_COMMERCE_STATE_ENTITLEMENT_PENDING = 3;
+  EXAM_COMMERCE_STATE_ENTITLED = 4;
+  EXAM_COMMERCE_STATE_ROLE_BYPASS = 5;
+}
+
 message StartExamRequest {
   int64 paper_id = 1;
   bool with_pinyin = 2;        // 是否返回拼音数据
@@ -410,6 +419,8 @@ message StartExamResponse {
   int64 start_time = 2;        // Unix 秒
   int64 due_time = 3;          // Unix 秒
   PaperDetail paper = 4;       // 试卷内容（题目已按配置乱序）
+  ExamCommerceState commerce_state = 5;
+  string commerce_reason = 6;
 }
 
 message GetSessionRequest {
