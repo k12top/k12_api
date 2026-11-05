@@ -24,6 +24,9 @@ service TeachingPlanService {
   rpc ListClassOfferingMembers(ListClassOfferingMembersRequest) returns (ListClassOfferingMembersResponse) { option (google.api.http) = {get: "/v1/admin/class-offerings/{class_offering_id}/members"}; }
   rpc AddClassOfferingMember(AddClassOfferingMemberRequest) returns (ClassOfferingMember) { option (google.api.http) = {post: "/v1/admin/class-offerings/{class_offering_id}/members" body: "*"}; }
   rpc RemoveClassOfferingMember(RemoveClassOfferingMemberRequest) returns (google.protobuf.Empty) { option (google.api.http) = {delete: "/v1/admin/class-offerings/{class_offering_id}/members/{member_id}"}; }
+  rpc GrantClassOfferingAccess(GrantClassOfferingAccessRequest) returns (ClassOfferingAccessGrant) { option (google.api.http) = {post: "/v1/admin/class-offerings/{class_offering_id}/access-grants" body: "*"}; }
+  rpc RevokeClassOfferingAccess(RevokeClassOfferingAccessRequest) returns (ClassOfferingAccessGrant) { option (google.api.http) = {post: "/v1/admin/class-offering-access-grants/{grant_id}:revoke" body: "*"}; }
+  rpc ListClassOfferingAccessGrants(ListClassOfferingAccessGrantsRequest) returns (ListClassOfferingAccessGrantsResponse) { option (google.api.http) = {get: "/v1/admin/class-offerings/{class_offering_id}/access-grants"}; }
   rpc ListAvailableClassOfferings(ListAvailableClassOfferingsRequest) returns (ListClassOfferingsResponse) { option (google.api.http) = {get: "/v1/class-offerings"}; }
   rpc CreateClassOfferingCheckout(CreateClassOfferingCheckoutRequest) returns (CreateClassOfferingCheckoutResponse) { option (google.api.http) = {post: "/v1/class-offerings/{offering_id}/checkout" body: "*"}; }
   rpc GetClassOfferingCheckout(GetClassOfferingCheckoutRequest) returns (GetClassOfferingCheckoutResponse) { option (google.api.http) = {get: "/v1/class-offering-checkouts/{checkout_key}"}; }
@@ -433,6 +436,28 @@ message ListClassOfferingMembersRequest { int64 class_offering_id = 1; }
 message ListClassOfferingMembersResponse { repeated ClassOfferingMember members = 1; }
 message AddClassOfferingMemberRequest { int64 class_offering_id = 1; int64 user_id = 2; string casdoor_subject = 3; string role = 4; }
 message RemoveClassOfferingMemberRequest { int64 class_offering_id = 1; int64 member_id = 2; }
+
+enum ClassOfferingAccessGrantType {
+  CLASS_OFFERING_ACCESS_GRANT_TYPE_UNSPECIFIED = 0;
+  CLASS_OFFERING_ACCESS_GRANT_TYPE_ADMIN_GIFT = 1;
+  CLASS_OFFERING_ACCESS_GRANT_TYPE_TEACHER_ACCESS = 2;
+  CLASS_OFFERING_ACCESS_GRANT_TYPE_RESEARCH_ACCESS = 3;
+}
+message ClassOfferingAccessGrant {
+  int64 id = 1; int64 class_offering_id = 2; int64 user_id = 3; int64 course_id = 4;
+  ClassOfferingAccessGrantType grant_type = 5; bool occupies_student_seat = 6; string status = 7;
+  google.protobuf.Timestamp starts_at = 8; google.protobuf.Timestamp expires_at = 9;
+  string granted_by = 10; string grant_reason = 11; string idempotency_key = 12;
+  string revoked_by = 13; string revoke_reason = 14; google.protobuf.Timestamp revoked_at = 15;
+}
+message GrantClassOfferingAccessRequest {
+  int64 class_offering_id = 1; int64 user_id = 2; ClassOfferingAccessGrantType grant_type = 3;
+  optional bool occupies_student_seat = 4; google.protobuf.Timestamp starts_at = 5; google.protobuf.Timestamp expires_at = 6;
+  string reason = 7; string idempotency_key = 8;
+}
+message RevokeClassOfferingAccessRequest { int64 grant_id = 1; string reason = 2; }
+message ListClassOfferingAccessGrantsRequest { int64 class_offering_id = 1; int64 user_id = 2; }
+message ListClassOfferingAccessGrantsResponse { repeated ClassOfferingAccessGrant grants = 1; }
 
 message ListProgramCategoriesRequest {}
 message ListProgramCategoriesResponse { repeated ProgramCategory categories = 1; }
