@@ -32,6 +32,10 @@ service TeachingPlanService {
   rpc ListPrograms(ListProgramsRequest) returns (ListProgramsResponse) { option (google.api.http) = {get: "/v1/programs"}; }
   rpc GetProgram(GetProgramRequest) returns (ProgramDetail) { option (google.api.http) = {get: "/v1/programs/{program_id}"}; }
   rpc ListProgramCategories(ListProgramCategoriesRequest) returns (ListProgramCategoriesResponse) { option (google.api.http) = {get: "/v1/program-categories"}; }
+  rpc GetSiteCommerceCapabilities(GetSiteCommerceCapabilitiesRequest) returns (SiteCommerceCapabilities) { option (google.api.http) = {get: "/v1/site-commerce/capabilities"}; }
+  rpc ListSitePaymentMethods(ListSitePaymentMethodsRequest) returns (ListSitePaymentMethodsResponse) { option (google.api.http) = {get: "/v1/admin/site-payment-methods"}; }
+  rpc UpsertSitePaymentMethod(UpsertSitePaymentMethodRequest) returns (SitePaymentMethod) { option (google.api.http) = {put: "/v1/admin/site-payment-methods/{provider}" body: "*"}; }
+  rpc DisableSitePaymentMethod(DisableSitePaymentMethodRequest) returns (SitePaymentMethod) { option (google.api.http) = {post: "/v1/admin/site-payment-methods/{provider}:disable" body: "*"}; }
   rpc StartPublishedCourseProgramSync(StartPublishedCourseProgramSyncRequest) returns (ProgramCourseSyncJob) { option (google.api.http) = {post: "/v1/admin/program-course-sync-jobs" body: "*"}; }
   rpc GetCourseProgramSyncJob(GetCourseProgramSyncJobRequest) returns (ProgramCourseSyncJob) { option (google.api.http) = {get: "/v1/admin/program-course-sync-jobs/{id}"}; }
   rpc ListCourseProgramSyncItems(ListCourseProgramSyncItemsRequest) returns (ListCourseProgramSyncItemsResponse) { option (google.api.http) = {get: "/v1/admin/program-course-sync-jobs/{job_id}/items"}; }
@@ -358,6 +362,51 @@ message GetClassOfferingCheckoutResponse {
 }
 message EnrollClassOfferingRequest { int64 offering_id = 1; }
 message EnrollClassOfferingResponse { ClassOffering offering = 1; bool already_enrolled = 2; }
+
+message GetSiteCommerceCapabilitiesRequest {}
+
+message SiteCommerceCapabilities {
+  string organization_id = 1;
+  string site_id = 2;
+  bool commerce_enabled = 3;
+  repeated CheckoutPaymentProvider payment_providers = 4;
+}
+
+enum SitePaymentMethodStatus {
+  SITE_PAYMENT_METHOD_STATUS_UNSPECIFIED = 0;
+  SITE_PAYMENT_METHOD_STATUS_ACTIVE = 1;
+  SITE_PAYMENT_METHOD_STATUS_DISABLED = 2;
+}
+
+message SitePaymentMethod {
+  int64 id = 1;
+  string organization_id = 2;
+  string site_id = 3;
+  CheckoutPaymentProvider provider = 4;
+  string nexus_tenant_id = 5;
+  string nexus_environment_id = 6;
+  string nexus_payment_connection_id = 7;
+  string nexus_credential_alias = 8;
+  SitePaymentMethodStatus status = 9;
+  string created_by = 10;
+  string updated_by = 11;
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp updated_at = 13;
+}
+
+message ListSitePaymentMethodsRequest {}
+message ListSitePaymentMethodsResponse { repeated SitePaymentMethod payment_methods = 1; }
+
+message UpsertSitePaymentMethodRequest {
+  CheckoutPaymentProvider provider = 1;
+  string nexus_tenant_id = 2;
+  string nexus_environment_id = 3;
+  string nexus_payment_connection_id = 4;
+  string nexus_credential_alias = 5;
+  SitePaymentMethodStatus status = 6;
+}
+
+message DisableSitePaymentMethodRequest { CheckoutPaymentProvider provider = 1; }
 message ListMyClassOfferingsRequest {}
 message MyClassOfferingSummary {
   ClassOffering offering = 1;
