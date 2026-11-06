@@ -8,6 +8,9 @@ import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 
 service ProgrammingService {
+  rpc ListProgrammingAssignments(ListProgrammingAssignmentsRequest) returns (ListProgrammingAssignmentsResponse) {
+    option (google.api.http) = {get: "/v1/programming/assignments"};
+  }
   rpc GetProgrammingAssignment(GetProgrammingAssignmentRequest) returns (ProgrammingAssignment) {
     option (google.api.http) = {get: "/v1/programming/assignments/{assignment_id}"};
   }
@@ -33,6 +36,9 @@ service ProgrammingService {
     option (google.api.http) = {get: "/v1/programming/assignments/{assignment_id}/submissions"};
   }
 }
+
+message ListProgrammingAssignmentsRequest {}
+message ListProgrammingAssignmentsResponse { repeated ProgrammingAssignment items = 1; }
 
 enum ProgrammingLanguage {
   PROGRAMMING_LANGUAGE_UNSPECIFIED = 0;
