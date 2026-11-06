@@ -111,6 +111,7 @@ message SaveProgrammingWorkRequest {
   int64 work_id = 1;
   ProgrammingWorkContent content = 2;
   int64 expected_version = 3;
+  int64 assignment_id = 4; // required when creating the initial work with work_id=0
 }
 
 message ProgrammingWorkContent {
