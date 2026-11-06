@@ -65,6 +65,23 @@ class ProgrammingContractTest(unittest.TestCase):
             self.assertRegex(self.source, rf"enum {enum_name}\s*\{{")
         self.assertIn('import "google/protobuf/timestamp.proto";', self.source)
 
+    def test_multi_file_project_is_additive_and_keeps_legacy_source_fields(self):
+        file_message = self.message("ProgrammingFile")
+        self.assertRegex(file_message, r"string path\s*=\s*1\s*;")
+        self.assertRegex(file_message, r"string content\s*=\s*2\s*;")
+
+        project = self.message("ProgrammingProject")
+        self.assertRegex(project, r"repeated ProgrammingFile files\s*=\s*1\s*;")
+        self.assertRegex(project, r"string entry_file\s*=\s*2\s*;")
+
+        work = self.message("ProgrammingWorkContent")
+        self.assertRegex(work, r"string source\s*=\s*2\s*;")
+        self.assertRegex(work, r"ProgrammingProject project\s*=\s*5\s*;")
+
+        run = self.message("CreateProgrammingRunRequest")
+        self.assertRegex(run, r"string source\s*=\s*3\s*;")
+        self.assertRegex(run, r"ProgrammingProject project\s*=\s*6\s*;")
+
 
 if __name__ == "__main__":
     unittest.main()

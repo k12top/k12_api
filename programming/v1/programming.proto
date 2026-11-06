@@ -125,6 +125,23 @@ message ProgrammingWorkContent {
   string source = 2;
   string stdin = 3;
   ScratchAsset scratch = 4;
+  // Preferred multi-file representation. During migration, source contains
+  // the entry-file content for legacy consumers.
+  ProgrammingProject project = 5;
+}
+
+message ProgrammingFile {
+  // Normalized relative path using forward slashes; max 160 characters.
+  string path = 1;
+  // UTF-8 source content; max 256 KiB per file.
+  string content = 2;
+}
+
+message ProgrammingProject {
+  // At most 30 files and 1 MiB total UTF-8 source content.
+  repeated ProgrammingFile files = 1;
+  // Must name one file in files.
+  string entry_file = 2;
 }
 
 message ProgrammingWork {
@@ -142,6 +159,8 @@ message CreateProgrammingRunRequest {
   string source = 3;
   string stdin = 4;
   string idempotency_key = 5;
+  // Complete project to execute. source remains the compatibility fallback.
+  ProgrammingProject project = 6;
 }
 
 message GetProgrammingRunRequest {
