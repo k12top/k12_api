@@ -28,6 +28,7 @@ class TeachingPlanContractTest(unittest.TestCase):
             "CreateTeachingPlanDraft",
             "SaveTeachingPlanDraft",
             "PublishTeachingPlanVersion",
+            "PublishTeachingPlanVersionAndSync",
             "ListSchedulingResources",
             "BatchApplyTeachingPlanToOfferings",
             "ListClassPlanAssignments",

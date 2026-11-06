@@ -18,6 +18,7 @@
 | :---------------------- | :------------- | :------------------------------------------------------------- | :---------------------------------------------------- |
 | **Auth**                | v1             | [`auth/v1/auth.proto`](./auth/v1/auth.proto)                   | 认证和授权服务，包括登录和令牌管理等。                |
 | **Greeter**             | v1             | [`helloworld/v1/greeter.proto`](./helloworld/v1/greeter.proto) | 基础 Hello World 服务，通常用于健康检查或连通性测试。 |
+| **Programming**         | v1             | [`programming/v1/programming.proto`](./programming/v1/programming.proto) | 学生编程作品、运行评测和作业提交。                    |
 
 ## 目录结构 (Directory Structure)
 

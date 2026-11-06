@@ -1,0 +1,221 @@
+syntax = "proto3";
+
+package programming.v1;
+
+option go_package = "k12_backend/api/programming/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+service ProgrammingService {
+  rpc GetProgrammingAssignment(GetProgrammingAssignmentRequest) returns (ProgrammingAssignment) {
+    option (google.api.http) = {get: "/v1/programming/assignments/{assignment_id}"};
+  }
+  rpc GetProgrammingWork(GetProgrammingWorkRequest) returns (ProgrammingWork) {
+    option (google.api.http) = {get: "/v1/programming/works/{work_id}"};
+  }
+  rpc SaveProgrammingWork(SaveProgrammingWorkRequest) returns (ProgrammingWork) {
+    option (google.api.http) = {put: "/v1/programming/works/{work_id}" body: "*"};
+  }
+  rpc CreateProgrammingRun(CreateProgrammingRunRequest) returns (ProgrammingRun) {
+    option (google.api.http) = {post: "/v1/programming/runs" body: "*"};
+  }
+  rpc GetProgrammingRun(GetProgrammingRunRequest) returns (ProgrammingRun) {
+    option (google.api.http) = {get: "/v1/programming/runs/{run_id}"};
+  }
+  rpc CreateProgrammingSubmission(CreateProgrammingSubmissionRequest) returns (ProgrammingSubmission) {
+    option (google.api.http) = {post: "/v1/programming/submissions" body: "*"};
+  }
+  rpc GetProgrammingSubmission(GetProgrammingSubmissionRequest) returns (ProgrammingSubmission) {
+    option (google.api.http) = {get: "/v1/programming/submissions/{submission_id}"};
+  }
+  rpc ListProgrammingSubmissions(ListProgrammingSubmissionsRequest) returns (ListProgrammingSubmissionsResponse) {
+    option (google.api.http) = {get: "/v1/programming/assignments/{assignment_id}/submissions"};
+  }
+}
+
+enum ProgrammingLanguage {
+  PROGRAMMING_LANGUAGE_UNSPECIFIED = 0;
+  PROGRAMMING_LANGUAGE_SCRATCH = 1;
+  PROGRAMMING_LANGUAGE_PYTHON = 2;
+  PROGRAMMING_LANGUAGE_CPP = 3;
+}
+
+enum ExecutionStatus {
+  EXECUTION_STATUS_UNSPECIFIED = 0;
+  EXECUTION_STATUS_QUEUED = 1;
+  EXECUTION_STATUS_COMPILING = 2;
+  EXECUTION_STATUS_RUNNING = 3;
+  EXECUTION_STATUS_SUCCEEDED = 4;
+  EXECUTION_STATUS_COMPILE_ERROR = 5;
+  EXECUTION_STATUS_RUNTIME_ERROR = 6;
+  EXECUTION_STATUS_TIME_LIMIT_EXCEEDED = 7;
+  EXECUTION_STATUS_MEMORY_LIMIT_EXCEEDED = 8;
+  EXECUTION_STATUS_OUTPUT_LIMIT_EXCEEDED = 9;
+  EXECUTION_STATUS_CANCELLED = 10;
+  EXECUTION_STATUS_SYSTEM_ERROR = 11;
+}
+
+enum SubmissionStatus {
+  SUBMISSION_STATUS_UNSPECIFIED = 0;
+  SUBMISSION_STATUS_EVALUATING = 1;
+  SUBMISSION_STATUS_GRADED = 2;
+  SUBMISSION_STATUS_REVIEW_REQUIRED = 3;
+  SUBMISSION_STATUS_FAILED = 4;
+}
+
+message GetProgrammingAssignmentRequest {
+  int64 assignment_id = 1;
+}
+
+message ProgrammingAssignment {
+  int64 id = 1;
+  string title = 2;
+  string description = 3;
+  ProgrammingLanguage language = 4;
+  string starter_code = 5;
+  ScratchAsset starter_scratch = 6;
+  repeated ProgrammingExample examples = 7;
+  google.protobuf.Timestamp due_at = 8;
+  int32 source_limit_bytes = 9;
+  int32 stdin_limit_bytes = 10;
+  int32 output_limit_bytes = 11;
+  int32 time_limit_ms = 12;
+  int32 memory_limit_mb = 13;
+  ProgrammingWork work = 14;
+  ProgrammingSubmission latest_submission = 15;
+  double highest_score = 16;
+  reserved 17 to 20;
+}
+
+message ProgrammingExample {
+  string title = 1;
+  string sample_input = 2;
+  string sample_output = 3;
+}
+
+message ScratchAsset {
+  string object_key = 1;
+  string download_url = 2;
+  string preview_object_key = 3;
+  string preview_url = 4;
+  int64 size_bytes = 5;
+  string checksum = 6;
+}
+
+message GetProgrammingWorkRequest {
+  int64 work_id = 1;
+}
+
+message SaveProgrammingWorkRequest {
+  int64 work_id = 1;
+  ProgrammingWorkContent content = 2;
+  int64 expected_version = 3;
+}
+
+message ProgrammingWorkContent {
+  ProgrammingLanguage language = 1;
+  string source = 2;
+  string stdin = 3;
+  ScratchAsset scratch = 4;
+}
+
+message ProgrammingWork {
+  int64 id = 1;
+  int64 assignment_id = 2;
+  ProgrammingWorkContent content = 3;
+  int64 version = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message CreateProgrammingRunRequest {
+  int64 work_id = 1;
+  int64 work_version = 2;
+  string source = 3;
+  string stdin = 4;
+  string idempotency_key = 5;
+}
+
+message GetProgrammingRunRequest {
+  int64 run_id = 1;
+}
+
+message ProgrammingRun {
+  int64 id = 1;
+  int64 work_id = 2;
+  ProgrammingLanguage language = 3;
+  ExecutionStatus status = 4;
+  string stdout = 5;
+  string stderr = 6;
+  string compile_error = 7;
+  int32 exit_code = 8;
+  int64 duration_ms = 9;
+  int64 memory_kb = 10;
+  bool stdout_truncated = 11;
+  bool stderr_truncated = 12;
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp started_at = 14;
+  google.protobuf.Timestamp finished_at = 15;
+  string error_code = 16;
+  string error_message = 17;
+  reserved 18 to 20;
+}
+
+message CreateProgrammingSubmissionRequest {
+  int64 assignment_id = 1;
+  int64 work_id = 2;
+  int64 work_version = 3;
+  string idempotency_key = 4;
+}
+
+message GetProgrammingSubmissionRequest {
+  int64 submission_id = 1;
+}
+
+message ListProgrammingSubmissionsRequest {
+  int64 assignment_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message ListProgrammingSubmissionsResponse {
+  repeated ProgrammingSubmission items = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+  double highest_score = 5;
+}
+
+message ProgrammingSubmission {
+  int64 id = 1;
+  int64 assignment_id = 2;
+  int64 work_id = 3;
+  int64 work_version = 4;
+  ProgrammingLanguage language = 5;
+  SubmissionStatus status = 6;
+  double awarded_points = 7;
+  double possible_points = 8;
+  repeated ProgrammingTestResult test_results = 9;
+  ScratchAsset scratch = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp finished_at = 12;
+  string error_code = 13;
+  string error_message = 14;
+  reserved 15 to 20;
+}
+
+message ProgrammingTestResult {
+  int32 index = 1;
+  bool is_hidden = 2;
+  ExecutionStatus status = 3;
+  double awarded_points = 4;
+  double possible_points = 5;
+  string stdout = 6;
+  string stderr = 7;
+  int64 duration_ms = 8;
+  int64 memory_kb = 9;
+  bool stdout_truncated = 10;
+  bool stderr_truncated = 11;
+  string diagnostic = 12;
+}
