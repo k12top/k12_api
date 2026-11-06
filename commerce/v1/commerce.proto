@@ -20,6 +20,21 @@ service CommerceService {
   rpc CheckRefundEligibility(CheckRefundEligibilityRequest) returns (RefundEligibility) {
     option (google.api.http) = {get: "/v1/commerce/orders/{nexus_order_id}/refund-eligibility"};
   }
+  rpc ListMyCommerceOrders(ListMyCommerceOrdersRequest) returns (ListMyCommerceOrdersResponse) {
+    option (google.api.http) = {get: "/v1/commerce/my/orders"};
+  }
+  rpc GetMyCommerceOrder(GetMyCommerceOrderRequest) returns (MyCommerceOrder) {
+    option (google.api.http) = {get: "/v1/commerce/my/orders/{nexus_order_id}"};
+  }
+  rpc GetMyRefundEligibility(GetMyRefundEligibilityRequest) returns (RefundEligibility) {
+    option (google.api.http) = {get: "/v1/commerce/my/orders/{nexus_order_id}/refund-eligibility"};
+  }
+  rpc RequestMyRefund(RequestMyRefundRequest) returns (CustomerRefundRequest) {
+    option (google.api.http) = {post: "/v1/commerce/my/orders/{nexus_order_id}/refunds" body: "*"};
+  }
+  rpc RetryMyRefund(RetryMyRefundRequest) returns (CustomerRefundRequest) {
+    option (google.api.http) = {post: "/v1/commerce/my/refunds/{refund_request_id}:retry" body: "*"};
+  }
   rpc GrantResourceAccess(GrantResourceAccessRequest) returns (CommerceEntitlement) {
     option (google.api.http) = {post: "/v1/admin/commerce/resource-grants" body: "*"};
   }
@@ -134,6 +149,88 @@ message RefundEligibility {
   string reason_code = 2;
   string reason = 3;
   repeated CommerceResourceKey used_resources = 4;
+}
+
+enum MyCommerceOrderKind {
+  MY_COMMERCE_ORDER_KIND_UNSPECIFIED = 0;
+  MY_COMMERCE_ORDER_KIND_CLASS_OFFERING = 1;
+  MY_COMMERCE_ORDER_KIND_EXAM = 2;
+}
+
+enum MyCommerceOrderStatus {
+  MY_COMMERCE_ORDER_STATUS_UNSPECIFIED = 0;
+  MY_COMMERCE_ORDER_STATUS_PAID = 1;
+  MY_COMMERCE_ORDER_STATUS_REFUND_PENDING = 2;
+  MY_COMMERCE_ORDER_STATUS_REFUNDED = 3;
+  MY_COMMERCE_ORDER_STATUS_FAILED = 4;
+  MY_COMMERCE_ORDER_STATUS_UNAVAILABLE = 5;
+}
+
+enum CustomerRefundStatus {
+  CUSTOMER_REFUND_STATUS_UNSPECIFIED = 0;
+  CUSTOMER_REFUND_STATUS_SUBMITTING = 1;
+  CUSTOMER_REFUND_STATUS_UNKNOWN = 2;
+  CUSTOMER_REFUND_STATUS_REQUESTED = 3;
+  CUSTOMER_REFUND_STATUS_APPROVED = 4;
+  CUSTOMER_REFUND_STATUS_PROCESSING = 5;
+  CUSTOMER_REFUND_STATUS_SUCCEEDED = 6;
+  CUSTOMER_REFUND_STATUS_REJECTED = 7;
+  CUSTOMER_REFUND_STATUS_WITHDRAWN = 8;
+  CUSTOMER_REFUND_STATUS_FAILED = 9;
+}
+
+message ListMyCommerceOrdersRequest {
+  string cursor = 1;
+  int32 page_size = 2;
+  MyCommerceOrderStatus status = 3;
+}
+
+message ListMyCommerceOrdersResponse {
+  repeated MyCommerceOrder orders = 1;
+  string next_cursor = 2;
+}
+
+message GetMyCommerceOrderRequest { string nexus_order_id = 1; }
+message GetMyRefundEligibilityRequest { string nexus_order_id = 1; }
+
+message MyCommerceOrder {
+  string nexus_order_id = 1;
+  string order_no = 2;
+  MyCommerceOrderKind kind = 3;
+  string resource_id = 4;
+  string title = 5;
+  string subtitle = 6;
+  string amount = 7;
+  string currency = 8;
+  string payment_provider = 9;
+  MyCommerceOrderStatus status = 10;
+  google.protobuf.Timestamp created_at = 11;
+  RefundEligibility refund_eligibility = 12;
+  repeated CustomerRefundRequest refunds = 13;
+}
+
+message RequestMyRefundRequest {
+  string nexus_order_id = 1;
+  string reason = 2;
+  string idempotency_key = 3;
+}
+
+message RetryMyRefundRequest { string refund_request_id = 1; }
+
+message CustomerRefundRequest {
+  string id = 1;
+  string nexus_order_id = 2;
+  string nexus_request_id = 3;
+  string nexus_refund_id = 4;
+  CustomerRefundStatus status = 5;
+  string reason = 6;
+  string amount = 7;
+  string currency = 8;
+  int32 retry_count = 9;
+  bool access_frozen = 10;
+  string last_error = 11;
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp updated_at = 13;
 }
 
 message CommerceEntitlement {
