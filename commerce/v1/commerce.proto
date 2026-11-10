@@ -17,6 +17,9 @@ service CommerceService {
   rpc GetCommerceCheckout(GetCommerceCheckoutRequest) returns (CommerceCheckout) {
     option (google.api.http) = {get: "/v1/commerce/checkouts/{checkout_key}"};
   }
+  rpc GetRecoverableCheckout(GetRecoverableCheckoutRequest) returns (CommerceCheckout) {
+    option (google.api.http) = {get: "/v1/commerce/resources/{resource_type}/{resource_id}/checkout"};
+  }
   rpc CheckRefundEligibility(CheckRefundEligibilityRequest) returns (RefundEligibility) {
     option (google.api.http) = {get: "/v1/commerce/orders/{nexus_order_id}/refund-eligibility"};
   }
@@ -142,6 +145,11 @@ message CommerceCheckout {
 }
 
 message GetCommerceCheckoutRequest { string checkout_key = 1; }
+
+message GetRecoverableCheckoutRequest {
+  CommerceResourceType resource_type = 1;
+  string resource_id = 2;
+}
 
 message CheckRefundEligibilityRequest { string nexus_order_id = 1; }
 message RefundEligibility {
