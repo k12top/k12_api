@@ -297,6 +297,7 @@ message PaperSummary {
   string title_i18n = 10;  // JSON: {"zh":"标题","en":"Title"}
   string desc_i18n = 11;  // JSON: {"zh":"描述","en":"Description"}
   string subject = 12;     // 科目（如：图形化、Python、C++）
+  string commerce_access_state = 13; // FREE|PURCHASE_REQUIRED|PENDING|ACTIVE|ROLE_BYPASS|DENIED
 }
 
 message GetPaperRequest {
