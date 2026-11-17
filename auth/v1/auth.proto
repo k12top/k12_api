@@ -47,6 +47,12 @@ service Auth {
       delete: "/api/v1/auth/users/{id}"
     };
   }
+  rpc ResetUserPassword (ResetUserPasswordRequest) returns (ResetUserPasswordReply) {
+    option (google.api.http) = {
+      put: "/api/v1/auth/users/password"
+      body: "*"
+    };
+  }
   rpc ListRoles (ListRolesRequest) returns (ListRolesReply) {
     option (google.api.http) = {
       get: "/api/v1/auth/roles"
@@ -148,6 +154,16 @@ message DeleteUserRequest {
 }
 
 message DeleteUserReply {
+  bool success = 1;
+  string message = 2;
+}
+
+message ResetUserPasswordRequest {
+  string username = 1;
+  string new_password = 2;
+}
+
+message ResetUserPasswordReply {
   bool success = 1;
   string message = 2;
 }
