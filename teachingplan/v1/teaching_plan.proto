@@ -894,6 +894,8 @@ message ClassPlanAssignment {
   google.protobuf.Timestamp published_at = 9;
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp updated_at = 11;
+  int64 template_id = 12;
+  int64 latest_template_version_id = 13;
 }
 
 message PreviewClassPlanSyncRequest { int64 offering_id = 1; int64 target_version_id = 2; }

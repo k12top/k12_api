@@ -187,6 +187,18 @@ class TeachingPlanContractTest(unittest.TestCase):
         self.assertIsNotNone(request)
         self.assertRegex(request.group(1), r"int64 template_id\s*=\s*9\s*;")
 
+    def test_class_plan_assignment_exposes_template_version_lineage(self):
+        assignment = re.search(
+            r"(?s)message ClassPlanAssignment\s*\{(.*?)\n\}",
+            self.source,
+        )
+        self.assertIsNotNone(assignment)
+        self.assertRegex(assignment.group(1), r"int64 template_id\s*=\s*12\s*;")
+        self.assertRegex(
+            assignment.group(1),
+            r"int64 latest_template_version_id\s*=\s*13\s*;",
+        )
+
     def test_program_category_contract_is_explicit(self):
         self.assertIn(
             "rpc ListProgramCategories(ListProgramCategoriesRequest) returns (ListProgramCategoriesResponse)",
