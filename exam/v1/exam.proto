@@ -131,6 +131,14 @@ service ExamService {
       body: "*"
     };
   }
+
+  rpc ResolveExamEventShare(ResolveExamEventShareRequest) returns (ResolveExamEventShareResponse) {
+    option (google.api.http) = { post: "/v1/exam/event-shares/resolve" body: "*" };
+  }
+
+  rpc EnrollFromExamEventShare(EnrollFromExamEventShareRequest) returns (EnrollFromExamEventShareResponse) {
+    option (google.api.http) = { post: "/v1/exam/event-shares/enroll" body: "*" };
+  }
 }
 
 // ========== 通用消息 ==========
@@ -643,6 +651,7 @@ message ExamEventSummary {
   optional int64 session_id = 9;
   string participation_status = 10;
   ResultVisibility result_visibility = 11;
+  bool enrolled = 12;
 }
 
 message ListMyExamEventsRequest {
@@ -668,4 +677,25 @@ message GetExamEventResponse {
 message StartExamEventRequest {
   int64 event_id = 1;
   bool with_pinyin = 2;
+}
+
+message ResolveExamEventShareRequest {
+  string token = 1;
+  optional string passcode = 2;
+}
+
+message ResolveExamEventShareResponse {
+  ExamEvent event = 1;
+  bool requires_passcode = 2;
+}
+
+message EnrollFromExamEventShareRequest {
+  string token = 1;
+  optional string passcode = 2;
+}
+
+message EnrollFromExamEventShareResponse {
+  int64 event_id = 1;
+  bool created = 2;
+  int64 enrolled_at = 3;
 }
