@@ -178,6 +178,10 @@ message SubjectiveReview {
   optional int64 reviewed_by = 12;
   optional int64 reviewed_at = 13;
   string last_ai_error = 14;
+  string user_answer = 15;
+  string question_text = 16;
+  string criteria = 17;
+  double max_score = 18;
 }
 
 message ExamEventSessionReview {
