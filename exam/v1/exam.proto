@@ -111,6 +111,26 @@ service ExamService {
       body: "*"
     };
   }
+
+  // ========== 统一考试场次相关 ==========
+  rpc ListMyExamEvents(ListMyExamEventsRequest) returns (ListMyExamEventsResponse) {
+    option (google.api.http) = {
+      get: "/v1/exam/events"
+    };
+  }
+
+  rpc GetExamEvent(GetExamEventRequest) returns (GetExamEventResponse) {
+    option (google.api.http) = {
+      get: "/v1/exam/events/{event_id}"
+    };
+  }
+
+  rpc StartExamEvent(StartExamEventRequest) returns (StartExamResponse) {
+    option (google.api.http) = {
+      post: "/v1/exam/events/{event_id}/start"
+      body: "*"
+    };
+  }
 }
 
 // ========== 通用消息 ==========
@@ -422,6 +442,7 @@ message StartExamResponse {
   PaperDetail paper = 4;       // 试卷内容（题目已按配置乱序）
   ExamCommerceState commerce_state = 5;
   string commerce_reason = 6;
+  optional int64 event_id = 7; // 统一考试场次；模拟考试为空
 }
 
 message GetSessionRequest {
@@ -437,6 +458,7 @@ message GetSessionResponse {
   int64 remaining_seconds = 5;  // 剩余时间(秒)
   map<string, string> answers = 6;  // 已保存的答案
   PaperDetail paper = 7;
+  optional int64 event_id = 8; // 统一考试场次；模拟考试为空
 }
 
 message GetUnfinishedSessionRequest {
@@ -491,6 +513,8 @@ message SubmitExamResponse {
   string status = 1;           // completed 或 grading
   optional double score = 2;    // 客观题立即出分
   google.protobuf.Timestamp submitted_at = 3;
+  ResultVisibility result_visibility = 4;
+  optional int64 event_id = 5;
 }
 
 message GetResultRequest {
@@ -507,6 +531,8 @@ message GetResultResponse {
   map<string, double> tag_scores = 7; // 各知识点得分率
   google.protobuf.Timestamp started_at = 8;
   google.protobuf.Timestamp submitted_at = 9;
+  ResultVisibility result_visibility = 10;
+  optional int64 event_id = 11;
 }
 
 message QuestionResult {
@@ -521,6 +547,7 @@ message QuestionResult {
   optional int64 group_id = 9; // 所属题组ID（题组子题才有）
   string stem = 10;            // 题干，方便前端展示
   QuestionContent content = 11; // 题目内容与选项，方便前端展示
+  string student_feedback = 12; // 主观题终审后给学生的评语
 }
 
 message ListUserSessionsRequest {
@@ -543,6 +570,8 @@ message SessionSummary {
   optional double score = 5;
   int64 started_at = 6;
   optional int64 submitted_at = 7;
+  optional int64 event_id = 8;
+  ResultVisibility result_visibility = 9;
 }
 
 message ReportBehaviorRequest {
@@ -553,4 +582,90 @@ message ReportBehaviorRequest {
 
 message ReportBehaviorResponse {
   bool success = 1;
+}
+
+// ========== 统一考试场次 ==========
+
+enum ExamEventStatus {
+  EXAM_EVENT_STATUS_UNSPECIFIED = 0;
+  EXAM_EVENT_STATUS_DRAFT = 1;
+  EXAM_EVENT_STATUS_SCHEDULED = 2;
+  EXAM_EVENT_STATUS_IN_PROGRESS = 3;
+  EXAM_EVENT_STATUS_ENDED = 4;
+  EXAM_EVENT_STATUS_PUBLISHED = 5;
+  EXAM_EVENT_STATUS_CANCELLED = 6;
+}
+
+enum ExamAdmissionMode {
+  EXAM_ADMISSION_MODE_UNSPECIFIED = 0;
+  EXAM_ADMISSION_MODE_PUBLIC = 1;
+  EXAM_ADMISSION_MODE_RESTRICTED = 2;
+}
+
+enum ExamReleaseMode {
+  EXAM_RELEASE_MODE_UNSPECIFIED = 0;
+  EXAM_RELEASE_MODE_MANUAL = 1;
+  EXAM_RELEASE_MODE_SCHEDULED = 2;
+}
+
+enum ResultVisibility {
+  RESULT_VISIBILITY_UNSPECIFIED = 0;
+  RESULT_VISIBILITY_PENDING = 1;
+  RESULT_VISIBILITY_RELEASED = 2;
+}
+
+message ExamEvent {
+  int64 id = 1;
+  int64 paper_id = 2;
+  string title = 3;
+  ExamEventStatus status = 4;
+  int64 starts_at = 5;
+  int64 ends_at = 6;
+  int64 server_time = 7;
+  ExamAdmissionMode admission_mode = 8;
+  ExamReleaseMode release_mode = 9;
+  optional int64 release_at = 10;
+  optional int64 published_at = 11;
+  optional int64 session_id = 12;
+  string participation_status = 13; // eligible, in_progress, submitted, absent
+  ResultVisibility result_visibility = 14;
+}
+
+message ExamEventSummary {
+  int64 id = 1;
+  int64 paper_id = 2;
+  string title = 3;
+  ExamEventStatus status = 4;
+  int64 starts_at = 5;
+  int64 ends_at = 6;
+  int64 server_time = 7;
+  ExamAdmissionMode admission_mode = 8;
+  optional int64 session_id = 9;
+  string participation_status = 10;
+  ResultVisibility result_visibility = 11;
+}
+
+message ListMyExamEventsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  optional ExamEventStatus status = 3;
+}
+
+message ListMyExamEventsResponse {
+  repeated ExamEventSummary events = 1;
+  Pagination pagination = 2;
+  int64 server_time = 3;
+}
+
+message GetExamEventRequest {
+  int64 event_id = 1;
+}
+
+message GetExamEventResponse {
+  ExamEvent event = 1;
+}
+
+message StartExamEventRequest {
+  int64 event_id = 1;
+  bool with_pinyin = 2;
 }

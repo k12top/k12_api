@@ -1,0 +1,224 @@
+syntax = "proto3";
+
+package exam.v1;
+
+option go_package = "k12_backend/api/exam/v1;v1";
+
+import "exam/v1/exam.proto";
+import "google/api/annotations.proto";
+
+service ExamAdminService {
+  rpc CreateExamEvent(CreateExamEventRequest) returns (ExamEventAdminDetail) {
+    option (google.api.http) = { post: "/v1/exam/admin/events" body: "*" };
+  }
+  rpc UpdateExamEvent(UpdateExamEventRequest) returns (ExamEventAdminDetail) {
+    option (google.api.http) = { patch: "/v1/exam/admin/events/{event_id}" body: "*" };
+  }
+  rpc SetExamEventAudience(SetExamEventAudienceRequest) returns (ExamEventAdminDetail) {
+    option (google.api.http) = { put: "/v1/exam/admin/events/{event_id}/audience" body: "*" };
+  }
+  rpc ScheduleExamEvent(ExamEventActionRequest) returns (ExamEventAdminDetail) {
+    option (google.api.http) = { post: "/v1/exam/admin/events/{event_id}/schedule" body: "*" };
+  }
+  rpc CancelExamEvent(CancelExamEventRequest) returns (ExamEventAdminDetail) {
+    option (google.api.http) = { post: "/v1/exam/admin/events/{event_id}/cancel" body: "*" };
+  }
+  rpc ListExamEvents(ListExamEventsAdminRequest) returns (ListExamEventsAdminResponse) {
+    option (google.api.http) = { get: "/v1/exam/admin/events" };
+  }
+  rpc GetExamEventAdminDetail(ExamEventActionRequest) returns (ExamEventAdminDetail) {
+    option (google.api.http) = { get: "/v1/exam/admin/events/{event_id}" };
+  }
+  rpc ListExamEventParticipants(ExamEventActionRequest) returns (ListExamEventParticipantsResponse) {
+    option (google.api.http) = { get: "/v1/exam/admin/events/{event_id}/participants" };
+  }
+  rpc ListExamEventSessions(ListExamEventSessionsRequest) returns (ListExamEventSessionsResponse) {
+    option (google.api.http) = { get: "/v1/exam/admin/events/{event_id}/sessions" };
+  }
+  rpc GetExamEventSessionReview(GetExamEventSessionReviewRequest) returns (ExamEventSessionReview) {
+    option (google.api.http) = { get: "/v1/exam/admin/events/{event_id}/sessions/{session_id}/review" };
+  }
+  rpc ListPendingSubjectiveReviews(ListSubjectiveReviewsRequest) returns (ListSubjectiveReviewsResponse) {
+    option (google.api.http) = { get: "/v1/exam/admin/events/{event_id}/reviews" };
+  }
+  rpc ReviewSubjectiveAnswer(ReviewSubjectiveAnswerRequest) returns (SubjectiveReview) {
+    option (google.api.http) = { put: "/v1/exam/admin/events/{event_id}/reviews/{review_id}" body: "*" };
+  }
+  rpc TakeOverFailedSubjectiveReview(TakeOverFailedSubjectiveReviewRequest) returns (SubjectiveReview) {
+    option (google.api.http) = { post: "/v1/exam/admin/events/{event_id}/reviews/{review_id}/take-over" body: "*" };
+  }
+  rpc PublishExamEventResults(ExamEventActionRequest) returns (ExamEventAdminDetail) {
+    option (google.api.http) = { post: "/v1/exam/admin/events/{event_id}/publish-results" body: "*" };
+  }
+}
+
+enum SubjectiveReviewStatus {
+  SUBJECTIVE_REVIEW_STATUS_UNSPECIFIED = 0;
+  SUBJECTIVE_REVIEW_STATUS_PENDING_AI = 1;
+  SUBJECTIVE_REVIEW_STATUS_PENDING_REVIEW = 2;
+  SUBJECTIVE_REVIEW_STATUS_AI_FAILED = 3;
+  SUBJECTIVE_REVIEW_STATUS_REVIEWED = 4;
+}
+
+message ExamEventAudienceInput {
+  ExamAdmissionMode admission_mode = 1;
+  repeated int64 user_ids = 2;
+  repeated int64 class_offering_ids = 3;
+}
+
+message CreateExamEventRequest {
+  int64 paper_id = 1;
+  string title = 2;
+  int64 starts_at = 3;
+  int64 ends_at = 4;
+  ExamReleaseMode release_mode = 5;
+  optional int64 release_at = 6;
+  ExamEventAudienceInput audience = 7;
+}
+
+message UpdateExamEventRequest {
+  int64 event_id = 1;
+  string title = 2;
+  int64 starts_at = 3;
+  int64 ends_at = 4;
+  ExamReleaseMode release_mode = 5;
+  optional int64 release_at = 6;
+}
+
+message SetExamEventAudienceRequest {
+  int64 event_id = 1;
+  ExamEventAudienceInput audience = 2;
+}
+
+message ExamEventActionRequest { int64 event_id = 1; }
+
+message CancelExamEventRequest {
+  int64 event_id = 1;
+  string reason = 2;
+}
+
+message ExamEventStats {
+  int32 eligible_count = 1;
+  int32 entered_count = 2;
+  int32 submitted_count = 3;
+  int32 pending_ai_count = 4;
+  int32 ai_failed_count = 5;
+  int32 pending_review_count = 6;
+  int32 completed_count = 7;
+  optional int32 absent_count = 8;
+  bool can_publish = 9;
+  string publish_blocker = 10;
+}
+
+message ExamEventAdminDetail {
+  ExamEvent event = 1;
+  ExamEventStats stats = 2;
+  repeated int64 source_user_ids = 3;
+  repeated int64 source_class_offering_ids = 4;
+}
+
+message ListExamEventsAdminRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  optional ExamEventStatus status = 3;
+}
+
+message ListExamEventsAdminResponse {
+  repeated ExamEventAdminDetail events = 1;
+  Pagination pagination = 2;
+}
+
+message ExamEventParticipant {
+  int64 user_id = 1;
+  string username = 2;
+  string source_type = 3;
+  optional int64 source_id = 4;
+  string participation_status = 5;
+}
+
+message ListExamEventParticipantsResponse {
+  repeated ExamEventParticipant participants = 1;
+}
+
+message ListExamEventSessionsRequest {
+  int64 event_id = 1;
+  string status = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message ExamEventSessionSummary {
+  int64 session_id = 1;
+  int64 user_id = 2;
+  string username = 3;
+  string status = 4;
+  int64 started_at = 5;
+  optional int64 submitted_at = 6;
+  optional double score = 7;
+  int32 pending_review_count = 8;
+}
+
+message ListExamEventSessionsResponse {
+  repeated ExamEventSessionSummary sessions = 1;
+  Pagination pagination = 2;
+}
+
+message SubjectiveReview {
+  int64 id = 1;
+  int64 session_id = 2;
+  int64 question_id = 3;
+  SubjectiveReviewStatus status = 4;
+  int32 ai_attempts = 5;
+  optional double ai_suggested_score = 6;
+  string ai_feedback = 7;
+  optional double final_score = 8;
+  string student_feedback = 9;
+  string internal_note = 10;
+  int64 version = 11;
+  optional int64 reviewed_by = 12;
+  optional int64 reviewed_at = 13;
+  string last_ai_error = 14;
+}
+
+message ExamEventSessionReview {
+  ExamEventSessionSummary session = 1;
+  repeated QuestionResult objective_results = 2;
+  repeated SubjectiveReview subjective_reviews = 3;
+}
+
+message GetExamEventSessionReviewRequest {
+  int64 event_id = 1;
+  int64 session_id = 2;
+}
+
+message ListSubjectiveReviewsRequest {
+  int64 event_id = 1;
+  optional SubjectiveReviewStatus status = 2;
+  optional int64 user_id = 3;
+  int32 page = 4;
+  int32 page_size = 5;
+}
+
+message ListSubjectiveReviewsResponse {
+  repeated SubjectiveReview reviews = 1;
+  Pagination pagination = 2;
+}
+
+message ReviewSubjectiveAnswerRequest {
+  int64 event_id = 1;
+  int64 review_id = 2;
+  int64 expected_version = 3;
+  double final_score = 4;
+  string student_feedback = 5;
+  string internal_note = 6;
+}
+
+message TakeOverFailedSubjectiveReviewRequest {
+  int64 event_id = 1;
+  int64 review_id = 2;
+  int64 expected_version = 3;
+  double final_score = 4;
+  string student_feedback = 5;
+  string internal_note = 6;
+  string takeover_reason = 7;
+}
