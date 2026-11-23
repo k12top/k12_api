@@ -452,6 +452,7 @@ message StartExamResponse {
   ExamCommerceState commerce_state = 5;
   string commerce_reason = 6;
   optional int64 event_id = 7; // 统一考试场次；模拟考试为空
+  bool resumed = 8; // 是否恢复了已有的未完成会话
 }
 
 message GetSessionRequest {
