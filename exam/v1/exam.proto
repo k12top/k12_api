@@ -305,6 +305,7 @@ message ListPapersRequest {
   string level = 3;         // 按等级筛选（如：一级、二级、三级）
   int32 page = 4;
   int32 page_size = 5;
+  string query = 6;         // 按试卷标题模糊搜索
 }
 
 message ListPapersResponse {
