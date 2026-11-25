@@ -177,6 +177,7 @@ message Option {
   string value = 2;                 // 选项内容
   string type = 3;                  // 内容类型: text, image
   PinyinText value_pinyin = 4;      // 选项拼音（可选）
+  string caption = 5;              // 图片选项的伴随说明
 }
 
 // 匹配题项目
@@ -185,6 +186,7 @@ message MatchItem {
   string value = 2;                 // 内容
   string type = 3;                  // 内容类型: text, image
   PinyinText value_pinyin = 4;      // 拼音（可选）
+  string caption = 5;              // 图片配对项的伴随说明
 }
 
 // 排序题项目
@@ -426,6 +428,7 @@ message GroupSubQuestion {
   double score = 4;                    // 该子题分值
   int32 order_in_group = 5;           // 在题组中的顺序
   string group_type = 6;              // 题型大类: read, writing, listening（与所属题组一致，便于聚合）
+  string type = 7;                    // 子题作答类型，独立于题组和听读写分区
 }
 
 // ========== 考试会话相关 ==========
