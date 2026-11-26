@@ -264,6 +264,8 @@ message ReviewSubjectiveAnswerRequest {
   double final_score = 4;
   string student_feedback = 5;
   string internal_note = 6;
+  int64 session_id = 7;
+  int64 question_id = 8;
 }
 
 message TakeOverFailedSubjectiveReviewRequest {
