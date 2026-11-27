@@ -140,6 +140,9 @@ service ExamService {
     option (google.api.http) = { post: "/v1/exam/event-shares/enroll" body: "*" };
   }
 
+  rpc GetExamCollectionResult(GetExamCollectionResultRequest) returns (ExamCollectionResult) {
+    option (google.api.http) = { get: "/v1/exam/collections/{collection_id}/result" };
+  }
   rpc ResolveExamCollectionShare(ExamCollectionShareRequest) returns (ResolveExamCollectionShareResponse) {
     option (google.api.http) = { post: "/v1/exam/collection-shares/resolve" body: "*" };
   }
@@ -590,6 +593,8 @@ message SessionSummary {
   optional int64 submitted_at = 7;
   optional int64 event_id = 8;
   ResultVisibility result_visibility = 9;
+  optional int64 collection_id = 10;
+  optional string collection_title = 11;
 }
 
 message ReportBehaviorRequest {
@@ -735,4 +740,23 @@ message EnrollFromExamCollectionShareResponse {
   int32 enrolled_count = 4;
   int32 already_enrolled_count = 5;
   int32 skipped_count = 6;
+}
+
+message GetExamCollectionResultRequest { int64 collection_id = 1; }
+message ExamCollectionResult {
+  int64 collection_id = 1;
+  string title = 2;
+  ResultVisibility result_visibility = 3;
+  optional double total_score = 4;
+  double total_max_score = 5;
+  repeated ExamCollectionSittingResult sittings = 6;
+  optional int64 published_at = 7;
+}
+message ExamCollectionSittingResult {
+  int64 event_id = 1;
+  string title = 2;
+  optional int64 session_id = 3;
+  string status = 4;
+  optional double score = 5;
+  double max_score = 6;
 }
