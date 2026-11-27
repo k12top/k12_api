@@ -178,6 +178,7 @@ message UpdateExamEventRequest {
   int64 ends_at = 4;
   ExamReleaseMode release_mode = 5;
   optional int64 release_at = 6;
+  optional int64 paper_id = 7;
 }
 
 message SetExamEventAudienceRequest {
