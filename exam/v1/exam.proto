@@ -139,6 +139,14 @@ service ExamService {
   rpc EnrollFromExamEventShare(EnrollFromExamEventShareRequest) returns (EnrollFromExamEventShareResponse) {
     option (google.api.http) = { post: "/v1/exam/event-shares/enroll" body: "*" };
   }
+
+  rpc ResolveExamCollectionShare(ExamCollectionShareRequest) returns (ResolveExamCollectionShareResponse) {
+    option (google.api.http) = { post: "/v1/exam/collection-shares/resolve" body: "*" };
+  }
+
+  rpc EnrollFromExamCollectionShare(ExamCollectionShareRequest) returns (EnrollFromExamCollectionShareResponse) {
+    option (google.api.http) = { post: "/v1/exam/collection-shares/enroll" body: "*" };
+  }
 }
 
 // ========== 通用消息 ==========
@@ -639,6 +647,8 @@ message ExamEvent {
   optional int64 session_id = 12;
   string participation_status = 13; // eligible, in_progress, submitted, absent
   ResultVisibility result_visibility = 14;
+  optional int64 collection_id = 15;
+  optional string collection_title = 16;
 }
 
 message ExamEventSummary {
@@ -654,6 +664,8 @@ message ExamEventSummary {
   string participation_status = 10;
   ResultVisibility result_visibility = 11;
   bool enrolled = 12;
+  optional int64 collection_id = 13;
+  optional string collection_title = 14;
 }
 
 message ListMyExamEventsRequest {
@@ -700,4 +712,26 @@ message EnrollFromExamEventShareResponse {
   int64 event_id = 1;
   bool created = 2;
   int64 enrolled_at = 3;
+}
+
+message ExamCollectionShareRequest {
+  string token = 1;
+  optional string passcode = 2;
+}
+
+message ResolveExamCollectionShareResponse {
+  int64 collection_id = 1;
+  string title = 2;
+  string description = 3;
+  bool requires_passcode = 4;
+  repeated ExamEventSummary events = 5;
+}
+
+message EnrollFromExamCollectionShareResponse {
+  int64 collection_id = 1;
+  string title = 2;
+  repeated ExamEventSummary events = 3;
+  int32 enrolled_count = 4;
+  int32 already_enrolled_count = 5;
+  int32 skipped_count = 6;
 }
