@@ -672,6 +672,7 @@ message ListMyExamEventsRequest {
   int32 page = 1;
   int32 page_size = 2;
   optional ExamEventStatus status = 3;
+  optional int64 collection_id = 4;
 }
 
 message ListMyExamEventsResponse {
