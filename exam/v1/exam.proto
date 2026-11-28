@@ -671,6 +671,7 @@ message ExamEventSummary {
   bool enrolled = 12;
   optional int64 collection_id = 13;
   optional string collection_title = 14;
+  optional double score = 15; // Own completed session score; present only after authoritative publication.
 }
 
 message ListMyExamEventsRequest {
@@ -684,6 +685,7 @@ message ListMyExamEventsResponse {
   repeated ExamEventSummary events = 1;
   Pagination pagination = 2;
   int64 server_time = 3;
+  repeated ExamCollectionResult collection_results = 4; // Whole-exam totals for this page, batched and scoped to the authenticated user.
 }
 
 message GetExamEventRequest {
