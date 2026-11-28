@@ -8,6 +8,11 @@ import "exam/v1/exam.proto";
 import "google/api/annotations.proto";
 
 service ExamAdminService {
+  // Read-only student lookup for exam audiences; never grants account administration.
+  rpc SearchExamCandidateUsers(SearchExamCandidateUsersRequest) returns (SearchExamCandidateUsersResponse) {
+    option (google.api.http) = { get: "/v1/exam/admin/candidate-users" };
+  }
+
   rpc CreateExamCollection(UpsertExamCollectionRequest) returns (ExamCollectionDetail) {
     option (google.api.http) = { post: "/v1/exam/admin/collections" body: "*" };
   }
@@ -364,4 +369,18 @@ message TakeOverFailedSubjectiveReviewRequest {
   string student_feedback = 5;
   string internal_note = 6;
   string takeover_reason = 7;
+}
+
+message SearchExamCandidateUsersRequest {
+  string keyword = 1;
+  int32 limit = 2;
+}
+message ExamCandidateUser {
+  int64 id = 1;
+  string username = 2;
+  string display_name = 3;
+  string email = 4;
+}
+message SearchExamCandidateUsersResponse {
+  repeated ExamCandidateUser users = 1;
 }
