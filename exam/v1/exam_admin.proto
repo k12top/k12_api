@@ -324,6 +324,9 @@ message SubjectiveReview {
   string question_text = 16;
   string criteria = 17;
   double max_score = 18;
+  // Frozen question content, including media, for the shared result/review renderer.
+  QuestionItem question = 19;
+  QuestionGroupItem question_group = 20;
 }
 
 message ExamEventSessionReview {
